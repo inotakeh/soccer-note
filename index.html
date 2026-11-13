@@ -1,0 +1,1962 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="soccer-note-standalone" content="1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="サッカーノート">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#eceff6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#090d18" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex,nofollow">
+<title>ぼくのサッカーノート</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.4 system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+/* Layout: phone = one column (player card, then panels). iPad and wider = player card pinned on the left, panels on the right. Tab bar fixed to the bottom. */
+:root{
+  --bg:#eceff6; --paper:#ffffff; --ink:#141a2e; --muted:#5a6480; --rule:#d3d9e8;
+  --accent:#ffc928; --accent-ink:#3a2c00; --accent-text:#8a6800; --kick:#e8501f; --on:#ffffff;
+  --good:#2f6fe4; --soft:#e3e9fb; --chip:#f2f5fc; --bond:#d93a74; --bond-soft:#fde6ee;
+  --display:"Dela Gothic One","Hiragino Sans","Noto Sans JP",sans-serif;
+  --body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#090d18; --paper:#121a2e; --ink:#e8ecf8; --muted:#98a3bf; --rule:#27314f;
+  --accent:#ffd34f; --accent-ink:#2a2000; --accent-text:#ffd34f; --kick:#ff875f; --on:#160b05;
+  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#090d18; --paper:#121a2e; --ink:#e8ecf8; --muted:#98a3bf; --rule:#27314f;
+  --accent:#ffd34f; --accent-ink:#2a2000; --accent-text:#ffd34f; --kick:#ff875f; --on:#160b05;
+  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; color-scheme:dark}
+html,body{background:var(--bg);color:var(--ink)}
+/* Paints the strip under the status bar, so the page does not show through it while it scrolls past the pinned card. */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+body{font-family:var(--body);font-size:16px;line-height:1.6}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 170px;display:flex;flex-direction:column;gap:16px}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.02em}
+h2{font-size:1.15rem}
+h3{font-size:1rem}
+p{margin:0}
+.panel{background:var(--paper);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--rule)}
+.muted{color:var(--muted);font-size:.88rem}
+.banner{font-size:.82rem;background:var(--soft);border-radius:12px;padding:8px 12px;color:var(--muted)}
+#view{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row2{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.label{font-size:.75rem;letter-spacing:.08em;font-weight:800}
+.b{display:block;height:10px;background:var(--soft);border-radius:999px;overflow:hidden}
+.b i{display:block;height:100%;background:var(--good);border-radius:999px}
+.b.bond i{background:var(--bond)}
+
+/* player card */
+.card{--team:#2f7bff;position:relative;border-radius:10px 26px 10px 26px;overflow:hidden;background:linear-gradient(135deg,#070b18 0%,#141d3d 55%,#070b18 100%);color:#fff;padding:12px 16px 12px 6px;display:grid;grid-template-columns:minmax(0,40%) 1fr;gap:8px;align-items:center;border:1px solid color-mix(in srgb,var(--team) 60%,#070b18)}
+.card::before{content:"";position:absolute;inset:0;background:
+  linear-gradient(115deg,transparent 0 58%,color-mix(in srgb,var(--team) 70%,transparent) 58% 59.5%,transparent 59.5% 64%,color-mix(in srgb,var(--team) 35%,transparent) 64% 64.8%,transparent 64.8%),
+  repeating-linear-gradient(115deg,rgba(255,255,255,.04) 0 2px,transparent 2px 16px);pointer-events:none}
+.card>*{position:relative}
+.card .fig svg{width:100%;height:auto;display:block}
+.card .who{display:flex;flex-direction:column;gap:6px;min-width:0;align-self:end}
+.tags{display:flex;gap:6px;flex-wrap:wrap;padding-right:64px}
+.rank,.posb{display:inline-flex;font-weight:800;font-size:.8rem;padding:2px 12px;border-radius:3px;transform:skewX(-10deg)}
+.rank{background:#ffd34f;color:#2a2000}
+.posb{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.4)}
+.pname{font-family:var(--display);font-size:1.4rem;line-height:1.2;word-break:break-all}
+.lv{font-family:var(--display);font-size:2.4rem;line-height:1;transform:skewX(-8deg);transform-origin:left bottom;text-shadow:0 0 14px var(--team)}
+.lv small{font-size:1rem;margin-right:4px}
+.xpbar{height:12px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;transform:skewX(-10deg)}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--team),#ffd34f);transition:width .8s ease}
+.xptext{font-size:.8rem;opacity:.9;font-variant-numeric:tabular-nums}
+.unlock{font-size:.82rem;color:#fff;opacity:.9}.unlock b{color:#ffd34f}
+.gear{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:999px;padding:4px 10px;font-size:.8rem}
+.zoom{grid-column:2;justify-self:start;align-self:start;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:999px;padding:7px 14px;font-size:.82rem;font-weight:800}
+.card .fig{grid-row:1/span 2;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+@media (max-width:400px){.lv{font-size:2rem}.pname{font-size:1.2rem}}
+@media (prefers-reduced-motion:no-preference){
+  .pxf1,.pxf2{animation:pxa .6s steps(1,end) infinite}.pxf2{animation-delay:-.3s}@keyframes pxa{0%{opacity:1}50%,100%{opacity:0}}}
+.pxf2{opacity:0} /* pixel pictures: aura tips and lightning switch between two frames; with reduced motion the first frame stays */
+@media (min-width:760px){
+  /* The room kept free under the page for the tab bar is split in two: 76px under the grid, so the pinned card can stay put down to the end of the page, and the rest under the panels. */
+  .wrap{max-width:1040px;display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);align-items:start;gap:20px;padding-bottom:76px}
+  .col{padding-bottom:94px}
+  .card{grid-template-columns:1fr;padding:12px 18px 18px}
+  .card .fig{width:100%;max-width:290px;margin:0 auto;grid-row:auto}
+  .card .who{align-self:auto}
+  .zoom{position:absolute;top:10px;left:10px;grid-column:auto;padding:6px 12px}
+  /* The card is pinned, so the figure shrinks until the whole card fits above the tab bar. --whoh is the height of the text block, measured by fitCard(). */
+  .card .fig svg{max-height:54vh;max-height:min(54vh,max(180px,calc(100dvh - var(--whoh,253px) - 128px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))))}
+  .pname{font-size:1.6rem}
+}
+/* Pinned only when the screen is tall enough for the whole card; on a low screen it scrolls with the page. */
+@media (min-width:760px) and (min-height:570px){.card{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
+
+.nextgoal{background:var(--accent);color:var(--accent-ink);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.nextgoal b{font-size:1.15rem}
+.ticket{background:var(--paper);border:2px solid var(--kick);border-radius:18px;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ticket b{font-family:var(--display);font-size:1.3rem;margin-left:8px;color:var(--kick)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;align-items:center}
+.stats svg{width:100%;max-width:330px;height:auto;display:block;margin:0 auto}
+.statlist{display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+.statlist div{display:grid;grid-template-columns:6.2em 1fr 2.2em;gap:6px;align-items:center}
+.statlist em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
+
+/* skills */
+.skills{display:flex;flex-wrap:wrap;gap:8px}
+.sk{display:inline-flex;font-weight:800;font-size:.85rem;padding:4px 12px;border-radius:4px;background:var(--good);color:var(--on);transform:skewX(-8deg)}
+.sk.gold{background:var(--accent);color:var(--accent-ink)}
+.soon{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.soon>div{display:flex;flex-direction:column;gap:4px}
+.more summary{cursor:pointer;font-weight:800;color:var(--good);padding:4px 0}
+.sklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 12px;margin-top:8px}
+.sklist>div{display:flex;flex-direction:column;border-left:4px solid var(--rule);padding-left:8px;line-height:1.4}
+.sklist>div.on{border-color:var(--good)}
+.sklist>div.gold{border-color:var(--accent)}
+.sidetip{margin:12px 0 0;background:var(--soft);border-radius:12px;padding:8px 12px;line-height:1.5}
+.sidetip b{display:block;font-size:.85rem;color:var(--good)}
+.eyedot{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:6px;box-shadow:0 0 0 2px var(--paper),0 0 0 3px var(--rule)}
+
+/* form */
+.field{display:flex;flex-direction:column;gap:8px}
+.field>.q{font-weight:800}
+.field>.q small{font-weight:400;color:var(--muted);margin-left:6px}
+.seg,.chips{display:flex;flex-wrap:wrap;gap:8px}
+.seg button,.chips button{border:2px solid var(--rule);background:var(--chip);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.95rem}
+.seg button[aria-pressed="true"],.chips button[aria-pressed="true"]{border-color:var(--good);background:var(--good);color:var(--on)}
+.chips.team button[aria-pressed="true"]{border-color:var(--bond);background:var(--bond)}
+.chips button:disabled{opacity:.45}
+.grp{font-size:.82rem;font-weight:800;display:flex;align-items:center;gap:6px}
+.grp i{width:10px;height:10px;border-radius:50%;background:var(--good);display:inline-block}
+.grp.team i{background:var(--bond)}
+.faces{display:flex;gap:6px}
+.faces button{flex:1;border:2px solid var(--rule);background:var(--chip);border-radius:14px;padding:6px 0;font-size:1.5rem;line-height:1.2}
+.faces button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent)}
+input[type=text],input[type=date],textarea{width:100%;border:2px solid var(--rule);background:var(--paper);border-radius:12px;padding:10px 12px;font-size:1rem}
+textarea{min-height:76px;resize:vertical}
+.primary{border:0;background:var(--kick);color:var(--on);font-family:var(--display);font-size:1.15rem;border-radius:16px;padding:14px;letter-spacing:.05em}
+.primary:disabled{opacity:.45}
+.ghost{border:2px solid var(--rule);background:transparent;border-radius:12px;padding:8px 12px;font-weight:700}
+/* backup, for parents (inside the settings panel) */
+.bk{display:flex;flex-direction:column;gap:10px;padding-top:8px}
+.bk h3{font-family:var(--body);font-weight:800;font-size:.95rem;letter-spacing:0}
+.bk .row>.ghost{flex:1 1 10em;text-align:center}
+.bk .pick{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.bk .pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.bk .pick:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+#bk-show{min-height:90px;font-size:.78rem;line-height:1.4;word-break:break-all}
+#bk-code{min-height:90px;word-break:break-all}
+.bkbox{border:2px solid var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.bkbox ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+.bkmsg{font-weight:800}
+.xpprev{font-size:.85rem;color:var(--muted);text-align:center}
+.formmsg{font-weight:800;color:var(--kick);text-align:center}
+/* v9 note items */
+.write h3.sec{font-family:var(--body);font-weight:800;font-size:.8rem;letter-spacing:.14em;color:var(--muted);border-top:2px dashed var(--rule);padding-top:12px}
+.gamerow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.gamerow>input{flex:1 1 9em;min-width:0}
+.gamerow .sc{display:flex;align-items:center;gap:6px;flex:none}
+.gamerow input.num{width:3.4em;text-align:center;font-variant-numeric:tabular-nums}
+.chips .star{color:var(--kick);margin-right:3px}
+.chips button[aria-pressed="true"] .star{color:var(--accent)}
+.chips.focus button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.ghost.mini{padding:2px 10px;font-size:.85rem;margin-left:6px;border-radius:10px}
+.note .wx{margin-left:8px;font-weight:700;font-size:.9rem;color:var(--muted)}
+.hint{margin-top:-4px}
+.seg[data-seg="weather"]{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.seg[data-seg="weather"] button{padding:8px 4px;white-space:nowrap}
+.goalcard{border:2px solid var(--accent)}
+.goalcard .gc-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.goalcard .gc-head .label{color:var(--accent-text)}
+.goalcard .gc-t{font-size:1.25rem;line-height:1.45}
+.goalcard .gc-tip{font-size:.85rem;color:var(--muted);margin:0}
+.goalcard .gc-own{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.goalcard .gc-own input{flex:1 1 12em;min-width:0}
+.goalcard .gc-top{display:flex;flex-wrap:wrap;gap:2px 14px;align-items:baseline;font-size:.92rem;border-top:1px dashed var(--rule);padding-top:8px}
+.goalcard .gc-top .label{color:var(--muted);flex-basis:100%}
+.goalcard .gc-top b{color:var(--good)}
+.stampnews{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;background:var(--paper);color:var(--ink);border:2px dashed var(--kick);border-radius:18px;padding:12px 16px;font:inherit;font-weight:800;cursor:pointer}
+.stampnews small{font-weight:600;color:var(--muted)}
+.stampnews.handnote{border-color:var(--good)}
+#gcEdit,.cal-head button,[data-stampopen]{min-height:44px;min-width:44px}
+.handoff{display:flex;flex-direction:column;gap:8px;border:2px solid var(--good);border-radius:14px;padding:10px 12px}
+.handoff-ask{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;justify-content:center;border:2px dashed var(--good);border-radius:16px;padding:6px 10px}
+.handoff-ask .ghost{min-height:44px}
+.stamps{display:flex;flex-wrap:wrap;gap:6px}
+.stamp{display:inline-flex;align-items:center;gap:4px;border:2px solid var(--kick);color:var(--kick);background:var(--paper);border-radius:999px;padding:2px 10px;font-weight:800;font-size:.85rem;transform:rotate(-2deg)}
+.stamp-pick{display:flex;flex-direction:column;gap:6px}
+.note.hl{outline:3px solid var(--accent-text);outline-offset:4px;border-radius:8px}
+.cal-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cal-head b{font-family:var(--display);font-size:1.05rem}
+.cal-head button[disabled]{opacity:.35}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.cal-grid .wd{font-size:.7rem;font-weight:800;color:var(--muted)}
+.cal-grid .cd{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:2.7em;min-width:0;border-radius:10px;font-size:.85rem;padding:2px 0;color:var(--muted)}
+.cal-grid button.cd{border:1.5px solid var(--rule);background:var(--soft);color:var(--ink);font:inherit;font-size:.85rem;font-weight:800;cursor:pointer;margin:0}
+.cal-grid .cd.today{box-shadow:inset 0 0 0 2px var(--accent-text)}
+.cal-grid .cd i{display:flex;gap:3px;height:9px;align-items:center}
+.mk{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-text)}
+.mk.k-match{background:var(--kick);border-radius:1px;transform:rotate(45deg)}
+.mk.k-self{background:var(--good);border-radius:1px}
+.cal-sum{margin:0}
+.cal-key{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:0}
+.cal-key span{display:inline-flex;align-items:center;gap:5px}
+.sklist .who{display:inline-block;font-size:.72rem;font-weight:800;border-radius:999px;padding:0 8px;margin-right:6px;background:var(--soft);color:var(--good)}
+.swatch{width:40px;height:40px;padding:0;border-radius:50%;border:3px solid var(--rule)}
+.swatch[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--ink)}
+/* Where the player card is not pinned (a narrow or a low screen) it scrolls away while the settings are open, so the panel pins a small preview of the look to the top. */
+.lookbar{display:none}
+#settings{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px)} /* opening the settings scrolls here; the heading stays clear of the status bar strip */
+@media (max-width:759px),(max-height:569px){
+  .lookbar{display:flex;align-items:center;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:2;background:var(--soft);border:1px solid var(--rule);border-radius:14px;padding:6px 12px 6px 6px}
+  .lookbar .ava{width:64px;height:72px}
+}
+
+/* notes list */
+.note{border-top:1px solid var(--rule);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+.note:first-of-type{border-top:0;padding-top:0}
+.note .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.note .date{font-weight:800}
+.tag{display:inline-block;font-size:.72rem;font-weight:800;border-radius:999px;padding:1px 8px;background:var(--soft);color:var(--good);margin-left:6px}
+.note .xp{font-weight:800;color:var(--kick);font-variant-numeric:tabular-nums}
+.note .k{font-size:.75rem;color:var(--muted);font-weight:800;margin-right:6px}
+.parent{background:var(--soft);border-radius:12px;padding:8px 12px;font-size:.92rem}
+.empty{text-align:center;padding:20px 8px;display:flex;flex-direction:column;gap:10px;align-items:center}
+
+/* team */
+.bondnum{font-family:var(--display);color:var(--bond);font-size:1.4rem;margin-left:6px}
+.pitch{background:linear-gradient(180deg,#2a8a4a,#1f6e3a);border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+.pitch::before{content:"";position:absolute;left:50%;top:50%;width:76px;height:76px;border:2px solid rgba(255,255,255,.35);border-radius:50%;transform:translate(-50%,-50%)}
+.pitch::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:2px solid rgba(255,255,255,.35)}
+.frow{display:flex;justify-content:space-around;position:relative;z-index:1}
+.sidef{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.sidef .q2{font-weight:700;font-size:.9rem}
+.sidef .q2 small{font-weight:400;color:var(--muted);margin-left:6px;font-size:.78rem}
+.sidef .muted{margin:0}
+/* the position badge keeps its words whole; on a phone it gets its own row, which can use the room kept free for the せってい button above it */
+.posb,#posPanel,#focusBox,#kindBox .muted,#askHint,#s-role,.sidef .q2,.pitch+.muted,#goalPresets,#gcPresets,#nextPresets,.goalcard .gc-t,.kw{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+@media (max-width:560px){.tags{flex-direction:column;align-items:flex-start}.tags .posb{margin-right:-64px;max-width:calc(100% + 64px)}}
+.fcell{display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;font-size:.75rem;font-weight:800;width:72px;text-align:center;line-height:1.2;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.ava{border-radius:10px;overflow:hidden;background:linear-gradient(170deg,#5a688f,#2b3458);flex:none}
+.ava svg{width:100%;height:100%;display:block}
+.fcell .ava{width:48px;height:54px;border:2px solid rgba(255,255,255,.75)}
+.fcell.me .ava{border-color:#ffd34f}
+.helper{width:100%;height:100%;display:grid;place-items:center;color:#a9b2c8;font-weight:800;font-size:1.1rem;background:#2a3147}
+.mates{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.mate{display:grid;grid-template-columns:60px 1fr;gap:10px;align-items:center;background:var(--chip);border:1px solid var(--rule);border-radius:14px;padding:8px;min-width:0}
+.mate .ava{width:60px;height:67px}
+.mate b{display:block}
+.mate small{display:block;color:var(--muted);line-height:1.4}
+.mate.locked{border-style:dashed}
+.mate.locked .ava{display:grid;place-items:center;color:#a9b2c8;font-family:var(--display);font-size:1.4rem;background:#2a3147}
+.powers{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem}
+.powers em{font-style:normal;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.powers .tot{font-family:var(--display);font-size:1.2rem;border-top:2px solid var(--rule);padding-top:4px}
+@media (min-width:760px){.pitch{gap:16px;padding:18px 8px}.fcell{width:96px;font-size:.85rem}.fcell .ava{width:64px;height:72px}}
+
+/* match */
+.score{background:linear-gradient(135deg,#070b18,#141d3d);color:#fff;border-radius:14px;padding:12px;display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center}
+.score .tn{font-weight:800;font-size:.9rem;overflow-wrap:anywhere}
+.score .sc{font-family:var(--display);font-size:2.3rem;line-height:1;font-variant-numeric:tabular-nums}
+.score .min{grid-column:1/-1;font-size:.8rem;opacity:.85}
+.feed{display:flex;flex-direction:column;gap:6px}
+.ev{display:grid;grid-template-columns:4.8em 1fr;gap:8px;padding:6px 10px;border-radius:10px;background:var(--chip);font-size:.95rem}
+.ev time{color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums;padding-top:2px}
+.ev.goal.me{background:var(--accent);color:var(--accent-ink);font-weight:800}
+.ev.goal.me time{color:inherit}
+.ev.goal.opp{background:var(--soft)}
+.ev.skill{border:1px solid var(--good)}
+.ev.mate{border:1px solid var(--bond)}
+.vs{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;font-size:.92rem}
+.vs em{font-style:normal;font-weight:800;font-variant-numeric:tabular-nums}
+.vs .b.opp i{background:var(--muted)}
+.steps{display:flex;flex-direction:column;gap:6px}
+.step{border:2px solid var(--rule);border-radius:12px;padding:8px 12px;font-size:.9rem;display:grid;grid-template-columns:8.6em minmax(0,1fr);gap:0 10px;align-items:baseline}
+.step b{font-size:.9rem}
+.step .muted{grid-column:2;font-size:.8rem}
+.step.done{background:var(--soft);border-color:var(--good)}
+.step.now{border-color:var(--kick)}
+.step .here{display:block;color:var(--kick);font-weight:800}
+.cups{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.cup{border:1px dashed var(--rule);border-radius:12px;padding:8px;text-align:center;font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+.cup svg{width:30px;height:30px;opacity:.3}
+.cup.won{border:1px solid var(--accent);color:var(--ink);background:var(--chip)}
+.cup.won svg{opacity:1}
+.items{display:flex;flex-direction:column;gap:10px}
+.itemrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.item{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--rule);background:var(--chip);border-radius:12px;padding:6px 10px;font-weight:700;font-size:.88rem}
+.item svg{width:28px;height:20px}
+.item[aria-pressed="true"]{border-color:var(--good);background:var(--soft)}
+.result{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.result .big{font-family:var(--display);font-size:2rem;line-height:1.2}
+.result .win{color:var(--kick)}
+.got{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);font-weight:800;border-radius:12px;padding:8px 14px}
+.got svg{width:34px;height:24px}
+.loglist{display:flex;flex-direction:column;gap:4px;font-size:.9rem}
+.loglist div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted var(--rule);padding:2px 0}
+
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:5}
+.tabrow{display:flex;justify-content:center}
+.tabrow button{flex:1;max-width:150px;border:0;background:transparent;padding:10px 0 12px;font-weight:800;font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.tabrow button svg{width:24px;height:24px}
+.tabrow button[aria-current="page"]{color:var(--good)}
+.tabrow .dot{position:absolute;top:6px;left:calc(50% + 8px);min-width:18px;height:18px;border-radius:9px;background:var(--kick);color:var(--on);font-size:.7rem;line-height:18px;padding:0 4px}
+
+/* voice input */
+.voice{display:flex;gap:8px;align-items:flex-start}
+.voice>input,.voice>textarea{flex:1;min-width:0}
+.mic{flex:none;width:46px;height:46px;border-radius:50%;border:2px solid var(--rule);background:var(--chip);color:var(--good);display:grid;place-items:center;padding:0}
+.mic svg{width:24px;height:24px}
+.mic[aria-pressed="true"]{background:var(--kick);border-color:var(--kick);color:var(--on)}
+.voicebar{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--soft);border-bottom:1px solid var(--rule);font-weight:700;font-size:.92rem}
+.voicebar #vtext{flex:1;min-width:0;overflow-wrap:anywhere}
+.voicebar .vdot{width:12px;height:12px;border-radius:50%;background:var(--muted);flex:none}
+.voicebar.live .vdot{background:var(--kick)}
+.voicebar button{border:0;background:var(--kick);color:var(--on);font-weight:800;border-radius:999px;padding:6px 14px;flex:none}
+@media (prefers-reduced-motion:no-preference){.mic[aria-pressed="true"],.voicebar.live .vdot{animation:pulse 1.2s ease-in-out infinite}@keyframes pulse{50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--kick) 25%,transparent)}}}
+
+/* reward overlay */
+.overlay{position:fixed;inset:0;background:rgba(6,10,20,.66);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.reward{background:var(--paper);border-radius:22px;padding:20px;max-width:400px;width:100%;max-height:90%;overflow:auto;display:flex;flex-direction:column;gap:10px;text-align:center}
+.reward .big{font-family:var(--display);font-size:2.4rem;color:var(--kick);line-height:1.1}
+.reward ul{list-style:none;margin:0;padding:0;text-align:left;font-size:.9rem;display:flex;flex-direction:column;gap:2px}
+.reward ul li{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted var(--rule);padding:2px 0}
+.lvup{font-family:var(--display);font-size:1.6rem;background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:6px}
+.newmate{display:flex;align-items:center;gap:10px;text-align:left;background:var(--bond-soft);border-radius:14px;padding:8px}
+.newmate .ava{width:54px;height:61px}.newmate .ava.look{width:66px;height:110px}
+@media (prefers-reduced-motion:no-preference){.reward{animation:pop .35s ease-out}@keyframes pop{from{transform:scale(.8);opacity:.3}}
+  .ev:first-child{animation:slide .3s ease-out}@keyframes slide{from{transform:translateY(-8px);opacity:0}}}
+</style>
+<script>if("serviceWorker"in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});</script>
+</head>
+<body>
+
+<div class="wrap" id="app">
+  <section class="card" aria-label="せんしゅカード">
+    <div class="fig" id="fig"></div>
+    <div class="who">
+      <div class="tags"><span class="rank" id="rank">たまご選手</span><span class="posb" id="posb" hidden></span></div>
+      <div class="pname" id="pname">せんしゅ</div>
+      <div class="lv"><small>Lv.</small><span id="lv">1</span></div>
+      <div class="xpbar" aria-hidden="true"><i id="xpfill" style="width:0%"></i></div>
+      <div class="xptext" id="xptext">つぎのレベルまで 40 XP</div>
+      <div class="unlock" id="unlock"></div>
+    </div>
+    <button class="zoom" id="zoomBtn" type="button">アップで みる</button>
+    <button class="gear" id="gearBtn" type="button">せってい</button>
+  </section>
+  <div class="col">
+    <div class="banner" id="status">よみこみ中…</div>
+    <main id="view"></main>
+  </div>
+</div>
+
+<nav class="tabs" aria-label="メニュー">
+  <div class="voicebar" id="voicebar" hidden><span class="vdot" aria-hidden="true"></span><span id="vtext" role="status" aria-live="polite"></span><button type="button" id="vstop" hidden>とめる</button></div>
+  <div class="tabrow">
+  <button type="button" data-tab="home" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/></svg>せんしゅ</button>
+  <button type="button" data-tab="write">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>かく</button>
+  <button type="button" data-tab="team">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c.6-4 2.8-6 6-6s5.4 2 6 6M15 14.2c3.4-.6 6 1.2 6.8 5"/></svg>なかま</button>
+  <button type="button" data-tab="match">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v5a5 5 0 0 1-10 0zM7 5H3v1a4 4 0 0 0 4 4M17 5h4v1a4 4 0 0 1-4 4M12 14v4M8 21h8"/></svg>しあい<span class="dot" id="tkdot" hidden></span></button>
+  <button type="button" data-tab="notes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>ノート</button>
+  </div>
+</nav>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+/* ---------- game rules ---------- */
+const STATS=[["stamina","スタミナ"],["dribble","ドリブル"],["pass","パス"],["shoot","シュート"],["defense","ディフェンス"],["brave","ゆうき"]];
+// "team" chips are about other people: they also earn キズナ, which brings teammates in.
+const CHIPS=[
+  {id:"chase",t:"ボールをおいかけた",s:{stamina:2,brave:1},skill:"ボールハンター",line:"{h}が こぼれだまを ひろった!"},
+  {id:"contact",t:"こわがらずにちかづいた",s:{brave:2,defense:1},skill:"ゆうきのプレス",line:"{h}が あいてに よせて ミスを さそった!"},
+  {id:"steal",t:"ボールをとりにいった",s:{defense:2,brave:1},skill:"インターセプト",line:"{h}が パスを カット!"},
+  {id:"dribble",t:"ドリブルでしかけた",s:{dribble:2,brave:1},skill:"ドリブルとっぱ",line:"{h}が ドリブルで 1人 かわした!"},
+  {id:"shoot",t:"シュートをうった",s:{shoot:2,brave:1},skill:"ストライカーのめ",line:"{h}の シュートは おしくも バーの上!"},
+  {id:"back",t:"ディフェンスにもどった",s:{defense:2,stamina:1},skill:"ピンチをすくう もどり",line:"{h}が はしって もどって クリア!"},
+  {id:"run",t:"さいごまで走った",s:{stamina:2},skill:"スタミナモンスター",line:"こうはんも {h}の はしりは おちない!"},
+  {id:"retry",t:"ミスしてもつぎ がんばった",s:{brave:2},skill:"ふくつの心",line:"ミスしても {h}は すぐ きりかえた!"},
+  {id:"getpass",t:"パスをもらいにうごいた",s:{pass:1,stamina:1},team:1,skill:"うらへの とびだし",line:"{h}が スペースに はしりこんだ!"},
+  {id:"pass",t:"パスをだした",s:{pass:2},team:1,skill:"キラーパス",line:"{h}の スルーパスで チャンス!"},
+  {id:"call",t:"「パスちょうだい」といった",s:{pass:1,brave:1},team:1,skill:"パスをよぶ声",line:"「ヘイ!」{h}が パスを よびこんだ!"},
+  {id:"voice",t:"こえをだした",s:{brave:1,pass:1},team:1,skill:"コーチング",line:"{h}の こえで チームが うごいた!"},
+  {id:"cheer",t:"なかまを はげました",s:{brave:1},team:1,skill:"ムードメーカー",line:"{h}の こえかけで みんなが げんきに!"},
+  {id:"cover",t:"なかまの カバーにはいった",s:{defense:1,stamina:1},team:1,skill:"カバーリング",line:"{h}が なかまの うしろを カバー!"},
+  {id:"listen",t:"コーチの話をよくきいた",s:{pass:1,defense:1},team:1,skill:"せんじゅつがん",line:"コーチの さくせんどおりに うごけた!"}
+];
+const CHIP={};CHIPS.forEach(c=>CHIP[c.id]=c);
+const MAXCHIPS=5, MAXGROUP=3, MAXPERDAY=2; // five chips a note, three at most from each group, so every note mixes "self" and "team"
+const GOALS=["ルーズボールを1回おいかける","パスを1回もらいにいく","こえを3回だす","シュートを1本うつ","あいてに1回ちかづく","「パスちょうだい」を1回いう","さいごまで走る"];
+const POS={
+  FW:{n:"フォワード",d:"ゴールを きめる",w:{shoot:.3,dribble:.25,brave:.15,stamina:.1,pass:.1,defense:.1},
+    goals:["シュートを3本うつ","キーパーの いない ほうを ねらって 1本うつ","まえを むいて ボールを 1回もらう","こぼれた ボールに いちばんに 1回さわる"]},
+  MF:{n:"ミッドフィルダー",d:"パスで つなぐ",w:{pass:.3,stamina:.2,dribble:.2,defense:.1,shoot:.1,brave:.1},
+    goals:["ボールが くる まえに まわりを 3回みる","パスしたら うごいて 1回もらいなおす","「へい!」と いって パスを 2回もらう","まえの みかたに パスを 2回だす"]},
+  DF:{n:"ディフェンダー",d:"ゴールを まもる",w:{defense:.35,brave:.2,stamina:.2,pass:.15,dribble:.05,shoot:.05},
+    goals:["あいてに すばやく ちかづくを 3回","とった ボールを まえの みかたに 1回パス","こえで みかたに 3回おしえる","こぼれた ボールに いちばんに 1回さわる"]},
+  GK:{n:"ゴールキーパー",d:"さいごの とりで",w:{defense:.3,brave:.25,pass:.2,stamina:.15,dribble:.05,shoot:.05},
+    goals:["かまえてから とるを 3回","りょうてで キャッチを 2回","こえで しじを 3回だす","まえに でて ボールを 1回とる"]}
+};
+// For each position: three points to look out for in play (the note asks which were done; they are kept apart from the がんばったこと chips),
+// practice that suits it (who it is done with, what to do), the practice-menu chips that suit it (they get a star), and questions that help
+// the writer think back. From coaching articles for this age (サカイク, COACH UNITED, The FA); JFA itself gives no per-position advice at U-10,
+// only that children should try every position, which the home panel passes on.
+const POSNOTE={
+  FW:{focus:[["fw_front","まえを むいて ボールを もらう"],["fw_look","うつ まえに キーパーを みる"],["fw_back","とられたら すぐ とりかえしに いく"]],
+      menu:["shoot","dribble","duel"],
+      prac:[["ひとりで","かべの しるしを ねらって ける","けるまえに ねらう ばしょを きめる"],["ひとりで","マーカーを よけて ドリブル","あしの うち・そと・うらを つかって、はやさも かえる"],
+        ["おうちの人と","1本ずつ よく みて シュート","はずれたら、どうしてか かんがえる"]],
+      ask:["きょう シュートは なん本 うてた?","うつ まえに キーパーを みれた?","どこに いたら パスが もらえた?"]},
+  MF:{focus:[["mf_look","ボールが くる まえに まわりを みる"],["mf_space","パスが とおる ところに たつ"],["mf_body","まわりが みえる むきで もらう"]],
+      menu:["pass","trap","lift"],
+      prac:[["ひとりで","かべあて","とめて、ねらって ける を くりかえす"],["ひとりで","なげあげて トラップ","まうえに なげた ボールを あし・もも・むねで とめる"],
+        ["ともだちと","しっぽとり・おにごっこ","まわりを みながら にげる・おいかける"]],
+      ask:["ボールが くる まえに なにが みえた?","パスしたあと どこに うごいた?","まえに パスできたのは どんな とき?"]},
+  DF:{focus:[["df_goal","あいてと ゴールの あいだに たつ"],["df_time","ボールが あいての あしから はなれた ときを ねらう"],["df_up","とったら まえの みかたを みる"]],
+      menu:["duel","tag","trap"],
+      prac:[["ともだちと","おにごっこ","タッチされたら すぐ おいかける"],["ひとりで","なげあげて トラップ","はずむ ボールに なれる"],
+        ["チームで","1たい1","あいての まえに はいって、インサイドで とる"]],
+      ask:["あいてに ちかづけたのは なん回?","ボールを とれた とき、どうやって とれた?","とったあと だれに パスした?"]},
+  GK:{focus:[["gk_ready","ひざを まげて つまさきで かまえる"],["gk_catch","てを まえに のばして りょうてで キャッチ"],["gk_go","またずに ボールに むかって いく"]],
+      menu:["keeper","run","game"],
+      prac:[["おうちの人と","ダッシュ → ピタッと とまって キャッチ","かまえてから なげて もらう"],["おうちの人と","いろいろな たかさの キャッチ","むね・おなか・あしもとの ボールを とる"],
+        ["チームで","フィールドの れんしゅうも","キーパーも ける・はしるが だいじ"]],
+      ask:["いちばん いい キャッチは どれ? どうして とれた?","どんな こえを だせた?","つぎは どこに たつと いいと おもう?"]}
+};
+const FOCUS={};Object.keys(POSNOTE).forEach(k=>POSNOTE[k].focus.forEach(([id,t])=>FOCUS[id]={t,pos:k}));
+// JFA asks that positions (the keeper too) are not fixed at this age, so every child tries them all.
+const POSTIP="小学生の うちは、いろいろな ポジションを やってみるのが いいんだって(日本サッカー協会)。ノートの「きょうの ポジション」は、その日に やった ところを えらぼう。いくつも やった 日は「いろいろ」だよ。";
+// A note can also be for a day with several positions (MIX): it has no points to tap, and its questions are about the differences.
+const MIX="MIX", MIXASK=["いちばん たのしかった ポジションは どこ? どうして?","ポジションが かわると、なにが ちがった?"];
+const POSKEYS=["FW","MF","DF","GK"];
+// v11: where on the field (8-a-side, facing the goal we attack) a FW, MF or DF plays; v12: the team plays 2-3-2, so a FW or DF
+// is on the left or the right and a MF also in the middle. The middle and the sides each have their own three points. Left and
+// right mirror each other: what changes is mostly the foot. With no side picked the position's own points stay, and so do the notes written before v11.
+// The keeper has no side.
+// From COACH UNITED, サカイク, ジュニサカ and J.League; for this age a defender first guards their own opponent (Ikegami, サカイク).
+// Both FW roles keep "win it back" (fw_back), because JFA asks every position to attack and defend in 8-a-side.
+const SIDES=[["L","ひだり"],["C","まんなか"],["R","みぎ"]], SIDEPOS=["FW","MF","DF"];
+const sideName=s=>(SIDES.find(x=>x[0]===s)||[])[1]||"";
+// v12: the team plays 2-3-2. The two FWs and the two DFs stand left and right; the three MFs left, middle and right. A note keeps
+// the shape it was written in (nshape "2-3-2"); notes written before v12 have none ("") and keep the v11 choices: every line had
+// left, middle and right, and a DF on a side was a side-back.
+const TEAMSHAPE="2-3-2", isShape=v=>v===TEAMSHAPE;
+const LINESIDES={FW:"LR",MF:"LCR",DF:"LR"};
+const sidesFor=(pos,shape)=>!SIDEPOS.includes(pos)?"":isShape(shape)?LINESIDES[pos]:"LCR";
+// The place a FW, MF or DF plays: the one picked, if that line has it.
+const sideOf=(pos,side,shape)=>sideName(side)&&sidesFor(pos,shape).includes(side)?side:"";
+const sideHead=(pos,shape)=>sidesFor(pos,shape).split("").map(sideName).join("・");
+const sideOpts=(pos,shape)=>SIDES.filter(([v])=>sidesFor(pos,shape).includes(v));
+// n: the name, note: what else it is called, d: what the role does. focus, goals, prac, ask and menu work like the position's own;
+// tip says what changes between left and right. v11 is the points a role had in v11, still counted for the notes written then.
+// v12 (researched for a 2-3-2): at this age the practice itself stays the same on both sides, with both feet and from both sides
+// (JFA, U.S. Soccer U9-U10, The FA, サカイク). What the side changes is mostly the foot: a wide player stops a pass from the middle
+// with the foot on the line side (away from the defender) so as to face forward, carries the ball along the line with it, and cuts
+// inside onto the other foot (サカイク, COACH UNITED, The FA). So a side role has one point or goal and one practice that name the
+// foot, and a tip; the rest, and the starred kinds, are the same on both sides. Drills that name a foot say how to stand, so that
+// left and right do not swap when he faces a wall or a parent.
+// The two DFs of a 2-3-2 are both centre-backs (ジュニアサッカーを応援しよう, サカイク): the one nearer the ball goes and the other covers
+// behind (FIFA, US Youth Soccer), they call to each other, and in 1v1 they do not dive in but steer the forward outside (FIFA, The FA).
+// When the keeper has the ball they split wide and take it on the outside foot (サッカーキング). Left out as not supported: each FW going
+// to the post on their own side, and "the DF on the ball's side goes" (the sources say the nearer one goes).
+const ROLE={
+  "FW-C":{n:"センターフォワード",note:"「トップ」と よぶ ことも あるよ。",d:"まんなかで ゴールを きめる",
+    focus:[["fwc_goal","ゴールの まえに はいる"],["fwc_run","パスが でる ときに、ディフェンダーの うしろへ はしりだす"],["fw_back","とられたら すぐ とりかえしに いく"]],
+    goals:["ゴールの まえに 3回はいる","まえを むけない ときは、ボールを まもって みかたに 1回わたす"],menu:["shoot","trap","duel"],
+    prac:[["おうちの人と","あいた ほうへ シュート","おうちの人が キーパー。ける とき よこに うごくので、はんたいへ ける"],
+      ["ひとりで","かべに けって、かえって きた ボールを シュート","1タッチめで よこに ずらして、すぐ ける"],
+      ["ともだちと","3にんで 1たい1 シュート","せめる・まもる・キーパーを じゅんばんに かわる"]],
+    ask:["どこで もらうと シュートが うてた?","キーパーは どっちに うごいた? どっちに けった?"]},
+  "FW-S":{n:"ツートップ",d:"もうひとりの FWと いっしょに ゴールを ねらう",
+    focus:[["fws_wide","もうひとりの FWと はなれて ひろがる"],["fws_in","ドリブルで なかへ いったら {はんたいあし}で シュート"],["fw_back","とられたら すぐ とりかえしに いく"]],
+    v11:[["fws_wide","もうひとりの FWと はなれて ひろがる"],["fws_duel","1たい1で しかける"],["fw_back","とられたら すぐ とりかえしに いく"]],
+    goals:["1たい1で しかけるを 3回","まっすぐ ぬけて、{あし}で ゴールまえへ 1回パス"],menu:["dribble","shoot","duel"],
+    prac:[["ひとりで","ドリブルで なかへ → シュート","{がわ}から ななめに ドリブル。コーンで なかへ。{はんたいあし}で ゴールの とおい すみへ"],
+      ["おうちの人と","ゴール 2つの 1たい1","おうちの人が まもって いない ほうの ゴールへ ドリブル"],
+      ["ともだちと","1たい1 → ゴールまえへ パス","ぬいたら、ゴールまえの みかたへ つよい ボール"]],
+    ask:["もうひとりの FWが ボールに ちかづいた とき、じぶんは どこへ はしった?","まっすぐと なか、どっちへ いけた? どっちの あしで けった?"],
+    tip:"まっすぐ ぬけたら {あし}で ゴールまえへ パス。ドリブルで なかへ いったら {はんたいあし}で シュート。"},
+  "MF-C":{n:"センターハーフ",note:"「ボランチ」や「トップ下」と よぶ ことも あるよ。",d:"まんなかで つなぐ・まもる",
+    focus:[["mfc_both","ひだりも みぎも うしろも みる"],["mfc_front","まえを むいて もらう"],["mfc_mid","まもる ときは DFの まえに もどる"]],
+    goals:["もらう まえに うしろを 3回みる","ひだりと みぎに 1回ずつ パス"],menu:["pass","trap","lift"],
+    prac:[["ひとりで","かべあて → くるっと ターン","うしろに あいてが いる つもりで まわり、マーカーの あいだへ はんたいの あしで ける"],
+      ["おうちの人と","かずを いいながら パス","おうちの人が ゆびで だす かずを、パスの あいまに みて いう"],
+      ["ともだちと","3たい1 の パスまわし","ボールを もつ 人の よこに うごいて もらう"]],
+    ask:["うしろを みた とき、だれが どこに いた?","ひだりと みぎ、あいてが すくなかったのは どっち?"]},
+  "MF-S":{n:"サイドハーフ",note:"「ウイング」と よぶ ことも あるよ。",d:"サイドを いったり きたり する",
+    focus:[["mfs_wide","せめる ときは タッチラインの ちかくに ひろがる"],["mfs_foot","パスを {あし}で とめて、まえを むく"],["mfs_back","とられたら サイドを はしって もどる"]],
+    v11:[["mfs_wide","せめる ときは タッチラインの ちかくに ひろがる"],["mfs_go","まえに あいてが いない ときは ドリブルで すすむ"],["mfs_back","とられたら サイドを はしって もどる"]],
+    goals:["サイドの ラインの ちかくで、{あし}で 1回もらう","あいての ボールに なったら、まもりに もどるを 2回"],menu:["dribble","trap","run"],
+    prac:[["ひとりで","ラインに そって ドリブル → パス","ラインに ちかい あしで はこび、おなじ あしで なかの コーンへ パス。りょうがわで"],
+      ["おうちの人と","{あし}で とめて まえへ","ラインを {がわ}に して たつ。おうちの人が なかから パス。{あし}で とめ、まえへ"],
+      ["ともだちと","2たい1 で ゴールラインを こえる","まっすぐ いくか、よこの みかたに わたすか えらぶ"]],
+    ask:["パスを どっちの あしで とめた? まえを むけた?","まもる とき、だれを みて いた?"],
+    tip:"なかからの パスは {あし}で とめると、まえも なかも よく みえるよ。ラインぞいも {あし}で はこぼう。"},
+  "DF-C":{n:"センターバック",d:"ゴールの まえを まもる",
+    focus:[["dfc_mark","あいての フォワードと ゴールの あいだに たつ"],["dfc_help","みかたが ぬかれたら たすけに いく"],["dfc_voice","こえで まえの みかたに おしえる"]],
+    goals:["みかたが ぬかれて シュートされそうな とき、1回とめに いく","あぶない ときは、まんなかを さけて とおくへ 1回けりだす"],menu:["duel","trap","tag"],
+    prac:[["おうちの人と","ドリブルに ちかづく","とおくは おおまた、ちかくは こまた。あしだけ ださない"],
+      ["おうちの人と","ういた ボールを やさしく とめる","むね・もも・あしで いきおいを とって、あしもとに おとす"],
+      ["ともだちと","3たい2 で まもる","ぬかれたら すぐ おいかける。ちかくの 人が かわりに いく"]],
+    ask:["ぬかれた とき、すぐ おいかけた? だれが たすけて くれた?","じぶんの うしろへ はしる あいてに きづけた?"]},
+  "DF-2":{n:"センターバック",note:"DFが 2人の ときは、ひだりも みぎも まんなかを まもるよ。",d:"もうひとりの DFと いっしょに ゴールを まもる",
+    focus:[["df2_cover","ちかい 人が ボールへ。もうひとりは ななめ うしろ"],["df2_out","1たい1では とびこまずに、そとへ おいだす"],["df2_voice","「いくよ」「うしろ いるよ」と こえを かけあう"]],
+    goals:["{がわ}の ラインへ ひろがって {あし}で うけ、まえへ 1回パス","あぶない ときは、まんなかを さけて とおくへ 1回けりだす"],menu:["duel","trap","game"],
+    prac:[["ひとりで","かべあて → {あし}で とめる","かべに むかって けったら、からだを {がわ}に むけて {あし}で とめ、まえへ"],
+      ["おうちの人と","そとへ おいだす 1たい1","うしろに コーンで ゴール。おうちの人の ドリブルを そとへ おいだす。とびこまない"],
+      ["ともだちと","2たい2 で まもる","ちかい 人が ボールへ。もうひとりは ななめ うしろ。パスが でたら いれかわる"]],
+    ask:["もうひとりの DFが ボールに いった とき、じぶんは どこに いた?","じぶんの よこや うしろへ はしる あいてに きづけた?"],
+    tip:"キーパーが ボールを もったら {がわ}の ラインの ほうへ ひろがろう。{あし}で とめると、まえが よく みえるよ。"},
+  "DF-S":{n:"サイドバック",note:"DFが 3人の ときの、ひだりと みぎの DFだよ。",d:"じぶんの がわを まもって、チャンスなら まえに あがる",
+    focus:[["dfs_in","あいてを なかへ いかせない"],["dfs_chase","ぬかれても すぐ おいかける"],["dfs_back","あがって とられたら、すぐ はしって もどる"]],
+    goals:["あいてを サイドの ラインの ほうへ 2回おいだす","{あし}で うけて、まえの サイドハーフへ 1回パス"],menu:["duel","run","tag"],
+    prac:[["おうちの人と","ラインの ちかくで 1たい1","からだで なかを ふさいで、ラインの ほうへ おいだす"],
+      ["おうちの人と","おいかけて とめる","すこし うしろから スタート。おいついて、まえに はいる"],
+      ["ひとりで","ステップ → くるっと ダッシュ","よこ・うしろに こまかく ステップ。「いち・に・さん」で まわって はしる"]],
+    ask:["あいてを どっちに いかせた? ラインの ほう? まんなか?","まえに あがれたのは どんな とき? うしろには だれが いた?"],
+    tip:"まもる ときは、あいてを {がわ}の ラインへ おいだす。もらう ときは {あし}で とめると、まえが みえるよ。"}
+};
+Object.keys(ROLE).forEach(k=>[...ROLE[k].focus,...(ROLE[k].v11||[])].forEach(([id,t])=>{if(!FOCUS[id])FOCUS[id]={t,pos:k.slice(0,2)};}));
+// The DFs of a 2-3-2 are a back two (DF-2); the side DFs of a note from before v12 are side-backs (DF-S).
+const roleKey=(pos,side,shape)=>{const s=sideOf(pos,side,shape); return s?pos+(s==="C"?"-C":pos==="DF"&&isShape(shape)?"-2":"-S"):"";};
+// Left and right mirror each other: {あし} is the foot on the player's side, {はんたいあし} the other foot, {がわ} the side.
+const fillSide=(t,side)=>{const f=side==="L"?["ひだりあし","みぎあし","ひだり"]:side==="R"?["みぎあし","ひだりあし","みぎ"]:["ききあし","はんたいの あし","じぶんの がわ"];
+  return String(t).replace(/\{あし\}/g,f[0]).replace(/\{はんたいあし\}/g,f[1]).replace(/\{がわ\}/g,f[2]);};
+// A role with its words filled in for the side (kept, since it is asked for on every render). A note from before v12 (no shape)
+// counts the points its role had in v11 (v11), so what was ticked then still counts.
+const roleMemo=Object.create(null);
+const roleOf=(pos,side,shape)=>{const k=roleKey(pos,side,shape); if(!k)return null; const s=sideOf(pos,side,shape), r=ROLE[k], old=!isShape(shape)&&r.v11?1:0, m=k+s+old;
+  if(!roleMemo[m]){const f=t=>fillSide(t,s);
+    roleMemo[m]=Object.assign({},r,{n:f(r.n),d:f(r.d),note:r.note?f(r.note):"",tip:r.tip?f(r.tip):"",focus:(old?r.v11:r.focus).map(([id,t])=>[id,f(t)]),goals:r.goals.map(f),prac:r.prac.map(p=>p.map(f)),ask:r.ask.map(f)});}
+  return roleMemo[m];};
+const pointsOf=(pos,side,shape)=>{const r=roleOf(pos,side,shape); return r?r.focus:Object.prototype.hasOwnProperty.call(POSNOTE,pos)?POSNOTE[pos].focus:[];};
+// "みぎの MF" for a note, "いろいろ" for a day of several positions.
+const posLabel=(pos,side,shape)=>pos===MIX?"いろいろ":POSKEYS.includes(pos)?(roleKey(pos,side,shape)?sideName(sideOf(pos,side,shape))+"の ":"")+pos:"";
+// "みぎの MF(サイドハーフ)" when a side is picked, else the position's own name.
+const posTitle=(pos,side,shape)=>{const r=roleOf(pos,side,shape); return r?`${posLabel(pos,side,shape)}(${r.n})`:POS[pos]?POS[pos].n:"";};
+// SIDETIP follows the line of places the position has ("ひだり・みぎは だいたいの ばしょ。"). LRTIP: what changes is mostly the foot,
+// and at this age every practice is done with both feet and from both sides (JFA, U.S. Soccer, The FA, サカイク).
+const SIDETIP="どこに いても、せめも まもりも するよ。チームで ならう ことと ちがう ときは、コーチの いう ことが いちばん!",
+  LRTIP="ひだりと みぎで ちがうのは、おもに つかう あし。れんしゅうは りょうあしで、ひだりからも みぎからも やって みよう!";
+const KINDS=[["practice","れんしゅう"],["match","しあい"],["self","じしゅれん"]];
+const RESULTS=[["done","できた!"],["half","やってみた!"],["notyet","まだ"]]; // "half" was "すこしできた" until v9: trying counts
+const FACES=["😣","😕","🙂","😄","🤩"];
+// Since v9 a note can also hold the weather, the place, what was practised (or the matches played), the position played and which of its
+// points were done, what was hard and what the coach said. All of them can be left out.
+const WEATHERS=[["sun","☀️","はれ"],["cloud","☁️","くもり"],["rain","☔","あめ"],["snow","⛄","ゆき"]];
+const MENUS=[["lift","リフティング"],["dribble","ドリブル"],["pass","パス"],["trap","トラップ"],["shoot","シュート"],["duel","1たい1"],["tag","おにごっこ"],["game","ミニゲーム・しあい"],["run","はしる"],["keeper","キーパー"]];
+const MAXGAMES=5;
+const gameUsed=g=>!!(g&&(String(g.opp||"").trim()||g.gf!=null||g.ga!=null));
+// Praise the parents can put on a note with one tap. Stamps give no XP, so the game never waits for the parents' time.
+const STAMPS=[["read","👀","よんだよ!"],["nice","🔥","ナイス チャレンジ!"],["voice","📣","こえ でてたね!"],["get","⚽","もらいに いってたね!"],["run","🏃","さいごまで はしったね!"],["fun","😊","たのしそうだったね!"]];
+const STAMP={};STAMPS.forEach(x=>STAMP[x[0]]=x);
+const MAXSTAMPS=3;
+const isStamp=id=>typeof id==="string"&&Object.prototype.hasOwnProperty.call(STAMP,id);
+const stampsOf=e=>(e&&Array.isArray(e.stamps)?e.stamps:[]).filter((id,i,a)=>isStamp(id)&&a.indexOf(id)===i).slice(0,MAXSTAMPS);
+const isoOr=(v,d)=>typeof v==="string"&&Number.isFinite(Date.parse(v))?new Date(Date.parse(v)).toISOString():d;
+const RANKS=[[1,"たまご選手"],[3,"ルーキー"],[6,"レギュラー"],[10,"エース"],[15,"キャプテン"],[20,"スター"],[30,"レジェンド"]];
+const TEAMCOLORS=["#2f7bff","#ff3b4a","#ff9a1f","#a45bff","#19c9b6","#b6f000"];
+const UNLOCKS=[[2,"プロの スーツ"],[3,"あおい目"],[4,"せばんごう"],[6,"ひかる目と ひかるライン"],[10,"むらさきの目"],[12,"キャプテンマーク"],[15,"あかい目と オーラ"],[20,"ゴールドオーラと いなずま"]];
+const need=l=>40+10*(l-1); // XP from level l to l+1
+
+// Teammates join as キズナ grows (thresholds in KIZUNA), then keep getting stronger.
+const KIZUNA=[2,5,9,14,20,27,35,44,54,65];
+const HELPER=13;
+const MATES=[
+  {id:"haru",n:"ハル",pos:"MF",cat:"パスの めいじん",skill:"スルーパス",line:"するどい パスが とおった!",base:20,num:8,hair:2,hc:1,skin:0,iris:"#8a6a3a",mood:"calm"},
+  {id:"daichi",n:"ダイチ",pos:"DF",cat:"かべのような まもり",skill:"てっぺきブロック",line:"からだを はって シュートを ブロック!",base:21,num:4,hair:1,hc:5,skin:1,iris:"#4a3a2a",mood:"fierce"},
+  {id:"sora",n:"ソラ",pos:"GK",cat:"とどかない ボールは ない",skill:"スーパーセーブ",line:"よこっとびで ボールを はじいた!",base:22,num:1,hair:3,hc:2,skin:0,iris:"#2f9f7a",mood:"grin"},
+  {id:"riku",n:"リク",pos:"FW",cat:"スピードスター",skill:"かけぬけダッシュ",line:"いっきに うらへ ぬけだした!",base:23,num:11,hair:0,hc:4,skin:0,iris:"#2aa7b8",mood:"grin"},
+  {id:"yuu",n:"ユウ",pos:"MF",cat:"むじんぞうの スタミナ",skill:"ハードワーク",line:"なんども はしって ボールを ひろう!",base:24,num:6,hair:1,hc:1,skin:1,iris:"#6a5a3a",mood:"calm"},
+  {id:"gen",n:"ゲン",pos:"DF",cat:"くうちゅうせんの おう",skill:"ヘディングクリア",line:"たかい ボールを あたまで はねかえした!",base:26,num:5,hair:3,hc:5,skin:2,iris:"#3a2a1a",mood:"fierce"},
+  {id:"kai",n:"カイ",pos:"FW",cat:"まほうの ドリブラー",skill:"またぬきドリブル",line:"あいての またを ぬいて とっぱ!",base:27,num:9,hair:2,hc:6,skin:0,iris:"#5a7ae0",mood:"fierce"},
+  {id:"minato",n:"ミナト",pos:"MF",cat:"チームの しれいとう",skill:"ゲームメイク",line:"おちついて こうげきを くみたてる!",base:29,num:7,hair:0,hc:2,skin:0,iris:"#9a6a2e",mood:"calm"},
+  {id:"takuma",n:"タクマ",pos:"DF",cat:"カバーの たつじん",skill:"スライディング",line:"ぎりぎりで ボールを かきだした!",base:31,num:3,hair:2,hc:5,skin:1,iris:"#3a3a4a",mood:"calm"},
+  {id:"kento",n:"ケント",pos:"FW",cat:"ここいちばんの エース",skill:"ミドルシュート",line:"とおくから ゴールを ねらう!",base:33,num:18,hair:3,hc:3,skin:2,iris:"#8a5230",mood:"grin"}
+];
+// Later cups have more rounds, so the road gets longer without the matches having to get unfair. The ratings were fitted with a simulation of
+// one match per note: a writer who mixes self and team chips wins about two matches in three and takes the last cup after roughly 35 notes;
+// one who never picks team chips (no teammates) needs about 50.
+const roundNames=n=>n===3?["1かいせん","じゅんけっしょう","けっしょう"]:n===4?["1かいせん","2かいせん","じゅんけっしょう","けっしょう"]:["1かいせん","2かいせん","3かいせん","じゅんけっしょう","けっしょう"];
+const CUPS=[
+  {n:"ちびっこカップ",teams:[["ひまわりFC",12],["みどりキッカーズ",16],["あおぞらSC",20]],sf:"w_white",f:"h_red"},
+  {n:"まちのカップ",teams:[["川ぞいファイターズ",22],["えきまえユナイテッド",27],["山のてFC",33]],sf:"h_blue",f:"b_fire"},
+  {n:"市たいかい",teams:[["北小ウイングス",33],["みなとシーガルズ",36],["サンダーキッズ",40],["中央ブレイブス",45]],sf:"w_black",f:"b_thunder"},
+  {n:"県たいかい",teams:[["ストームライダーズ",43],["レッドコメッツ",47],["ブラックウルブズ",52],["スカイファルコンズ",58]],sf:"h_white",f:"b_ice"},
+  {n:"ぜんこく大会",teams:[["ドラゴンフレイム",55],["シルバーシャークス",58],["ファントムエイト",61],["ライジングサンズ",64],["キングレオーネ",70]],sf:"w_gold",f:"b_gold"},
+  {n:"せかい大会",teams:[["ギャラクシースターズ",65],["アイアンバイキングス",68],["サンバキングス",71],["タイタンズ",74],["ゼウスFC",80]],sf:"h_gold",f:"b_legend"}
+];
+const ITEMS={
+  w_white:{n:"しろい リストバンド",slot:"wrist",c:"#f2f4f8"},
+  h_red:{n:"あかい ヘアバンド",slot:"head",c:"#ff3b4a"},
+  h_blue:{n:"あおい ヘアバンド",slot:"head",c:"#2f7bff"},
+  b_fire:{n:"ほのおスパイク",slot:"boots",c:"#ff5a1f",dk:"#7a1500"},
+  w_black:{n:"くろい リストバンド",slot:"wrist",c:"#232a3e"},
+  b_thunder:{n:"いなずまスパイク",slot:"boots",c:"#ffe033",dk:"#2a2a2a"},
+  h_white:{n:"しろい ヘアバンド",slot:"head",c:"#f2f4f8"},
+  b_ice:{n:"アイススパイク",slot:"boots",c:"#5fe1ff",dk:"#0b4a6b"},
+  w_gold:{n:"ゴールド リストバンド",slot:"wrist",c:"#f3c531"},
+  b_gold:{n:"ゴールドスパイク",slot:"boots",c:"#f3c531",dk:"#8a6800"},
+  h_gold:{n:"チャンピオン ヘアバンド",slot:"head",c:"#f3c531"},
+  b_legend:{n:"レジェンドスパイク",slot:"boots",c:"#b26bff",dk:"#3a0e7a"}
+};
+const SLOTS=[["head","ヘアバンド"],["boots","スパイク"],["wrist","リストバンド"]];
+const EXBASE=CUPS[CUPS.length-1].teams.slice(-1)[0][1]+3; // after the last cup: an endless challenge that gets a little harder with every win
+
+function entryXP(e,prev){
+  const parts=[["ノートをかいた",20]];
+  if((e.goal||"").trim())parts.push(["めあてをきめた",10]);
+  if(e.goalResult)parts.push(["めあてをふりかえった",5]);
+  const c=Math.min((e.chips||[]).length,MAXCHIPS); if(c)parts.push(["がんばったこと ×"+c,c*3]);
+  const f=focusOf(e).length; if(f)parts.push(["ポジションの ポイント ×"+f,f*2]);
+  const g=(e.good||"").trim(); if(g){parts.push(["うまくいったこと",10]); if(g.length>=15)parts.push(["くわしく書けた",5]);}
+  if(String(e.hard||"").trim())parts.push(["むずかしかったこと",5]);
+  if(String(e.coach||"").trim())parts.push(["コーチの ことば",5]);
+  if((e.next||"").trim())parts.push(["つぎのめあて",10]);
+  if((e.parent||"").trim())parts.push(["おうちの人のコメント",10]);
+  if(prev){const d=daysBetween(prev.date,e.date); if(d>=1&&d<=4)parts.push(["つづけてかいた",5]);}
+  return parts;
+}
+// The position points a note counts: known ones, for the position the note was written for, each once.
+const focusOf=e=>{const ok=pointsOf(e.npos,e.nside,e.nshape).map(p=>p[0]); return (Array.isArray(e.focus)?e.focus:[]).filter((id,i,a)=>typeof id==="string"&&ok.includes(id)&&a.indexOf(id)===i);};
+function daysBetween(a,b){return Math.round((new Date(b+"T00:00")-new Date(a+"T00:00"))/864e5)}
+function sortEntries(list){return list.slice().sort((a,b)=>(a.date+(a.createdAt||"")).localeCompare(b.date+(b.createdAt||"")))}
+
+function compute(list){
+  const es=sortEntries(list); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
+  const per={}, chipCount={}; let kizuna=0, done=0, parentN=0;
+  es.forEach((e,i)=>{
+    const parts=entryXP(e,es[i-1]); const sum=parts.reduce((a,p)=>a+p[1],0);
+    per[e.id]={parts,sum}; xp+=sum;
+    (e.chips||[]).slice(0,MAXCHIPS).forEach(id=>{const c=CHIP[id]; if(!c)return; chipCount[id]=(chipCount[id]||0)+1; for(const k in c.s)stats[k]+=c.s[k]; if(c.team)kizuna++;});
+    if(e.goalResult==="done")done++;
+    if((e.parent||"").trim())parentN++;
+  });
+  let level=1,rest=xp; while(rest>=need(level)){rest-=need(level);level++;}
+  return {xp,level,rest,stats,per,es,chipCount,kizuna,done,parentN};
+}
+const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
+
+// Skills: do the same thing 5 times to learn it, 15 times to make it gold.
+function skillList(g){
+  const arr=CHIPS.map(c=>({id:c.id,n:c.skill,how:c.t,count:g.chipCount[c.id]||0,th:[5,15],line:c.line}));
+  arr.push({id:"keep",n:"けいぞくは力",how:"ノートをかく",count:g.es.length,th:[10,30]});
+  arr.push({id:"goal",n:"めあてハンター",how:"めあてが「できた!」",count:g.done,th:[5,15]});
+  arr.push({id:"family",n:"おうえんパワー",how:"おうちの人のコメント",count:g.parentN,th:[5,15]});
+  arr.forEach(s=>{s.lv=s.count>=s.th[1]?2:s.count>=s.th[0]?1:0; s.next=s.lv===0?s.th[0]:s.lv===1?s.th[1]:null;});
+  return arr;
+}
+function squad(g){
+  return MATES.map((m,i)=>{const th=KIZUNA[i], joined=g.kizuna>=th;
+    return Object.assign({},m,{th,joined,power:joined?m.base+Math.min(40,Math.round(4*Math.sqrt(g.kizuna-th))):0});});
+}
+function heroPower(g){const w=POS[profile.pos||"MF"].w; let s=0; for(const k in w)s+=w[k]*(g.stats[k]||0); return 12+1.8*g.level+0.6*s;}
+// 8-a-side in the team's 2-3-2.
+// The hero takes a slot in their own position (on their own side); the best teammates fill the rest; すけっと fill the gaps.
+const SHAPES={"2-3-2":["GK","DF","DF","MF","MF","MF","FW","FW"]};
+function lineup(g){
+  const pos=profile.pos||"MF", side=sideOf(pos,profile.side,TEAMSHAPE), out=SHAPES[TEAMSHAPE].map(p=>({pos:p,who:null}));
+  const at=out.map((s,i)=>s.pos===pos?i:-1).filter(i=>i>=0);
+  out[at[side==="R"?at.length-1:side==="C"?(at.length-1)>>1:0]].who={hero:true,power:heroPower(g)};
+  const pool=squad(g).filter(m=>m.joined).sort((a,b)=>b.power-a.power), used={};
+  out.forEach(s=>{if(s.who)return; const m=pool.find(m=>!used[m.id]&&m.pos===s.pos); if(m){used[m.id]=1; s.who={mate:m,power:m.power};}});
+  out.forEach(s=>{if(s.who)return; const m=pool.find(m=>!used[m.id]&&m.power*.85>HELPER); if(m){used[m.id]=1; s.who={mate:m,power:m.power*.85};} else s.who={helper:true,power:HELPER};});
+  return out;
+}
+function teamPower(g){
+  const lu=lineup(g), hero=lu.find(s=>s.who.hero).who.power, others=lu.filter(s=>!s.who.hero);
+  const avg=others.reduce((a,s)=>a+s.who.power,0)/others.length;
+  const sk=skillList(g).reduce((a,s)=>a+(s.lv===2?1.5:s.lv===1?.7:0),0);
+  // While a match is being played back the bonuses stay as they were at kick-off, so the team page does not give the result away.
+  const held=live&&!live.done, it=(held?live.prevItems:(game.items||[]).length)*.5, fire=Math.min(9,((held?live.prevLoss:game.lossStreak)||0)*3);
+  return {lu,hero,avg,sk,it,fire,total:0.3*hero+0.7*avg+sk+it+fire};
+}
+const tickets=g=>Math.max(0,g.es.length-(game.used||0));
+
+/* ---------- match simulation ---------- */
+function poisson(l){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random();}while(p>L);return k-1;}
+function simulate(g,opp){
+  const tp=teamPower(g), ratio=tp.total/opp.r;
+  const gm=Math.min(7,poisson(clamp(1.5*Math.pow(ratio,1.5),.25,4.5))), go=Math.min(7,poisson(clamp(1.5*Math.pow(1/ratio,1.5),.25,4.5)));
+  const hero=profile.name||"きみ";
+  const players=tp.lu.map(s=>s.who.hero?{n:hero,pos:s.pos,hero:true}:s.who.mate?{n:s.who.mate.n,pos:s.pos,mate:s.who.mate}:{n:"すけっと",pos:s.pos,helper:true});
+  const W={FW:3,MF:1.7,DF:.6,GK:.05}, wt=p=>W[p.pos]*(p.helper?.5:1)*(p.hero?1.3:1);
+  const pick=not=>{const c=players.filter(p=>p!==not); let r=Math.random()*c.reduce((a,p)=>a+wt(p),0); for(const p of c){r-=wt(p); if(r<=0)return p;} return c[c.length-1];};
+  const ev=[], add=(m,t,o)=>ev.push(Object.assign({m,t},o||{})), minute=()=>1+Math.floor(Math.random()*30);
+  for(let i=0;i<gm;i++){const sc=pick(null), as=pick(sc);
+    add(minute(),sc.hero?`${as.n}の パスから ${hero}が シュート! ゴール!!`:as.hero?`${hero}の パスから ${sc.n}が ゴール!`:`${as.n}から ${sc.n}へ! シュートが きまった!`,{side:"me",goal:1});}
+  for(let i=0;i<go;i++)add(minute(),rnd(["あいての シュートが きまってしまった…","カウンターから しってん…","コーナーキックから きめられた…"]),{side:"opp",goal:1});
+  const sk=skillList(g).filter(s=>s.lv>0&&s.line);
+  shuffle(sk).slice(0,3).forEach(s=>add(minute(),`【${s.n}】${s.line.replace(/\{h\}/g,hero)}`,{skill:1}));
+  shuffle(players.filter(p=>p.mate)).slice(0,2).forEach(p=>add(minute(),`${p.n}の【${p.mate.skill}】 ${p.mate.line}`,{mate:1}));
+  if(ev.length<3)add(minute(),`${hero}も ボールを おいかける!`),add(minute(),"みんなで こえを かけあって まもる!");
+  ev.sort((a,b)=>a.m-b.m);
+  const half=ev.filter(e=>e.m<=15).length;
+  ev.splice(half,0,{m:15,t:"ハーフタイム",mark:1});
+  ev.unshift({m:0,t:`キックオフ! あいては ${opp.n}`,mark:1});
+  ev.push({m:30,t:"しあい しゅうりょう!",mark:1});
+  let pk=null, win=gm>go;
+  if(gm===go){
+    const pm=clamp(.68+(g.stats.brave||0)/400,.5,.88), po=.7; let a=0,b=0,guard=0;
+    for(let i=0;i<5;i++){if(Math.random()<pm)a++; if(Math.random()<po)b++;}
+    while(a===b&&guard++<20){if(Math.random()<pm)a++; if(Math.random()<po)b++;}
+    if(a===b)a++;
+    pk=[a,b]; win=a>b;
+    ev.push({m:31,t:`どうてん! PKせん… ${a} - ${b} で ${win?"かった!":"まけた…"}`,mark:1,pk:1});
+  }
+  return {gm,go,win,pk,ev,power:tp.total};
+}
+
+/* ---------- player picture ---------- */
+// The player and the teammates are Famicom-style pixel pictures drawn by code (pixSVG) on a 24 x 40 grid of squares.
+// Every square is part of one path per colour (runs along a row), drawn with crispEdges, so the picture stays sharp at any size.
+// The markup has no ids, so any number of pictures can sit on one page.
+// The look choices in the settings. A saved profile keeps list positions, so these lists keep their order.
+// Hair art on the 16 x 16 head grid ("." empty): h hair, H shade, i light.
+const HAIRS=[
+  {n:"ツンツン",art:["..h....hh....h..","..hh..hhhh..hh..",".hhhhhhhhhhhhhhh",".hiihhhhhhhhhhH.","hhiiihhhhhhhhHHh","hhiihhhhhhhhhHHh","hhh.hhh.hhhh.HHh","hh...h......h.Hh","h.............H.","h..............H"]}, // spikes
+  {n:"みじかめ",art:["................","................","....hhhhhhhh....","..hhiihhhhhhhh..",".hiihhhhhhhhhHh.",".hihhhhhhhhhhHH.",".hhhh.hhhh.hhHH.",".hh.........hHH.",".h............H."]}, // short and round
+  {n:"ながめ",art:["................",".....hhhhhh.....","...hhhhhhhhhh...","..hiihhhhhhhhh..",".hiihhhhhhhhhHH.","hhihhhhhhhhhhHHh","hhhhh.hhhhh.hHHh","hhh...h......HHh","hhh..........HHh","hh............Hh","hh............Hh","hh............Hh",".h............H."]}, // down past the ears
+  {n:"アップバング",art:["......hhhh......","....hhiiihhh....","...hiiihhhhhh...","..hhiihhhhhhHh..",".hhhhhhhhhhhHHh.",".hhhh.....hhhHh.",".hh..........Hh.",".h...........Hh.","................"]} // front swept up
+];
+// Hair colours (c base, dk shade, hi light) and skin colours (c base, sh shade, dk dark), hand-picked for the pixel picture. The settings show c.
+const HAIRCOLORS=[
+  {c:"#2c3264",dk:"#141836",hi:"#5a70c0"},{c:"#8a4a1a",dk:"#4e2808",hi:"#c47c3a"},{c:"#f4c43a",dk:"#b88412",hi:"#fce9a4"},{c:"#c42a1a",dk:"#741008",hi:"#f26a4a"},
+  {c:"#c4c8d6",dk:"#7a7e90",hi:"#fcfcfc"},{c:"#2a2a32",dk:"#0a0a10",hi:"#60606e"},{c:"#e86a1a",dk:"#9e3a08",hi:"#f8aa5a"}
+];
+const SKINS=[{c:"#fcd6aa",sh:"#e8a676",dk:"#b8704a"},{c:"#e8b088",sh:"#c88456",dk:"#9a5a36"},{c:"#b87850",sh:"#8a5230",dk:"#5c3018"}];
+// The hero's eyes change colour as the level goes up: dark, blue, glowing blue, purple, red, then red with gold light.
+// c iris, hi bright colour, dk dark lower half. glow: the suit's light lines and bands shine; flare: a streak of light from one eye.
+const EYES=[
+  {lv:1,c:"#46506e",hi:"#8d9abb",dk:"#161c30",glow:0,flare:false},
+  {lv:3,c:"#2f7bff",hi:"#9ad8ff",dk:"#0b2a78",glow:0,flare:false},
+  {lv:6,c:"#1ea0ff",hi:"#c6f4ff",dk:"#0a3a9a",glow:1,flare:true},
+  {lv:10,c:"#a45bff",hi:"#ecd2ff",dk:"#3d1a8a",glow:1,flare:true},
+  {lv:15,c:"#ff2f3f",hi:"#ffc2a6",dk:"#7a0a18",glow:1,flare:true},
+  {lv:20,c:"#ff2f3f",hi:"#ffe27a",dk:"#7a0a18",glow:1,flare:true}
+];
+const eyeOf=l=>EYES.filter(e=>l>=e.lv).pop();
+const cmix=(a,b,t)=>"#"+[1,3,5].map(i=>{const x=parseInt(a.slice(i,i+2),16),y=parseInt(b.slice(i,i+2),16);return Math.round(x+(y-x)*t).toString(16).padStart(2,"0")}).join("");
+const eyeFrom=c=>({c,hi:cmix(c,"#ffffff",.55),dk:cmix(c,"#000000",.6),glow:0,flare:false}); // teammates keep one eye colour
+// pixSVG(o): o.level, color (team), number, hair, hairColor, skin, mood (fierce | grin | calm), gk, hero (captain band from Lv.12), fx (effects),
+// sweat (after a loss), head / wrist (item colours), boots (item), iris (a teammate's eye colour), label, crop: "" full figure, "up" to the knees, "bust" avatar.
+const pixSVG=(()=>{
+  const OL="#0c0c14", W=24, H=40, HX=4, HY=2, BY=18; // outline colour; grid size; where the 16 x 16 head and the body rows start
+  const hex=c=>/^#[0-9a-f]{6}$/i.test(c), mix=(a,b,t)=>hex(a)?cmix(a,b,t):a;
+  // Face on the head grid: s skin, S skin shade.
+  const FACE=["................","................","................",
+    "....ssssssss....","...ssssssssss...","..sssssssssssS..","..sssssssssssS..","..sssssssssssS..",
+    ".ssssssssssssSS.",".SsssssssssssSS.",".ssssssssssssSS.",
+    "..sssssssssssS..","..sssssssssssS..","...sssssssssS...","....sssssSSS....","................"];
+  // Body rows 18 to 37: j shirt, J shade, w trim, s/S skin, n/N shorts, k/K socks, b boot, B sole, o line.
+  const BODY=[
+    ".........jwwwwj.........","......jjjjjjjjjjJ.......",".....jjjjjjjjjjjjJJ.....","....jjjjjjjjjjjjjjJJ....",
+    "....wwojjjjjjjjjjoww....","....ssojjjjjjjjjjoSS....","....ssojjjjjjjjjjoSS....","....ssojjjjjjjjjJoSS....",
+    ".......nnnnnnnnnN.......",".......nnnnnnnnNN.......",".......nnnNoonnNN.......","........ss....sS........",
+    "........ww....ww........","........kk....kK........","........kk....kK........","........kk....kK........",
+    "........kK....kK........",".......bbb....bbb.......","......bbbb....bbbb......","......BBBB....BBBB......"];
+  const BALL=["..oooo..",".okwwko.","owwkkwwo","owkkkkwo","okwkkwko","owwwwwwo",".okwwko.","..oooo.."];
+  const DIG={"0":["111","101","101","101","111"],"1":["010","110","010","010","111"],"2":["111","001","111","100","111"],"3":["111","001","111","001","111"],"4":["101","101","111","001","001"],
+    "5":["111","100","111","001","111"],"6":["111","100","111","101","111"],"7":["111","001","010","010","010"],"8":["111","101","111","101","111"],"9":["111","101","111","001","111"]};
+  const runs=cells=>{const by={};cells.forEach(([x,y,c])=>{(by[c]=by[c]||[]).push([x,y]);});
+    return Object.entries(by).map(([c,ps])=>{ps.sort((a,b)=>a[1]-b[1]||a[0]-b[0]);let d="",i=0;
+      while(i<ps.length){let j=i;while(j+1<ps.length&&ps[j+1][1]===ps[i][1]&&ps[j+1][0]===ps[j][0]+1)j++;d+=`M${ps[i][0]} ${ps[i][1]}h${j-i+1}v1h-${j-i+1}z`;i=j+1;}
+      return `<path fill="${c}" d="${d}"/>`;}).join("");};
+  return function pixSVG(o){
+    const level=Math.max(1,+o.level||1), team=hex(o.color)?o.color:TEAMCOLORS[0], pro=level>=2, gk=!!o.gk&&pro;
+    const crop=o.crop==="bust"||o.crop==="up"?o.crop:"", fx=o.fx!==false&&crop!=="bust";
+    const hc=HAIRCOLORS[o.hairColor||0]||HAIRCOLORS[0], sk=SKINS[o.skin||0]||SKINS[0], eye=o.iris?eyeFrom(o.iris):eyeOf(level);
+    const jer=!pro?"#aab0c0":gk?"#22a046":team, dark=mix(jer,"#000000",.38);
+    const pal={o:OL,s:sk.c,S:sk.sh,h:hc.c,H:hc.dk,i:hc.hi,j:jer,J:dark,w:gk?"#ffd34f":"#fcfcfc",
+      n:!pro?"#4a5068":gk?"#343c58":"#fcfcfc",N:!pro?"#2c3044":gk?"#222840":"#b8bfd0",
+      k:!pro?"#fcfcfc":jer,K:!pro?"#b8bfd0":dark,b:o.boots?o.boots.c:"#f0f2f8",B:o.boots?(o.boots.dk||"#0b1022"):"#7f8798"};
+    const g=[...Array(H)].map(()=>Array(W).fill(""));
+    const put=(x,y,c)=>{if(x>=0&&y>=0&&x<W&&y<H&&c)g[y][x]=c;}, F=(x,y,c)=>put(HX+x,HY+y,c);
+    const draw=(rows,ox,oy)=>rows.forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch!==".")put(ox+x,oy+y,pal[ch]);}));
+    draw(BODY,0,BY);
+    if(gk)for(let y=BY+5;y<=BY+7;y++){put(4,y,"#f4f5f8");put(5,y,y<BY+7?"#f4f5f8":"#c9cfdd");put(18,y,"#f4f5f8");put(19,y,"#c9cfdd");} // keeper gloves
+    draw(FACE,HX,HY); draw((HAIRS[o.hair||0]||HAIRS[0]).art,HX,HY);
+    // a one-square outline all round
+    const filled=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&g[y][x]!=="";
+    const ring=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(!filled(x,y)&&(filled(x-1,y)||filled(x+1,y)||filled(x,y-1)||filled(x,y+1)))ring.push([x,y]);
+    ring.forEach(([x,y])=>g[y][x]=OL);
+    // face: brows by mood, eyes in the level's colour, mouth
+    const mood=o.mood||"fierce", brow=hc.dk;
+    if(mood==="fierce")[[3,7],[4,7],[5,8],[12,7],[11,7],[10,8]].forEach(([x,y])=>F(x,y,brow));
+    else if(mood==="grin")[[3,7],[4,6],[5,6],[12,7],[11,6],[10,6]].forEach(([x,y])=>F(x,y,brow));
+    else [[4,7],[5,7],[10,7],[11,7]].forEach(([x,y])=>F(x,y,brow));
+    for(const ex of [4,10]){F(ex,9,OL);F(ex+1,9,OL);F(ex,10,eye.c);F(ex+1,10,"#ffffff");F(ex,11,eye.dk);F(ex+1,11,eye.c);}
+    const lip="#5a2014";
+    if(mood==="grin"){F(6,12,lip);F(7,13,lip);F(8,13,"#ffffff");F(9,13,lip);F(10,12,lip);}
+    else if(mood==="calm"){F(7,13,sk.dk);F(8,13,sk.dk);}
+    else{F(7,13,lip);F(8,13,lip);F(9,12,lip);}
+    // the back number from Lv.4 (not in the small avatar), light lines from the glowing eyes, items, the captain band, sweat after a loss
+    const num=level>=4&&crop!=="bust"?String(o.number||"10").replace(/\D/g,"").slice(0,2):"";
+    if(num){const ds=[...num],x0=12-Math.ceil((ds.length*4-1)/2);ds.forEach((d,i)=>DIG[d].forEach((r,y)=>[...r].forEach((b,x)=>{if(b==="1")put(x0+i*4+x,BY+1+y,gk?"#ffd34f":"#ffffff");})));}
+    if(fx&&pro&&eye.glow>0){const gl=mix(gk?"#ffd34f":jer,"#ffffff",.42);for(let y=BY+2;y<=BY+7;y++){put(7,y,gl);put(16,y,mix(jer,"#ffffff",.18));}
+      [4,5,18,19].forEach(x=>put(x,BY+4,eye.hi));[8,9,14,15].forEach(x=>put(x,BY+12,eye.hi));}
+    if(o.wrist)[4,5,18,19].forEach(x=>put(x,BY+5,o.wrist));
+    if(o.hero&&level>=12){put(4,BY+3,"#ffd34f");put(5,BY+3,"#ffd34f");}
+    if(o.head){const hb=o.head,hd=mix(hb,"#000000",.35);for(let x=1;x<=14;x++){F(x,5,hb);F(x,6,x>=13?hd:hb);}F(0,6,hb);F(0,7,hb);F(-1,8,hb);F(0,8,hd);F(-1,9,hd);}
+    if(o.sweat){[[15,3],[14,4],[16,4],[13,5],[16,5],[13,6],[16,6],[14,7],[15,7]].forEach(([x,y])=>F(x,y,OL));F(15,4,"#bfe9ff");F(14,5,"#ffffff");F(15,5,"#5fc2ff");F(14,6,"#5fc2ff");F(15,6,"#2f8fe0");}
+    const cells=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(g[y][x])cells.push([x,y,g[y][x]]);
+    // effects drawn outside the figure: the streak of light from one eye, the aura (Lv.15, gold from Lv.20) with tips that flicker between two frames, lightning (Lv.20)
+    const flare=fx&&eye.flare?[[12,10,"#ffffff"],[13,10,eye.hi],[13,9,eye.hi],[14,9,eye.c],[15,8,eye.c],[16,8,eye.hi],[17,7,eye.hi]].map(([x,y,c])=>[HX+x,HY+y,c]):[];
+    let aura="", bolts="";
+    if(fx&&level>=15){const gold=level>=20, c1=gold?"#ffd34f":team, c2=gold?"#fff2a8":mix(team,"#ffffff",.5), a1=[], a2=[], a3=[];
+      for(let y=0;y<38;y++)for(let x=0;x<W;x++)if(!g[y][x]&&!(y>=BY+11&&x>=11&&x<=12)){let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(filled(x+dx,y+dy))n++;if(n)a1.push([x,y,c1]);}
+      [[5,1],[9,0],[13,1],[17,2],[3,9],[20,6],[2,15],[21,14]].forEach(([x,y])=>{if(!g[y][x])a2.push([x,y,c2]);});
+      [[7,0],[11,1],[15,0],[19,4],[2,11],[21,10],[3,18],[20,17]].forEach(([x,y])=>{if(!g[y][x])a3.push([x,y,c2]);});
+      aura=`<g opacity=".9">${runs(a1)}</g><g class="pxf1">${runs(a2)}</g><g class="pxf2">${runs(a3)}</g>`;}
+    if(fx&&level>=20){const b=[], bolt=(x,y)=>[[2,0],[1,1],[2,1],[0,2],[1,2],[1,3],[2,3],[0,4],[1,4],[0,5]].forEach(([dx,dy])=>b.push([x+dx,y+dy,"#ffe27a"]));bolt(0,9);bolt(21,15);bolts=`<g class="pxf1">${runs(b)}</g>`;}
+    const ball=[];if(!crop)BALL.forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch!==".")ball.push([16+x,30+y,ch==="w"?"#f4f6fa":ch==="k"?"#141829":OL]);}));
+    const shadow=crop?"":`<path fill="#000000" fill-opacity=".32" d="M6 38h17v1h-17z"/>`;
+    // Frames: the avatar is 8:9 and fills its box; the others are 3:5. Room above the head keeps the hair clear of the card's zoom button on wide screens.
+    const vb=crop==="bust"?"4 2 16 18":crop==="up"?"2 -3.333 20 33.333":"-1.5 -4 27 45";
+    const label=esc(o.label||(crop==="bust"?"せんしゅ":"レベル"+level+"のせんしゅ"));
+    return `<svg class="pix" viewBox="${vb}" role="img" aria-label="${label}" shape-rendering="crispEdges"${crop==="bust"?` preserveAspectRatio="xMidYMin slice"`:""}>${aura}${shadow}<g class="pxfig">${runs(cells)}</g>${runs(ball)}${runs(flare)}${bolts}</svg>`;
+  };
+})();
+function itemIcon(it){const c=it.c;
+  if(it.slot==="head")return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M5 9L1 15 4 17 7 12Z" fill="${c}" stroke="#070914"/><path d="M4 8Q14 2 25 8V13Q14 7 4 13Z" fill="${c}" stroke="#070914"/></svg>`;
+  if(it.slot==="boots")return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M5 3H12L14 9 24 12Q26 13 26 16H4Q3 9 5 3Z" fill="${c}" stroke="#070914"/><path d="M4 16H26V18.5H4Z" fill="${it.dk||"#070914"}"/></svg>`;
+  return `<svg viewBox="0 0 28 20" aria-hidden="true"><rect x="7" y="4" width="14" height="12" rx="3" fill="${c}" stroke="#070914"/><path d="M7 8H21M7 12H21" stroke="#070914" stroke-opacity=".3"/></svg>`;}
+const TROPHY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v5a5 5 0 0 1-10 0zM7 4H3v1.5A3.5 3.5 0 0 0 6.5 9H7M17 4h4v1.5A3.5 3.5 0 0 1 17.500 9H17M11 13h2v4h-2zM8 17h8v3.500H8z" fill="#ffd34f" stroke="#8a6800" stroke-width="1.1" stroke-linejoin="round"/></svg>';
+
+/* ---------- storage ---------- */
+const newGame=()=>({cup:0,round:0,used:0,lossStreak:0,exWins:0,items:[],equip:{},trophies:[],log:[]});
+let entries=[], profile={name:"",number:"10",team:"",color:TEAMCOLORS[0],pos:"",side:"",hair:0,hairColor:0,skin:0}, game=newGame(), mode="loading", db=null, profReady=false, gameReady=false;
+// mode: "loading" | "slow" (store not answering yet) | "db" | "local" (this browser only) | "error" (store listener died)
+const loaded=()=>mode==="db"||mode==="local";
+const LS="soccer-note-v1";
+// Saved looks are used as list positions and colours, so anything unexpected falls back to the first choice. The number is kept to two digits, the room it has on the suit.
+// v7 also saved a picture style (pixel or anime); there is one style now, so it is dropped.
+function cleanProfile(p){const pick=(v,n)=>Number.isInteger(v)&&v>=0&&v<n?v:0;
+  p.number=String(p.number==null?"":p.number).replace(/\D/g,"").slice(0,2)||"10";
+  p.hair=pick(p.hair,HAIRS.length);p.hairColor=pick(p.hairColor,HAIRCOLORS.length);p.skin=pick(p.skin,SKINS.length);
+  if(!TEAMCOLORS.includes(p.color))p.color=TEAMCOLORS[0]; if(!POSKEYS.includes(p.pos))p.pos="";
+  // v12: the team plays 2-3-2, so the middle a FW or DF could pick in v11 is let go (the notes written then keep it).
+  p.side=sideOf(p.pos,p.side,TEAMSHAPE); delete p.shape; delete p.style;
+  // The town for the weather (set by the parents, outside Claude only): a name and a position rounded to about a kilometre.
+  const w=p.wx; if(w&&typeof w==="object"&&Number.isFinite(w.lat)&&Number.isFinite(w.lon)&&Math.abs(w.lat)<=90&&Math.abs(w.lon)<=180)
+    p.wx={n:typeof w.n==="string"?w.n.slice(0,30):"",a:typeof w.a==="string"?w.a.slice(0,20):"",lat:Math.round(w.lat*100)/100,lon:Math.round(w.lon*100)/100};
+  else delete p.wx;
+  // The goal picked on home for the next practice or match (a newer note's next goal takes over from it).
+  const c=p.chal; if(c&&typeof c==="object"&&typeof c.t==="string"&&c.t.trim()&&isoOr(c.at,""))p.chal={t:c.t.trim().slice(0,40),at:isoOr(c.at,"")};
+  else delete p.chal;
+  return p;}
+function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");entries=d.entries||[];if(d.profile)profile=cleanProfile(Object.assign(profile,d.profile));if(d.game)game=Object.assign(newGame(),d.game);}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify({entries,profile,game}));return true;}catch(e){return false;}}
+const lsOK=(()=>{try{localStorage.setItem(LS+"-t","1");localStorage.removeItem(LS+"-t");return true;}catch(e){return false;}})();
+
+/* ---------- backup (for parents): the notes as a file or a code, and back ---------- */
+// The copy of this page that is published outside Claude carries this meta tag. There the notes live only in this browser,
+// so the page offers a file to keep, asks the browser to keep its data, and reminds the parents when no backup is recent.
+const STANDALONE=!!document.querySelector('meta[name="soccer-note-standalone"]');
+const IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+// On iPad and iPhone a page added to the Home Screen keeps its own data, apart from Safari. Opened in a Safari tab it starts another, empty notebook that Safari may clear.
+const IOS_TAB=STANDALONE&&IOS&&!(navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches));
+if(STANDALONE&&navigator.storage&&navigator.storage.persisted&&navigator.storage.persist)navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{});
+const BK="soccer-note-backup-at";
+let bkOpen=false, bkPaste=false, bkData=null, bkBusy=false, bkMsg="", bkShow="";
+const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+const localDay=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+function bkLast(){try{const v=localStorage.getItem(BK)||"";return isNaN(Date.parse(v))?"":v;}catch(e){return "";}}
+function bkMark(at){const t=Math.min(Date.parse(at),Date.now()), cur=Date.parse(bkLast());if(isNaN(t)||(!isNaN(cur)&&t<=cur))return;try{localStorage.setItem(BK,new Date(t).toISOString());}catch(e){}}
+// Due when a note is missing from the last backup and that backup (or, without one, the oldest note) is two weeks old.
+function bkDue(){
+  if(!STANDALONE||!entries.length)return false;
+  const ts=entries.map(e=>Date.parse(e.createdAt||e.date+"T12:00:00")).filter(t=>!isNaN(t)); if(!ts.length)return false;
+  const last=Date.parse(bkLast()); if(!isNaN(last)&&Math.max(...ts)<=last)return false;
+  return Date.now()-(isNaN(last)?Math.min(...ts):last)>=14*864e5;
+}
+const backupJSON=()=>JSON.stringify({app:"soccer-note",v:1,at:new Date().toISOString(),entries:sortEntries(entries),profile,game});
+// A backup is read field by field, so a damaged or edited file cannot put anything odd into the notes, the player or the game.
+// The v9 fields, read field by field: only known choices, small whole numbers and short texts.
+function noteExtras(x){
+  const s=(v,n)=>typeof v==="string"?v.slice(0,n):"", n2=v=>Number.isInteger(v)&&v>=0&&v<=99?v:null;
+  const ids=(v,ok)=>(Array.isArray(v)?v:[]).filter((id,i,a)=>typeof id==="string"&&ok(id)&&a.indexOf(id)===i);
+  const npos=POSKEYS.includes(x.npos)||x.npos===MIX?x.npos:"", nshape=isShape(x.nshape)?x.nshape:"", nside=sideOf(npos,x.nside,nshape);
+  return {weather:WEATHERS.some(w=>w[0]===x.weather)?x.weather:"",temp:Number.isFinite(x.temp)&&x.temp>=-50&&x.temp<=60?Math.round(x.temp):null,
+    place:s(x.place,20),menu:ids(x.menu,id=>MENUS.some(m=>m[0]===id)),
+    games:(Array.isArray(x.games)?x.games:[]).filter(g=>g&&typeof g==="object").slice(0,20).map(g=>({opp:s(g.opp,20),gf:n2(g.gf),ga:n2(g.ga)})),
+    npos,nside,nshape,focus:focusOf({npos,nside,nshape,focus:x.focus}).slice(0,pointsOf(npos,nside,nshape).length),
+    hard:s(x.hard,200),coach:s(x.coach,200),stamps:stampsOf(x),stampAt:isoOr(x.stampAt,""),parentAt:isoOr(x.parentAt,"")};
+}
+function cleanEntry(x){
+  if(!x||typeof x!=="object"||typeof x.id!=="string"||!/^[A-Za-z0-9_-]{1,40}$/.test(x.id))return null;
+  if(typeof x.date!=="string"||!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(x.date))return null;
+  const s=(v,n)=>typeof v==="string"?v.slice(0,n):"", chips=[];
+  (Array.isArray(x.chips)?x.chips:[]).forEach(id=>{if(CHIPS.some(c=>c.id===id)&&!chips.includes(id)&&!chipFull({chips},!!CHIP[id].team))chips.push(id);});
+  const e={id:x.id,date:x.date,kind:KINDS.some(k=>k[0]===x.kind)?x.kind:"practice",goal:s(x.goal,40),goalResult:RESULTS.some(r=>r[0]===x.goalResult)?x.goalResult:"",
+    chips,fun:[1,2,3,4,5].includes(x.fun)?x.fun:0,good:s(x.good,300),next:s(x.next,40),parent:s(x.parent,300)};
+  Object.assign(e,noteExtras(x)); e.games=e.games.filter(gameUsed).slice(0,MAXGAMES); // empty rows go first, so they never push a real game out
+  if(typeof x.createdAt==="string"&&x.createdAt.length<=40&&!isNaN(Date.parse(x.createdAt)))e.createdAt=x.createdAt;
+  return e;
+}
+function cleanGame(x){
+  const n=(v,hi)=>Number.isInteger(v)&&v>=0&&v<=hi?v:0, g=newGame();
+  g.cup=n(x.cup,CUPS.length); g.round=g.cup<CUPS.length?n(x.round,CUPS[g.cup].teams.length-1):0;
+  g.used=n(x.used,1e6); g.lossStreak=n(x.lossStreak,1e6); g.exWins=n(x.exWins,1e6);
+  g.items=(Array.isArray(x.items)?x.items:[]).filter((id,i,a)=>typeof id==="string"&&own(ITEMS,id)&&a.indexOf(id)===i);
+  if(x.equip&&typeof x.equip==="object")Object.keys(x.equip).forEach(k=>{const id=x.equip[k];if(g.items.includes(id))g.equip[ITEMS[id].slot]=id;});
+  g.trophies=(Array.isArray(x.trophies)?x.trophies:[]).filter((t,i,a)=>Number.isInteger(t)&&t>=0&&t<CUPS.length&&a.indexOf(t)===i);
+  g.log=(Array.isArray(x.log)?x.log:[]).filter(l=>l&&typeof l==="object").slice(0,12).map(l=>{const k=v=>Number.isInteger(v)&&v>=0&&v<100?v:0;
+    return {t:Number.isFinite(l.t)?l.t:0,opp:typeof l.opp==="string"?l.opp.slice(0,30):"",gm:k(l.gm),go:k(l.go),pk:Array.isArray(l.pk)&&l.pk.length===2?[k(l.pk[0]),k(l.pk[1])]:null,win:l.win===true};});
+  return g;
+}
+function cleanBackupProfile(x){const s=(v,n)=>typeof v==="string"?v.trim().slice(0,n):"";
+  return cleanProfile({name:s(x.name,12),number:x.number,team:s(x.team,12),color:x.color,pos:x.pos,side:x.side,hair:x.hair,hairColor:x.hairColor,skin:x.skin,wx:x.wx,chal:x.chal});}
+function bkParse(text){
+  let d; try{d=JSON.parse(String(text||"").trim());}catch(e){return null;}
+  if(!d||typeof d!=="object"||d.app!=="soccer-note"||!Array.isArray(d.entries))return null;
+  const list=[], ids=new Set();
+  d.entries.slice(0,5000).forEach(x=>{const e=cleanEntry(x);if(e&&!ids.has(e.id)){ids.add(e.id);list.push(e);}});
+  return {at:typeof d.at==="string"&&d.at.length<=40&&!isNaN(Date.parse(d.at))?d.at:"",entries:list,given:d.entries.length,
+    profile:d.profile&&typeof d.profile==="object"?cleanBackupProfile(d.profile):null,game:d.game&&typeof d.game==="object"?cleanGame(d.game):null};
+}
+// Restoring never deletes: notes are added by id, the match record that got further is kept, and the player's look comes back only if none is set yet.
+function bkPlan(d){
+  const have=new Set(entries.map(e=>e.id)), add=d.entries.filter(e=>!have.has(e.id));
+  const key=g=>[g.cup,g.round,(g.trophies||[]).length,g.exWins||0,(g.items||[]).length,g.used||0];
+  const ahead=(a,b)=>{const x=key(a),y=key(b);for(let i=0;i<x.length;i++)if(x[i]!==y[i])return x[i]>y[i];return false;};
+  return {add,useGame:!!d.game&&ahead(d.game,game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+let gameQ=Promise.resolve(), gameBusy=0;
+const store={
+  async add(e){if(db){await db.collection("entries").doc(e.id).set(e);}else{entries=entries.filter(x=>x.id!==e.id).concat([e]);lsSave();}},
+  async update(id,patch){if(db){await db.doc("entries/"+id).update(patch);} const x=entries.find(x=>x.id===id); if(x)Object.assign(x,patch); if(!db)lsSave();},
+  async remove(id){if(db){await db.doc("entries/"+id).delete();} entries=entries.filter(x=>x.id!==id); if(!db)lsSave();},
+  async setProfile(p){profile=cleanProfile(Object.assign({},profile,p));if(db){await db.doc("profile/main").set(profile);}else lsSave();},
+  // One write at a time to game/main, each with its own copy of the state.
+  setGame(){
+    if(!db){lsSave();return Promise.resolve();}
+    const body=JSON.parse(JSON.stringify(game)); gameBusy++;
+    const p=gameQ.then(()=>db.doc("game/main").set(body));
+    gameQ=p.catch(()=>{}).then(()=>{gameBusy--;});
+    return p;
+  }
+};
+
+/* ---------- voice input (dictation) ---------- */
+const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+let dict=null, dictReady=false, dictHidden=false, dictState="idle", dictTarget=null, dictLang="ja", dictPartial="";
+let sess=0, sessHandled=-1, sessLang="", startPending=false, noticeTimer=null;
+const FIELD_NAMES={"f-goal":"きょうの めあて","f-good":"うまくいったこと","f-hard":"むずかしかったこと","f-coach":"コーチに いわれたこと・ほめられたこと","f-next":"つぎの めあて","f-parent":"おうちの人から"};
+function micBtn(id){
+  if(!dict||dictHidden)return "";
+  return `<button type="button" class="mic" data-mic="${id}" aria-pressed="${dictState!=="idle"&&dictTarget===id}" aria-label="こえで入力">${MIC}</button>`;
+}
+function voiceHint(){
+  if(dict&&!dictHidden)return `<p class="muted">マイクの ボタンを おすと、こえで かけるよ。</p>`;
+  if(dictReady)return `<p class="muted">こえで かきたいときは、キーボードの マイク(🎤)を おして はなしてね。</p>`;
+  return "";
+}
+function updateVoiceUI(){
+  document.querySelectorAll("[data-mic]").forEach(b=>b.setAttribute("aria-pressed",String(dictState!=="idle"&&b.dataset.mic===dictTarget)));
+  const bar=document.getElementById("voicebar"), txt=document.getElementById("vtext"), stop=document.getElementById("vstop");
+  if(dictState==="idle"){bar.classList.remove("live");stop.hidden=true;if(!noticeTimer)bar.hidden=true;return;}
+  clearTimeout(noticeTimer);noticeTimer=null;
+  bar.hidden=false;stop.hidden=false;bar.classList.add("live");
+  txt.textContent=dictState==="starting"?"マイクを じゅんび中…":dictState==="finishing"?"かきとり中…":(dictPartial||`きいています…「${FIELD_NAMES[dictTarget]||"おうちの人コメント"}」に かくよ`);
+}
+function voiceNotice(msg){
+  const bar=document.getElementById("voicebar");
+  document.getElementById("vtext").textContent=msg;document.getElementById("vstop").hidden=true;
+  bar.classList.remove("live");bar.hidden=false;
+  clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>{noticeTimer=null;if(dictState==="idle")bar.hidden=true;},5000);
+}
+function voiceEnded(code,lang){
+  if(code==="stopped"||code==="viewer_stopped"||code==="hidden")return;
+  if(code==="not_granted"){dictHidden=true;render();voiceNotice("マイクが つかえない せっていです。キーボードで かいてね。");}
+  else if(code==="unavailable"){
+    if(lang){dictLang="";voiceNotice("もういちど マイクを おしてね。");}
+    else{dictHidden=true;render();voiceNotice("ここでは こえの入力が つかえません。キーボードで かいてね。");}
+  }
+  else if(code==="dismissed")voiceNotice("マイクを もういちど おすと ためせるよ。");
+  else if(code==="rate_limited")voiceNotice("すこし まってから もういちど ためしてね。");
+  else if(code==="time_limit")voiceNotice("じかんが ながくなったので とめました。");
+  else voiceNotice("うまく ききとれませんでした。もういちど ためしてね。");
+}
+// Must run synchronously inside the click: dictation.start() needs the viewer's gesture.
+function toggleMic(id){
+  if(!dict||dictHidden||dictState==="finishing")return;
+  if(dictState!=="idle"){
+    if(dictTarget===id)dict.stop().catch(()=>{});
+    else{dictTarget=id;dictPartial="";updateVoiceUI();} // keep listening, write into the other field
+    return;
+  }
+  dictTarget=id;dictPartial="";sess++;const my=sess,lang=dictLang;sessLang=lang;startPending=true;
+  let p;try{p=lang?dict.start({language:lang}):dict.start();}catch(err){p=Promise.reject(err);}
+  Promise.resolve(p).then(()=>{startPending=false;},err=>{startPending=false;if(sessHandled!==my){sessHandled=my;voiceEnded((err&&err.code)||"upstream_error",lang);}});
+}
+async function stopVoice(){if(dict&&dictState!=="idle"){try{await dict.stop();}catch(e){}}}
+function wireDictation(d){
+  dict=d;
+  d.onState(({state,reason})=>{
+    dictState=state;
+    if(state==="idle"){dictPartial="";updateVoiceUI();if(reason&&!startPending&&sessHandled!==sess){sessHandled=sess;voiceEnded(reason,sessLang);}}
+    else updateVoiceUI();
+  });
+  d.onPartial(({text})=>{dictPartial=text||"";updateVoiceUI();});
+  d.onFinal(({text})=>{
+    dictPartial="";
+    const el=dictTarget&&document.getElementById(dictTarget);
+    if(el&&text){
+      const v=el.value;let t=text;
+      if(!v||/[^\x00-\x7f]$/.test(v))t=t.replace(/^\s+/,""); // Japanese needs no joining space
+      el.value=(v+t).slice(0,el.maxLength>0?el.maxLength:1000);
+      el.dispatchEvent(new Event("input",{bubbles:true}));
+    }
+    updateVoiceUI();
+  });
+}
+
+/* ---------- weather (the copy outside Claude only) ---------- */
+// Inside Claude the page cannot reach other sites, so there the weather is a tap. The Home Screen copy asks Open-Meteo (no key needed; data
+// CC BY 4.0, credited wherever it is shown) about the note's day at the town the parents chose. Only that town's position and the date are sent.
+const WX_ON=STANDALONE&&typeof fetch==="function";
+const WXCREDIT='<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>';
+let wx={key:"",st:""}, wxpOpen=false, wxHits=null, wxMsg="", wxBusy=false; // wx.st: "busy" | "ok" | "fail" for the day in wx.key
+const wxKey=d=>profile.wx&&d?profile.wx.lat+","+profile.wx.lon+","+d.date:"";
+// WMO weather codes: 0-2 clear to partly cloudy, 3 overcast, 45 and 48 fog, 71-77 and 85-86 snow; the rest is drizzle, rain, showers or thunder.
+const wxCat=c=>c<=2?"sun":c<=48?"cloud":(c>=71&&c<=77)||c===85||c===86?"snow":"rain";
+// One word for the day from the hours 9:00 to 18:00, when practice and matches happen: two wet hours make it あめ (or ゆき),
+// otherwise the more common of はれ and くもり. The temperature is the highest in those hours.
+function wxDay(h){
+  const n={sun:0,cloud:0,rain:0,snow:0}, tm=Array.isArray(h.time)?h.time:[], wc=h.weather_code||[], tc=h.temperature_2m||[]; let t=null;
+  tm.forEach((x,i)=>{const hr=+String(x).slice(11,13); if(!(hr>=9&&hr<=18))return;
+    if(Number.isFinite(wc[i]))n[wxCat(wc[i])]++; if(Number.isFinite(tc[i]))t=t==null?tc[i]:Math.max(t,tc[i]);});
+  const wet=n.rain+n.snow, any=wet+n.sun+n.cloud;
+  return {w:!any?"":wet>=2?(n.snow>=n.rain?"snow":"rain"):n.sun>=n.cloud?"sun":"cloud",t:t==null?null:Math.round(t)};
+}
+async function wxJSON(url){
+  const ctl=typeof AbortController==="function"?new AbortController():null, timer=setTimeout(()=>{if(ctl)ctl.abort();},10000);
+  try{const r=await fetch(url,{signal:ctl?ctl.signal:undefined,referrerPolicy:"no-referrer",credentials:"omit"}); if(!r.ok)throw new Error("http "+r.status); return await r.json();}
+  finally{clearTimeout(timer);}
+}
+// The forecast service answers for about three months back, which covers notes written on the day or soon after; older days are tapped.
+const WX_RECENT=85;
+const wxURL=date=>"https://api.open-meteo.com/v1/forecast?latitude="+profile.wx.lat+"&longitude="+profile.wx.lon+"&hourly=weather_code,temperature_2m&timezone=auto&start_date="+date+"&end_date="+date;
+const wxOld=d=>daysBetween(d.date,today())>WX_RECENT;
+function wxMaybe(){
+  const d=draft;
+  // A lookup made for another town (changed or removed in the settings) no longer belongs to this note.
+  if(d&&d.wxFor&&d.wxFor!==wxKey(d)){d.temp=null; d.wxFor=""; if(!d.wxHand)d.weather=""; keepDraft(); wxShow();}
+  if(!WX_ON||!profile.wx||!d||tab!=="write"||!/^\d{4}-\d\d-\d\d$/.test(d.date||"")||d.date>today()||wxOld(d))return;
+  const key=wxKey(d); if(d.wxFor===key)return; // filled already
+  // This day and town was asked already: use that answer (a second note on the same day, or a date changed and changed back).
+  // While it is being asked, wait; when it failed, the button asks again.
+  if(wx.key===key){if(wx.st==="ok"&&wx.r){wxApply(d,key,wx.r); wxShow();} return;}
+  const date=d.date; wx={key,st:"busy"}; wxShow();
+  wxJSON(wxURL(date)).then(j=>{
+    if(wx.key!==key)return; const r=j&&j.hourly&&typeof j.hourly==="object"?wxDay(j.hourly):{w:"",t:null};
+    wx.st=r.w?"ok":"fail"; if(r.w)wx.r=r;
+    if(r.w&&draft&&wxKey(draft)===key&&draft.wxFor!==key)wxApply(draft,key,r);
+    wxShow();
+  },()=>{if(wx.key!==key)return; wx.st="fail"; wxShow();});
+}
+// Puts a looked-up day into the draft: the temperature always, the weather unless it was picked by hand.
+function wxApply(d,key,r){d.temp=r.t; if(!d.wxHand)d.weather=r.w; d.wxFor=key; if(d===draft)keepDraft();}
+// The temperature belongs to the note's day, and so does the weather unless it was picked by hand, so a new date asks again.
+function wxDateChanged(){if(!draft)return; draft.temp=null; draft.wxFor=""; if(!draft.wxHand)draft.weather=""; wxShow(); wxMaybe();}
+function wxShow(){const el=$("#wxField"); if(el&&draft&&tab==="write"){el.outerHTML=wxField(draft);}}
+function wxField(d){
+  let info="";
+  if(WX_ON&&profile.wx){
+    const k=wxKey(d);
+    if(d.temp!=null&&d.wxFor===k)info=`きおん ${d.temp}℃(${esc(profile.wx.n)})。ちがったら タップで なおしてね。 てんきの データ:${WXCREDIT}`;
+    else if(/^\d{4}-\d\d-\d\d$/.test(d.date||"")&&wxOld(d))info="ずっと まえの 日なので、てんきは タップで えらんでね。";
+    else if(wx.key===k&&wx.st==="busy")info="てんきを しらべています…";
+    else if(wx.key===k&&wx.st==="fail")info=`てんきを しらべられませんでした。タップで えらんでね。<button type="button" class="ghost mini" id="wxRetry">もういちど しらべる</button>`;
+  }else if(WX_ON)info="おうちの人が「せってい」で まちを えらぶと、てんきと きおんが じどうで はいるよ。";
+  return `<div class="field" id="wxField"><span class="q">てんき</span>${seg("weather",WEATHERS.map(([v,e,t])=>[v,e+" "+t]),d.weather)}${info?`<p class="muted">${info}</p>`:""}</div>`;
+}
+// The settings part, for the parents: pick the town once.
+function wxPanel(){
+  const head=`<section class="panel"><details class="more" id="wxp"${wxpOpen?" open":""}><summary>おうちの人へ:てんきの じどう入力</summary><div class="bk">`;
+  if(!WX_ON)return head+`<p class="muted">ノートの 日の てんきと きおんを じどうで いれる きのうは、iPad の ホーム画面に いれた サッカーノートで つかえます。ここでは てんきを タップで えらびます。</p></div></details></section>`;
+  const w=profile.wx;
+  return head+`<p class="muted">すんでいる まちを えらぶと、ノートの 日の てんきと きおんが じどうで はいります。てんきの サービス(Open-Meteo)には、えらんだ まちの いちと 日づけだけを おくります。</p>
+  ${w?`<p><b>いまの まち:${esc(w.n)}${w.a?`(${esc(w.a)})`:""}</b></p><div class="row"><button class="ghost" id="wx-off" type="button">じどう入力を やめる</button></div><h3>まちを かえる</h3>`:"<h3>まちを えらぶ</h3>"}
+  <div class="row"><input type="text" id="wx-q" maxlength="30" placeholder="れい:横浜、世田谷区" aria-label="まちの なまえ" style="flex:1 1 12em;width:auto"><button class="ghost" id="wx-find" type="button"${wxBusy?" disabled":""}>さがす</button></div>
+  ${wxHits&&wxHits.length?`<div class="chips" id="wxHits">${wxHits.map((h,i)=>`<button type="button" data-wxi="${i}">${esc(h.n)}${h.a?`(${esc(h.a)})`:""}</button>`).join("")}</div>`:""}
+  <p class="bkmsg" id="wxmsg" role="status"${wxMsg?"":" hidden"}>${esc(wxMsg)}</p>
+  <p class="muted">てんきの データ:${WXCREDIT}(CC BY 4.0)。まちの データ:GeoNames(open-meteo.com の けんさく)。</p></div></details></section>`;
+}
+async function wxFind(){
+  const el=$("#wx-q"), q=String(el?el.value:"").trim();
+  if(q.length<2){wxMsg="まちの なまえを 2もじ いじょうで いれてください。";render();return;}
+  wxBusy=true; wxHits=null; wxMsg="さがしています…"; render();
+  try{
+    // A name of two characters (府中, 横浜) only finds exact matches, so without a hit the search tries it again with 市, 区 and 町.
+    const tries=[q].concat(/[市区町村]$/.test(q)?[]:[q+"市",q+"区",q+"町"]);
+    for(const t of tries){
+      const j=await wxJSON("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(t)+"&count=10&language=ja&format=json&countryCode=JP");
+      wxHits=(j&&Array.isArray(j.results)?j.results:[]).map(r=>({n:typeof r.name==="string"?r.name.slice(0,30):"",a:typeof r.admin1==="string"?r.admin1.slice(0,20):"",lat:r.latitude,lon:r.longitude}))
+        .filter(h=>h.n&&Number.isFinite(h.lat)&&Number.isFinite(h.lon)).slice(0,8);
+      if(wxHits.length)break;
+    }
+    wxMsg=wxHits.length?"あてはまる まちを えらんでください。":"みつかりませんでした。「横浜」「世田谷区」のように、かきかたを かえて ためしてください。";
+  }catch(e){wxMsg="しらべられませんでした。でんぱを たしかめて、もういちど ためしてください。";}
+  wxBusy=false; render();
+}
+async function wxPick(i){
+  const h=wxHits&&wxHits[i]; if(!h)return;
+  try{await store.setProfile({wx:h}); wxHits=null; wx={key:"",st:""}; wxMsg=`${h.n}の てんきを いれます。`;}catch(e){wxMsg="ほぞんできませんでした。";}
+  render();
+}
+async function wxOff(){try{await store.setProfile({wx:null}); wx={key:"",st:""}; wxMsg="てんきの じどう入力を やめました。";}catch(e){wxMsg="ほぞんできませんでした。";} wxHits=null; render();}
+
+/* ---------- UI ---------- */
+let tab="home", figUp=false, draft=null, settingsOpen=false, sdraft=null, confirmDel=null, editingParent=null, lastG=null, live=null, cardKey="", skOpen=false, saving=false, formNote="";
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+// A new note starts from the last one: its next goal becomes today's goal, its place today's place, and the position is the player's own.
+// The goal shown on home and given to a new note: the one picked on home when it was picked after the last note was written
+// (a note written later for an earlier day does not take over), else the last note's next goal.
+function curGoal(){
+  const es=sortEntries(entries), last=es[es.length-1], c=profile.chal;
+  if(c&&c.t&&(!last||Date.parse(c.at)>(Date.parse(last.createdAt||"")||0)))return c.t;
+  return last&&last.next?last.next:"";
+}
+function newDraft(){const es=sortEntries(entries), last=es[es.length-1], lp=es.slice().reverse().find(e=>typeof e.place==="string"&&e.place.trim()), g0=loaded()&&profReady?curGoal():"";
+  return {id:uid(),date:today(),kind:"practice",goal:g0,goalFrom:g0,goalResult:"",chips:[],fun:0,good:"",next:"",parent:"",
+    weather:"",temp:null,place:lp?lp.place.trim().slice(0,20):"",menu:[],games:[{opp:"",gf:null,ga:null}],npos:profile.pos||"",nside:profile.side||"",nshape:TEAMSHAPE,focus:[],hard:"",coach:"",wxHand:false,wxFor:""};}
+// The v9 part of a draft read back from this browser, plus what only the form needs: a match row to type into and where the weather came from.
+function draftExtras(base,d){
+  const x=noteExtras(d); if(!own(d,"npos")){x.npos=profile.pos||"";x.nside=profile.side||"";x.nshape=TEAMSHAPE;} // a draft kept by v8 has no position yet (one kept by v10 has no side and one kept by v11 no shape: they keep the points they ticked)
+  else if(SIDEPOS.includes(x.npos)&&sideName(d.nside))x.nside=d.nside; // as in the open form, a side the line lacks stays (hidden, not saved) for a switch back
+  x.games=x.games.slice(0,MAXGAMES); if(!x.games.length)x.games=[{opp:"",gf:null,ga:null}];
+  return Object.assign(base,x,{wxHand:d.wxHand===true,wxFor:typeof d.wxFor==="string"?d.wxFor.slice(0,60):""});
+}
+// The note being written is also kept in this browser, so a reload does not lose it. The copy is used only on the day it was last changed (an older one would bring back an old date unnoticed), and it is dropped when the note is saved.
+const DRAFT="soccer-note-draft"; let keptPending=false;
+function keepDraft(){try{if(draft)localStorage.setItem(DRAFT,JSON.stringify({day:today(),d:draft}));}catch(e){}}
+function dropKept(){try{localStorage.removeItem(DRAFT);}catch(e){}}
+// Reads the kept copy back as a clean draft: only known choices and texts of the lengths the form allows.
+function keptDraft(){
+  try{
+    const k=JSON.parse(localStorage.getItem(DRAFT)||"null"), d=k&&k.d;
+    if(!d||typeof d!=="object"||typeof d.id!=="string"||!/^[a-z0-9]{1,24}$/.test(d.id)||k.day!==today()){dropKept();return null;}
+    const s=(v,n)=>typeof v==="string"?v.slice(0,n):"", chips=[];
+    (Array.isArray(d.chips)?d.chips:[]).forEach(id=>{if(CHIPS.some(c=>c.id===id)&&!chips.includes(id)&&!chipFull({chips},!!CHIP[id].team))chips.push(id);});
+    return draftExtras({id:d.id,date:typeof d.date==="string"&&/^\d{4}-\d\d-\d\d$/.test(d.date)?d.date:today(),kind:KINDS.some(x=>x[0]===d.kind)?d.kind:"practice",goal:s(d.goal,40),goalFrom:typeof d.goalFrom==="string"?s(d.goalFrom,40):null,
+      goalResult:RESULTS.some(x=>x[0]===d.goalResult)?d.goalResult:"",chips,fun:[1,2,3,4,5].includes(d.fun)?d.fun:0,good:s(d.good,300),next:s(d.next,40),parent:s(d.parent,300)},d);
+  }catch(e){dropKept();return null;}
+}
+// A kept draft whose note is already saved must not come back, because saving it again would overwrite that note. That can only be told once the notes are loaded, so it is checked once, at that point.
+function checkKept(){
+  if(!keptPending||!loaded())return; keptPending=false;
+  if(draft&&entries.some(e=>e.id===draft.id)){draft=null;dropKept();flash("かきかけの ノートは、もう ほぞんできていたよ。「ノート」で みられるよ。");}
+}
+const heroName=()=>profile.name||"きみ";
+// The look shown on the card: the saved profile, or the choices being tried in the settings panel.
+const look=()=>settingsOpen&&sdraft?Object.assign({},profile,sdraft):profile;
+// While a match is being played back the player keeps the look from before kick-off (items and sweat), so it does not give the result away.
+const lossNow=()=>((live&&!live.done?live.prevLoss:game.lossStreak)||0)>0;
+const equipNow=()=>live&&!live.done?live.prevEquip:(game.equip||{});
+function heroOpts(g,eq){eq=eq||{};const it=k=>eq[k]&&ITEMS[eq[k]]?ITEMS[eq[k]]:null, L=look();
+  return {level:g.level,color:L.color,number:profile.number,hair:L.hair||0,hairColor:L.hairColor||0,skin:L.skin||0,mood:"fierce",gk:L.pos==="GK",hero:true,fx:true,sweat:lossNow(),
+    head:it("head")?it("head").c:null,wrist:it("wrist")?it("wrist").c:null,boots:it("boots")};}
+const mateOpts=m=>({level:4,color:profile.color,number:m.num,hair:m.hair,hairColor:m.hc,skin:m.skin,iris:m.iris,mood:m.mood,gk:m.pos==="GK",crop:"bust",label:m.n});
+const heroBust=(g,id)=>pixSVG(Object.assign(heroOpts(g,equipNow()),{crop:"bust",label:heroName()}),id);
+
+function renderCard(g){
+  const eq=equipNow();
+  const L=look(), key=JSON.stringify([g.level,profile,eq,settingsOpen&&sdraft,figUp,lossNow()]);
+  if(key!==cardKey){cardKey=key;$("#fig").innerHTML=pixSVG(Object.assign(heroOpts(g,eq),{crop:figUp?"up":""}),"hero");
+    const lp=$("#lookPrev"); if(lp)lp.innerHTML=heroBust(g,"lp");} // the small preview in the settings panel follows the choices too
+  const zb=$("#zoomBtn"); zb.textContent=figUp?"ぜんしんを みる":"アップで みる";
+  $("#pname").textContent=profile.name?profile.name+" せんしゅ":"なまえをつけよう";
+  $("#rank").textContent=rankOf(g.level);
+  const lside=sideOf(L.pos,L.side,TEAMSHAPE), pb=$("#posb"), lr=roleOf(L.pos,L.side,TEAMSHAPE); pb.hidden=!L.pos; if(L.pos)pb.textContent=L.pos+" "+(lr?lr.n+(lside==="C"?"":"("+sideName(lside)+")"):POS[L.pos].n);
+  $("#lv").textContent=g.level;
+  $("#xpfill").style.width=Math.round(g.rest/need(g.level)*100)+"%";
+  $("#xptext").textContent=`つぎのレベルまで あと ${need(g.level)-g.rest} XP`;
+  document.querySelector(".card").style.setProperty("--team",L.color||TEAMCOLORS[0]);
+  const nx=UNLOCKS.find(u=>u[0]>g.level); $("#unlock").innerHTML=nx?`Lv.${nx[0]} で <b>${esc(nx[1])}</b>`:"ぜんぶ かいほう ずみ!";
+  const tk=gameReady?tickets(g):0, dot=$("#tkdot"); dot.hidden=!tk; dot.textContent=tk;
+  fitCard();
+}
+// On wide screens the card stays pinned beside the page. The styles need the height of its text block to keep the whole card above the tab bar.
+function fitCard(){const c=document.querySelector(".card"), w=c.querySelector(".who"); c.style.setProperty("--whoh",w.offsetHeight+"px");}
+
+function radar(stats){
+  const max=Math.max(10,...Object.values(stats)); const cx=100,cy=100,R=70;
+  const pt=(i,r)=>{const a=-Math.PI/2+i*Math.PI/3;return [cx+Math.cos(a)*r,cy+Math.sin(a)*r]};
+  let grid="";[.33,.66,1].forEach(f=>{grid+=`<polygon points="${STATS.map((_,i)=>pt(i,R*f).join(",")).join(" ")}" fill="none" stroke="var(--rule)"/>`});
+  const poly=STATS.map(([k],i)=>pt(i,R*Math.max(.04,stats[k]/max)).join(",")).join(" ");
+  const labels=STATS.map(([k,t],i)=>{const [x,y]=pt(i,R+18);return `<text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--muted)">${t}</text>`}).join("");
+  return `<svg viewBox="-26 0 252 200" role="img" aria-label="のうりょくチャート">${grid}<polygon points="${poly}" fill="var(--good)" fill-opacity=".35" stroke="var(--good)" stroke-width="2"/>${labels}</svg>`;
+}
+
+function skillsPanel(g){
+  const sl=skillList(g), got=sl.filter(s=>s.lv>0), soon=sl.filter(s=>s.next).sort((a,b)=>b.count/b.next-a.count/a.next).slice(0,4);
+  return `<section class="panel"><h2>スキル <span class="muted">${got.length} / ${sl.length}</span></h2>
+  ${got.length?`<div class="skills">${got.map(s=>`<span class="sk${s.lv===2?" gold":""}">${s.lv===2?"★ ":""}${esc(s.n)}</span>`).join("")}</div>`
+    :`<p class="muted">おなじ「がんばったこと」を 5回 かくと スキルを おぼえて、しあいで つかえるよ。15回で ★ゴールドスキルに!</p>`}
+  <h3>もうすこしで おぼえる</h3>
+  <div class="soon">${soon.map(s=>`<div><div class="row2"><b>${esc(s.n)}${s.lv===1?" → ★":""}</b><span class="muted">あと ${s.next-s.count}回</span></div><span class="b"><i style="width:${Math.round(s.count/s.next*100)}%"></i></span><span class="muted">${esc(s.how)}</span></div>`).join("")}</div>
+  <details class="more" id="skAll"${skOpen?" open":""}><summary>スキルを ぜんぶ みる</summary>
+  <div class="sklist">${sl.map(s=>`<div class="${s.lv===2?"gold":s.lv===1?"on":""}"><b>${s.lv===2?"★ ":""}${esc(s.n)}</b><span class="muted">${esc(s.how)}  ${Math.min(s.count,s.next||s.th[1])} / ${s.next||s.th[1]}回</span></div>`).join("")}</div></details></section>`;
+}
+
+// Every look the player grows into, so the next eye colour is something to aim for.
+function looksPanel(g){
+  return `<section class="panel"><h2>すがたの へんか</h2><p class="muted">レベルが あがると、目の いろや スーツが かわるよ。</p>
+  <div class="sklist">${UNLOCKS.map(([lv,n])=>{const e=n.includes("目")&&EYES.find(x=>x.lv===lv), on=g.level>=lv;
+    return `<div class="${on?"on":""}"><b>${e?`<i class="eyedot" style="background:${e.c}"></i>`:""}${on?"✓ ":""}${esc(n)}</b><span class="muted">Lv.${lv}${on?"":" で かわる"}</span></div>`}).join("")}</div></section>`;
+}
+function viewHome(g){
+  const tk=gameReady?tickets(g):0;
+  const ready=loaded();
+  const setup=ready&&profReady&&(!profile.name||!profile.pos)&&!settingsOpen?`<section class="panel empty"><h2>はじめに</h2><p class="muted">せんしゅの なまえと ポジションを きめよう!</p><button class="primary" id="openSettings" type="button">せっていを ひらく</button></section>`:"";
+  const empty=ready&&!g.es.length?`<section class="panel empty"><h2>さいしょのノートをかこう!</h2><p class="muted">れんしゅうや しあいのあとに かくと、せんしゅが そだって、なかまが ふえて、しあいにも でられるよ。</p><button class="primary" data-go="write" type="button">ノートをかく</button></section>`:"";
+  const hp=handGet(), he=hp&&g.es.find(e=>e.id===hp.id), hb=he&&!stampsOf(he).length&&!String(he.parent||"").trim()
+    ?`<button class="stampnews handnote" id="handBtn" data-note="${esc(he.id)}" type="button">👪 きょうの ノートを おうちの人に みせよう!<small>タップで おうちの人の ばんに なるよ</small></button>`:"";
+  const ng=goalCard(g), nw=stampNews(g), sn=nw?`<button class="stampnews" id="newsBtn" data-note="${esc(nw.id)}" type="button">🎉 おうちの人から ${nw.stamp&&nw.comment?"コメントと スタンプが":nw.comment?"コメントが":"スタンプが"} とどいたよ!<small>タップで みてね</small></button>`:"";
+  const tkb=tk?`<div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><button class="ghost" data-go="match" type="button">しあいに いく</button></div>`:"";
+  const max=Math.max(10,...Object.values(g.stats));
+  const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
+  const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに だいじ。</p>`:"";
+  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${tkb}
+  <section class="panel"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
+  <p class="muted">「がんばったこと」を えらぶと のうりょくが のびるよ。</p>${pw}</section>
+  ${posPanel(g)}${skillsPanel(g)}${looksPanel(g)}`;
+}
+
+// Home: the goal for the next practice or match, so it can be seen before playing and changed there.
+let chalOpen=false;
+function goalCard(g){
+  if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
+  // Once today's note is written, the goal shown is the one for next time.
+  const t=curGoal(), top=topChips(g), last=g.es[g.es.length-1], after=!!(last&&last.date>=today());
+  const pick=`<div class="chips" id="gcPresets">${presetBtns(goalPresets(profile.pos,profile.side,TEAMSHAPE),"gc",t)}</div>
+  <div class="gc-own"><input type="text" id="gc-in" maxlength="40" placeholder="じぶんで かく" aria-label="めあてを じぶんで かく"><button class="primary" id="gcSave" type="button">これに する</button></div>
+  <div class="row"><button class="ghost" id="gcCancel" type="button">やめる</button></div>`;
+  return `<section class="panel goalcard" id="goalCard"><div class="gc-head"><span class="label">${after?"つぎの めあて":"きょうの めあて"}</span>${chalOpen?"":`<button class="ghost mini" id="gcEdit" type="button">${t?"かえる":"きめる"}</button>`}</div>
+  ${t?`<b class="gc-t">${esc(t)}</b>`:`<p class="muted">まだ きまって いないよ。れんしゅうや しあいの まえに 1つ きめてみよう!</p>`}
+  ${chalOpen?pick:t?`<p class="gc-tip">${after?"つぎの れんしゅうや しあいで やってみよう!":"うまく いかなくても、やってみたら OK! ノートで おしえてね。"}</p>`:""}
+  ${top.length?`<div class="gc-top"><span class="label">よく がんばっている こと</span>${top.map(([l,n])=>`<span>${esc(l)} <b>${n}かい</b></span>`).join("")}</div>`:""}</section>`;
+}
+// The がんばったこと picked most often (three times or more): something to be proud of, measured against nobody else.
+function topChips(g){return Object.entries(g.chipCount||{}).filter(([id,c])=>c>=3&&Object.prototype.hasOwnProperty.call(CHIP,id)).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([id,c])=>[CHIP[id].t,c]);}
+async function setChal(t){
+  t=String(t||"").trim().slice(0,40); if(!t){flash("めあてを えらぶか、かいてね。");return;}
+  const before=curGoal();
+  try{await store.setProfile({chal:{t,at:new Date().toISOString()}});}catch(e){flash("ほぞんできませんでした。");return;}
+  followGoal(before,curGoal());
+  chalOpen=false; render(); const eb=$("#gcEdit"); if(eb)eb.focus();
+}
+// A note begun follows a new goal while its goal is still the one it was given and not yet marked done or not. A note that already
+// says how its goal went was written after playing: it keeps its goal (that belongs to the practice it was played in), and the new
+// goal becomes its next goal unless it has one of its own, so the pick is not lost when the note is saved. The same goes for a note
+// kept in this browser and not opened yet.
+function followGoal(before,t){
+  if(before===t)return;
+  const fit=d=>{if(!d.goalResult&&(!d.goal||d.goal===before)){d.goal=t;d.goalFrom=t;return true;}
+    const n=typeof d.next==="string"?d.next.trim():""; if(n&&n!==before)return false; d.next=t; return true;};
+  if(draft){if(fit(draft))keepDraft();return;}
+  try{const k=JSON.parse(localStorage.getItem(DRAFT)||"null");
+    if(k&&k.day===today()&&k.d&&typeof k.d==="object"&&fit(k.d))localStorage.setItem(DRAFT,JSON.stringify(k));}catch(e){}
+}
+// A banner on home when a parent stamped a note or wrote on it after the notes were last opened on this device. What is kept is the
+// newest of this device's clock and every stamp and comment time, so another device's clock running ahead cannot bring it back, and it
+// is also kept in memory for a browser that keeps nothing. A comment written in the form before saving brings no banner (no time).
+const STAMPSEEN="soccer-note-stamp-seen", HAND="soccer-note-hand";
+let handMem=null;
+function handGet(){let h=handMem&&handMem.day===today()?handMem:null;
+  if(!h)try{const v=JSON.parse(localStorage.getItem(HAND)||"null"); if(v&&typeof v.id==="string"&&v.day===today())h=v;}catch(e){}
+  return h;}
+function handSet(id){handMem=id?{id,day:today()}:null; try{if(id)localStorage.setItem(HAND,JSON.stringify(handMem));else localStorage.removeItem(HAND);}catch(e){}}
+let seenMem={at:0,m:{}};
+// Kept as {at: this device's time of the last look, m: {note id: [stamp time, comment time]}}; v10 kept one number.
+const seenOf=v=>typeof v==="number"&&isFinite(v)?{at:v,m:{}}:v&&typeof v==="object"&&isFinite(+v.at)?{at:+v.at,m:v.m&&typeof v.m==="object"&&!Array.isArray(v.m)?v.m:{}}:null;
+function seenNow(){let s=seenMem; try{const v=seenOf(JSON.parse(localStorage.getItem(STAMPSEEN)||"null")); if(v&&v.at>s.at)s=v;}catch(e){} return s;}
+const stampTime=e=>stampsOf(e).length?Date.parse(e.stampAt||"")||0:0, commentTime=e=>String(e.parent||"").trim()?Date.parse(e.parentAt||"")||0:0;
+// A stamp or comment is news when its note's time differs from the one seen, or, for a note written since the last look, is newer than that look.
+// The banner names what the note it opens has.
+function stampNews(g){
+  const s=seenNow(); let id=null,t=0,stamp=false,comment=false;
+  g.es.forEach(e=>{const a=stampTime(e),c=commentTime(e),r=Array.isArray(s.m[e.id])?s.m[e.id]:null;
+    const na=a>0&&(r?a!==r[0]:a>s.at), nc=c>0&&(r?c!==r[1]:c>s.at), m=Math.max(na?a:0,nc?c:0);
+    if(m>t){t=m;id=e.id;stamp=na;comment=nc;}});
+  return id?{id,stamp,comment}:null;
+}
+// With no list, everything now on screen is seen; with a list (notes brought back from a backup), only those are added.
+function stampSeen(list){const s=list?seenNow():{at:Date.now(),m:{}}, m=list?Object.assign({},s.m):s.m;
+  (list||entries).forEach(e=>{m[e.id]=[stampTime(e),commentTime(e)];}); // every note, so a stamp from a clock that is behind still counts
+  seenMem={at:s.at,m}; try{localStorage.setItem(STAMPSEEN,JSON.stringify(seenMem));}catch(e){}}
+// The player's position: what to look out for (with how often a note said it was done) and practice that suits it.
+function posPanel(g){
+  const pos=profile.pos, pn=POSNOTE[pos]; if(!pn)return "";
+  const sh=TEAMSHAPE, side=sideOf(pos,profile.side,sh), r=roleOf(pos,side,sh), shown={}, n={}; pointsOf(pos,side,sh).forEach(([id,t])=>{shown[id]=t;});
+  // A tick counts for a point when the note's own words for it are the words shown: a point that names a foot counts only on its side.
+  g.es.forEach(e=>focusOf(e).forEach(id=>{if(Object.prototype.hasOwnProperty.call(shown,id)&&fillSide(FOCUS[id].t,e.nside)!==shown[id])return; n[id]=(n[id]||0)+1;}));
+  return `<section class="panel" id="posPanel"><h2>${esc(posTitle(pos,side,sh))}の ポイント</h2>
+  <h3>しあいで きを つけること</h3>
+  <div class="sklist">${pointsOf(pos,side,sh).map(([id,t])=>`<div class="${n[id]?"on":""}"><b>${esc(t)}</b><span class="muted">${n[id]?`できた ${n[id]}かい`:"ノートで できたら タップしよう"}</span></div>`).join("")}</div>
+  <h3>おすすめの れんしゅう</h3>
+  <div class="sklist">${(r?r.prac:pn.prac).map(([who,t,d])=>`<div><b>${esc(t)}</b><span class="muted"><span class="who">${esc(who)}</span>${esc(d)}</span></div>`).join("")}</div>
+  ${r&&r.tip?`<p class="sidetip"><b>${esc(sideName(side))}の コツ</b>${esc(r.tip)}</p>`:""}
+  <p class="muted">${esc(POSTIP)}${side?" "+esc((sidesFor(pos,sh).length>1?sideHead(pos,sh)+"は だいたいの ばしょ。":"")+SIDETIP):""}${side==="L"||side==="R"?" "+esc(fillSide(LRTIP,side)):""}</p></section>`;
+}
+// What the side picked in settings is called and what it does.
+function roleLine(pos,side,shape){const r=roleOf(pos,side,shape);
+  return r?`${sideName(sideOf(pos,side,shape))}の ${pos}は「${esc(r.n)}」。${esc(r.d)} ポジションだよ。${r.note?esc(r.note):""}`
+    :SIDEPOS.includes(pos)?"えらばなくても OK。えらぶと、その ばしょの ポイントが でるよ。":"";}
+const sideQ=(pos,shape)=>`${sideHead(pos,shape)}<small>せめる ゴールに むかって、よく やる ところ</small>`;
+const sideBtns=(pos,side,shape)=>sideOpts(pos,shape).map(([v,t])=>`<button type="button" data-side="${v}" aria-pressed="${side===v}">${t}</button>`).join("");
+function viewSettings(){
+  const s=sdraft||(sdraft={pos:profile.pos||"",side:profile.side||"",hair:profile.hair||0,hairColor:profile.hairColor||0,skin:profile.skin||0,color:profile.color||TEAMCOLORS[0]});
+  return `<section class="panel" id="settings"><h2>せってい</h2>
+  <div class="lookbar"><div class="ava" id="lookPrev">${heroBust(lastG,"lp")}</div><p class="muted">えらぶと、せんしゅの みためが すぐに かわるよ。</p></div>
+  <div class="field"><label class="q" for="s-name">せんしゅの なまえ</label><input type="text" id="s-name" maxlength="12" value="${esc(profile.name)}"></div>
+  <div class="field"><span class="q">ポジション</span><div class="seg" id="s-pos">${POSKEYS.map(k=>`<button type="button" data-pos="${k}" aria-pressed="${s.pos===k}">${k}<small style="display:block;font-weight:400;font-size:.72rem">${POS[k].d}</small></button>`).join("")}</div>
+    <div class="sidef" id="s-sidef"${SIDEPOS.includes(s.pos)?"":" hidden"}><span class="q2" id="s-sideq">${sideQ(s.pos,TEAMSHAPE)}</span>
+    <div class="seg" id="s-side" data-sides="${sidesFor(s.pos,TEAMSHAPE)}">${sideBtns(s.pos,s.side,TEAMSHAPE)}</div>
+    <p class="muted" id="s-role" aria-live="polite">${roleLine(s.pos,s.side,TEAMSHAPE)}</p></div></div>
+  <div class="field"><label class="q" for="s-num">せばんごう</label><input type="text" id="s-num" inputmode="numeric" maxlength="2" value="${esc(profile.number)}"></div>
+  <div class="field"><label class="q" for="s-team">チームの なまえ</label><input type="text" id="s-team" maxlength="12" value="${esc(profile.team||"")}" placeholder="れい:ブルーサンダーズ"></div>
+  <div class="field"><span class="q">チームカラー</span><div class="seg" id="s-color">${TEAMCOLORS.map(c=>`<button type="button" class="swatch" data-c="${c}" aria-pressed="${s.color===c}" style="background:${c}" aria-label="いろ"></button>`).join("")}</div></div>
+  <div class="field"><span class="q">かみがた</span><div class="seg" id="s-hair">${HAIRS.map((h,i)=>`<button type="button" data-hair="${i}" aria-pressed="${s.hair===i}">${h.n}</button>`).join("")}</div></div>
+  <div class="field"><span class="q">かみの いろ</span><div class="seg" id="s-hc">${HAIRCOLORS.map((h,i)=>`<button type="button" class="swatch" data-hc="${i}" aria-pressed="${s.hairColor===i}" style="background:${h.c}" aria-label="かみのいろ"></button>`).join("")}</div></div>
+  <div class="field"><span class="q">はだの いろ</span><div class="seg" id="s-skin">${SKINS.map((k,i)=>`<button type="button" class="swatch" data-sk="${i}" aria-pressed="${s.skin===i}" style="background:${k.c}" aria-label="はだのいろ ${i+1}"></button>`).join("")}</div></div>
+  <div class="row"><button class="primary" id="s-save" type="button" style="flex:1">ほぞん</button><button class="ghost" id="s-close" type="button">とじる</button></div></section>${wxPanel()}${backupPanel()}`;
+}
+
+function backupPanel(){
+  const last=bkLast();
+  const info=STANDALONE?`<p class="muted">ノートは この端末の 中だけに ほぞんされています。ときどき バックアップを とっておくと、端末を かえたときや データが きえたときに もどせます。</p>
+    <p class="muted">${last?`さいごの バックアップ:${esc(fmtDate(localDay(last)))}`:"まだ バックアップを とっていません。"}</p>`
+    :`<p class="muted">ノートを ファイルや コードに して、べつの 端末の サッカーノートに うつせます。</p>`;
+  return `<section class="panel"><details class="more" id="bk"${bkOpen?" open":""}><summary>おうちの人へ:ノートの バックアップ</summary><div class="bk">${info}
+  <h3>とっておく</h3>
+  <div class="row">${STANDALONE?`<button class="ghost" id="bk-file" type="button">ファイルに ほぞん</button>`:""}<button class="ghost" id="bk-copy" type="button">コードを コピー</button></div>
+  ${bkShow?`<textarea id="bk-show" readonly aria-label="バックアップの コード">${esc(bkShow)}</textarea>`:""}
+  <h3>もどす</h3>
+  <div class="row"><label class="ghost pick">ファイルから もどす<input type="file" id="bk-in" accept=".json,.txt,application/json,text/plain"></label><button class="ghost" id="bk-paste" type="button" aria-expanded="${bkPaste}">コードを はりつけて もどす</button></div>
+  ${bkPaste?`<textarea id="bk-code" aria-label="バックアップの コード" placeholder="ここに コードを はりつけてください"></textarea><div class="row"><button class="ghost" id="bk-check" type="button">この コードで もどす</button></div>`:""}
+  ${bkData?bkConfirm():""}
+  <p class="bkmsg" id="bkmsg" role="status"${bkMsg?"":" hidden"}>${esc(bkMsg)}</p></div></details></section>`;
+}
+function bkConfirm(){
+  const d=bkData, p=bkPlan(d), dup=d.entries.length-p.add.length;
+  return `<div class="bkbox" id="bkbox"><b>${d.at?`${esc(fmtDate(localDay(d.at)))}の バックアップ`:"この バックアップ"}から もどします。</b><ul>
+  <li>ノート:${p.add.length?`${p.add.length}さつ ふえます`:"ふえる ノートは ありません"}${dup?`(もう ある ${dup}さつは そのまま)`:""}</li>
+  <li>しあいの きろく:${p.useGame?"バックアップの ほうが すすんでいるので、そちらに します":"いまの まま"}</li>
+  <li>せんしゅの なまえと みため:${p.useProfile?"バックアップの ものに します":"いまの まま"}</li></ul>
+  <p class="muted">いまの ノートは けしません。</p>
+  <div class="row"><button class="primary" id="bk-go" type="button" style="flex:1"${bkBusy?" disabled":""}>もどす</button><button class="ghost" id="bk-cancel" type="button"${bkBusy?" disabled":""}>やめる</button></div></div>`;
+}
+function bkReset(){if(bkBusy)return;bkOpen=false;bkPaste=false;bkData=null;bkMsg="";bkShow="";}
+const bkReady=()=>{if(loaded()&&profReady&&gameReady)return true;bkMsg="よみこみ中です。すこし まってから もういちど おしてね。";render();return false;};
+function bkSaved(msg){bkMark(new Date().toISOString());bkShow="";bkMsg=msg;render();}
+// A file goes through the share sheet where there is one (on iPad: "ファイルに保存"), otherwise it is downloaded.
+function bkSaveFile(){
+  if(!bkReady())return;
+  const json=backupJSON(), name="soccer-note-"+today()+".json";
+  let f=null, can=false; try{f=new File([json],name,{type:"application/json"});can=!!(navigator.canShare&&navigator.share&&navigator.canShare({files:[f]}));}catch(e){}
+  if(can){navigator.share({files:[f]}).then(()=>bkSaved("ファイルを ほぞんしました。"),err=>{if(!(err&&err.name==="AbortError"))bkDownload(json,name);});return;}
+  bkDownload(json,name);
+}
+function bkDownload(json,name){
+  try{const u=URL.createObjectURL(new Blob([json],{type:"application/json"})), a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},4000);bkSaved("ファイルを ダウンロードしました。");}
+  catch(e){bkMsg="ファイルを つくれませんでした。「コードを コピー」を つかってください。";render();}
+}
+// The clipboard is written straight from the tap; where that is refused, the code is shown to copy by hand.
+function bkCopy(){
+  if(!bkReady())return;
+  const json=backupJSON();
+  const manual=()=>{bkShow=json;bkMsg="下の コードを ながおしして、ぜんぶ えらんで コピーしてください。";render();const t=$("#bk-show");if(t){t.focus();t.select();}};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(json).then(()=>bkSaved("コードを コピーしました。メモや メッセージに はりつけて とっておいてください。"),manual);return;}}catch(e){}
+  manual();
+}
+function bkPrepare(text){
+  bkData=null;
+  const d=bkParse(text);
+  if(!d)bkMsg="バックアップの コードでは ないようです。もういちど たしかめてください。";
+  else if(!d.entries.length&&d.given)bkMsg="ノートを よみとれませんでした。";
+  else{const p=bkPlan(d);
+    if(!p.add.length&&!p.useGame&&!p.useProfile)bkMsg=d.entries.length?"この バックアップの ノートは、もう ぜんぶ はいっています。":"この バックアップには ノートが ありません。";
+    else{bkMsg="";bkData=d;bkPaste=false;}}
+  render();
+  const el=$(bkData?"#bkbox":"#bkmsg"); if(el&&el.scrollIntoView)el.scrollIntoView({block:"nearest"});
+}
+function bkFile(input){
+  const f=input.files&&input.files[0]; input.value=""; if(!f)return;
+  if(f.size>5e6){bkMsg="ファイルが 大きすぎます。";render();return;}
+  const r=new FileReader(); r.onload=()=>bkPrepare(r.result); r.onerror=()=>{bkMsg="ファイルを よめませんでした。";render();}; r.readAsText(f);
+}
+async function bkApply(){
+  const d=bkData; if(!d||bkBusy)return;
+  if(live&&!live.done){bkMsg="しあいの さいせいが おわってから もどしてね。";render();return;}
+  if(saving||!bkReady())return;
+  const p=bkPlan(d); bkBusy=true; bkMsg="もどしています…"; render();
+  try{
+    if(db){
+      for(let i=0;i<p.add.length;i++){await db.collection("entries").doc(p.add[i].id).set(p.add[i]);const m=$("#bkmsg");if(m)m.textContent=`もどしています… ${i+1} / ${p.add.length}`;}
+      entries=entries.filter(e=>!p.add.some(a=>a.id===e.id)).concat(p.add); // until the snapshot lands
+      if(p.useProfile)await store.setProfile(d.profile);
+      if(p.useGame){game=JSON.parse(JSON.stringify(d.game));game.used=Math.min(game.used,entries.length);await store.setGame();}
+    }else{
+      const before=[entries,game,profile];
+      entries=entries.concat(p.add);
+      if(p.useGame){game=JSON.parse(JSON.stringify(d.game));game.used=Math.min(game.used,entries.length);}
+      if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile));
+      if(!lsSave()){[entries,game,profile]=before;throw new Error("local");}
+    }
+    if(d.at)bkMark(d.at);
+    stampSeen(p.add); // old stamps and comments brought back are not news
+    // The open settings show the player brought back, not the choices made or the words typed before it (render keeps typed words).
+    if(p.useProfile){sdraft=null; [["#s-name",profile.name],["#s-num",profile.number],["#s-team",profile.team||""]].forEach(([k,v])=>{const el=$(k); if(el)el.value=v;});}
+    bkData=null; bkMsg=`ノートを ${p.add.length}さつ もどしました。`+(p.useGame?"しあいの きろくも もどしました。":"");
+    flash(bkMsg);
+  }catch(err){bkMsg="とちゅうで うまく いきませんでした。もういちど ためしてください。(もどせた ノートは そのまま のこります)";}
+  bkBusy=false; render();
+}
+
+function seg(name,opts,val){return `<div class="seg" data-seg="${name}">${opts.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${val===v}">${t}</button>`).join("")}</div>`}
+const draftXP=()=>entryXP(draft,sortEntries(entries).filter(e=>e.date<=draft.date).pop()).reduce((a,p)=>a+p[1],0);
+const chipFull=(d,team)=>d.chips.length>=MAXCHIPS||d.chips.filter(id=>CHIP[id]&&!!CHIP[id].team===team).length>=MAXGROUP;
+function chipBtns(team,d){const full=chipFull(d,team);
+  return CHIPS.filter(c=>!!c.team===team).map(c=>{const on=d.chips.includes(c.id);return `<button type="button" data-chip="${c.id}" aria-pressed="${on}"${!on&&full?" disabled":""}>${c.t}</button>`}).join("");}
+// One question about the position that helps the writer think back; it changes from day to day.
+const askFor=d=>{const r=roleOf(d.npos,d.nside,d.nshape), a=d.npos===MIX?MIXASK:POSNOTE[d.npos]?[...(r?r.ask:[]),...POSNOTE[d.npos].ask]:null; if(!a)return ""; const n=+String(d.date||"").replace(/\D/g,"")||0; return a[n%a.length];};
+// The goals of the place picked come first (on the left or the right they name that side's foot).
+const sideGoals=(pos,side,shape)=>{const r=roleOf(pos,side,shape); return r?r.goals:[];};
+function goalPresets(pos,side,shape){return [...new Set([...sideGoals(pos,side,shape),...(POS[pos]?POS[pos].goals:[]),...GOALS])].slice(0,7);}
+// For the next goal: today's goal again unless it was done, then the position's goals (or the general ones).
+function nextPresets(d){const g=d.goal.trim(), again=g&&d.goalResult!=="done"?[g]:[], r=sideGoals(d.npos,d.nside,d.nshape);return [...new Set([...again,...r,...(POS[d.npos]?POS[d.npos].goals:GOALS)])].slice(0,4);}
+function recentPlaces(){const out=[];sortEntries(entries).reverse().forEach(e=>{const p=typeof e.place==="string"?e.place.trim():"";if(p&&!out.includes(p)&&out.length<4)out.push(p);});return out;}
+const presetBtns=(list,attr,val)=>list.map(x=>`<button type="button" data-${attr}="${esc(x)}" aria-pressed="${val===x}">${esc(x)}</button>`).join("");
+// Practice days list what was practised (the kinds that suit the position get a star); match days list the matches.
+function kindField(d){
+  if(d.kind==="match")return `<div class="field" id="kindBox"><span class="q">しあいの きろく<small>わかる ところだけで OK</small></span>
+  ${d.games.map((g,i)=>`<div class="gamerow"><input type="text" id="g-opp-${i}" maxlength="20" value="${esc(g.opp)}" placeholder="あいての チーム" aria-label="${i+1}しあいめの あいて">
+    <span class="sc"><input type="text" class="num" id="g-gf-${i}" inputmode="numeric" maxlength="2" value="${g.gf==null?"":g.gf}" placeholder="–" aria-label="${i+1}しあいめ じぶんの チームの とくてん"><b>-</b><input type="text" class="num" id="g-ga-${i}" inputmode="numeric" maxlength="2" value="${g.ga==null?"":g.ga}" placeholder="–" aria-label="${i+1}しあいめ あいての とくてん"></span></div>`).join("")}
+  <p class="muted">とくてんは じぶんの チーム − あいて</p>
+  ${d.games.length<MAXGAMES?`<div class="row"><button class="ghost" type="button" id="addGame">+ しあいを ふやす</button></div>`:""}</div>`;
+  const rr=roleOf(d.npos,d.nside,d.nshape), rec=rr?rr.menu:POSNOTE[d.npos]?POSNOTE[d.npos].menu:[];
+  return `<div class="field" id="kindBox"><span class="q">どんな れんしゅうを した?<small>いくつでも</small></span>
+  <div class="chips">${MENUS.map(([id,t])=>`<button type="button" data-menu="${id}" aria-pressed="${d.menu.includes(id)}">${rec.includes(id)?'<span class="star">★</span>':""}${t}</button>`).join("")}</div>
+  ${rec.length?`<p class="muted">★は ${esc(posTitle(d.npos,d.nside,d.nshape))}に おすすめの れんしゅう</p>`:""}</div>`;
+}
+function focusField(d){
+  const pn=POSNOTE[d.npos], pts=pointsOf(d.npos,d.nside,d.nshape);
+  if(d.npos===MIX)return `<div class="field" id="focusBox"><span class="q">ポジションの ポイント</span><p class="muted">いろいろな ポジションを やった 日だね。やってみて ちがった ことを「うまくいったこと」や「むずかしかったこと」に かいてみよう。</p></div>`;
+  if(!pn)return `<div class="field" id="focusBox"><span class="q">ポジションの ポイント</span><p class="muted">「きょうの ポジション」を えらぶと、そのポジションで だいじな ことが でるよ。</p></div>`;
+  return `<div class="field" id="focusBox"><span class="q">${esc(posTitle(d.npos,d.nside,d.nshape))}の ポイント<small>できたら タップ(1つ +2 XP)</small></span>
+  <div class="chips focus">${pts.map(([id,t])=>`<button type="button" data-focus="${id}" aria-pressed="${d.focus.includes(id)}">${esc(t)}</button>`).join("")}</div></div>`;
+}
+// A new draft begun before the notes and the profile arrived gets their defaults (place, goal) once they are here.
+var draftEarly=false, draftStale=false;
+// The id of the note form the child has changed (a form kept from before counts as changed).
+let touchedId=null;
+// A form nobody has changed starts again from the settings when its position, side or shape no longer matches them.
+function freshDraft(){if(!draft||saving||touchedId===draft.id)return;
+  const p=profile.pos||"", sh=TEAMSHAPE, s=sideOf(p,profile.side,sh);
+  if(draft.npos!==p||(draft.nside||"")!==s||(draft.nshape||"")!==sh){if(keptIs(draft))dropKept();draft=null;}}
+const keptIs=d=>{try{const k=JSON.parse(localStorage.getItem(DRAFT)||"null");return !!(k&&k.d&&k.d.id===d.id);}catch(e){return false;}};
+function viewWrite(){
+  if(!draft){draft=keptDraft();keptPending=!!draft;draftStale=!!draft;if(draft)touchedId=draft.id;checkKept();}
+  if(!draft){draft=newDraft();draftEarly=!(loaded()&&profReady);}
+  const d=draft;
+  if(draftEarly&&loaded()&&profReady){draftEarly=false;const n=newDraft();if(!d.goal){d.goal=n.goal;d.goalFrom=n.goal;}if(!d.place)d.place=n.place;if(keptIs(d))keepDraft();}
+  // A note kept in this browser whose goal is still the one it was given, and not marked yet, takes a goal picked since (on another device too).
+  // A note kept by an older version has no record of the goal it was given, so it keeps its own.
+  if(draftStale&&loaded()&&profReady){draftStale=false;const t=curGoal();if(!d.goalResult&&d.goal===d.goalFrom&&t&&t!==d.goal){d.goal=d.goalFrom=t;keepDraft();}}
+  if(!d.npos&&profile.pos){d.npos=profile.pos;d.nside=profile.side||"";d.nshape=TEAMSHAPE;} // a position cannot be unpicked, so "" means none was chosen yet
+  const presets=goalPresets(d.npos,d.nside,d.nshape), places=recentPlaces(), ask=askFor(d);
+  return `<section class="panel write"><h2>きょうのノート</h2>${voiceHint()}
+  <h3 class="sec">きょうの きろく</h3>
+  <div class="field"><label class="q" for="f-date">いつ?</label><input type="date" id="f-date" max="${today()}" value="${esc(d.date)}"></div>
+  ${wxField(d)}
+  <div class="field"><span class="q">なにをした?</span>${seg("kind",KINDS,d.kind)}</div>
+  <div class="field"><label class="q" for="f-place">ばしょ</label><input type="text" id="f-place" maxlength="20" value="${esc(d.place)}" placeholder="れい:〇〇小の グラウンド">
+    ${places.length?`<div class="chips" id="placeChips">${presetBtns(places,"place",d.place)}</div>`:""}</div>
+  <div class="field"><span class="q">きょうの ポジション</span>${seg("npos",[...POSKEYS.map(k=>[k,k]),[MIX,"いろいろ"]],d.npos)}
+    ${sidesFor(d.npos,d.nshape).length>1?`<div class="sidef" id="sideBox"><span class="q2">${sideHead(d.npos,d.nshape)}<small>せめる ゴールに むかって。わかれば</small></span>${seg("nside",sideOpts(d.npos,d.nshape),d.nside)}</div>`:""}</div>
+  ${kindField(d)}
+  <h3 class="sec">めあて</h3>
+  <div class="field"><label class="q" for="f-goal">きょうの めあて<small>小さくてOK</small></label>
+    <div class="voice"><input type="text" id="f-goal" maxlength="40" value="${esc(d.goal)}" placeholder="れい:ルーズボールを1回おいかける">${micBtn("f-goal")}</div>
+    <div class="chips" id="goalPresets">${presetBtns(presets,"g",d.goal)}</div></div>
+  <div class="field"><span class="q">めあては できた?<small>「まだ」でも XPはもらえるよ</small></span>${seg("goalResult",RESULTS,d.goalResult)}</div>
+  <h3 class="sec">ふりかえり</h3>
+  ${focusField(d)}
+  <div class="field" id="chipField"><span class="q">がんばったこと<small>${MAXCHIPS}つまで えらべるよ(<span id="chipN">${d.chips.length}</span>/${MAXCHIPS})</small></span>
+    <span class="grp"><i></i>じぶんを きたえる(${MAXGROUP}つまで)→ のうりょくアップ</span><div class="chips" data-chips="self">${chipBtns(false,d)}</div>
+    <span class="grp team"><i></i>なかまと つながる(${MAXGROUP}つまで)→ キズナが たまって なかまが ふえる</span><div class="chips team" data-chips="team">${chipBtns(true,d)}</div></div>
+  <div class="field"><label class="q" for="f-good">うまくいったこと</label><p class="muted hint" id="askHint"${ask?"":" hidden"}>${ask?"かんがえて みよう:"+esc(ask):""}</p><div class="voice"><textarea id="f-good" maxlength="300" placeholder="れい:〇〇くんに パスがとおった">${esc(d.good)}</textarea>${micBtn("f-good")}</div></div>
+  <div class="field"><label class="q" for="f-hard">むずかしかったこと<small>かけたら +5 XP</small></label><div class="voice"><textarea id="f-hard" maxlength="200" placeholder="れい:トラップが はねた。つぎは よく みて とめる">${esc(d.hard)}</textarea>${micBtn("f-hard")}</div></div>
+  <div class="field"><label class="q" for="f-coach">コーチに いわれたこと・ほめられたこと<small>かけたら +5 XP</small></label><div class="voice"><textarea id="f-coach" maxlength="200" placeholder="れい:まえを むいて もらえたね!">${esc(d.coach)}</textarea>${micBtn("f-coach")}</div></div>
+  <div class="field"><span class="q">たのしかった?</span><div class="faces" id="faces">${FACES.map((f,i)=>`<button type="button" data-f="${i+1}" aria-pressed="${d.fun===i+1}" aria-label="${i+1}">${f}</button>`).join("")}</div></div>
+  <h3 class="sec">つぎに むけて</h3>
+  <div class="field"><label class="q" for="f-next">つぎの めあて</label><div class="voice"><input type="text" id="f-next" maxlength="40" value="${esc(d.next)}" placeholder="れい:シュートを1本うつ">${micBtn("f-next")}</div>
+    <div class="chips" id="nextPresets">${presetBtns(nextPresets(d),"ng",d.next)}</div></div>
+  <div class="field"><label class="q" for="f-parent">おうちの人から<small>あとで書いてもOK</small></label><div class="voice"><textarea id="f-parent" maxlength="300" placeholder="ひとこと ほめてあげてください">${esc(d.parent)}</textarea>${micBtn("f-parent")}</div></div>
+  <p class="xpprev" id="xpprev">このノートで <b>+${draftXP()} XP</b> と しあいチケット 1まい</p>
+  <p class="formmsg" id="saveMsg" role="alert"${formNote?"":" hidden"}>${esc(formNote)}</p>
+  <button class="primary" id="saveBtn" type="button"${saving?" disabled":""}>${saving?"ほぞん中…":"ノートをつける!"}</button></section>`;
+}
+function viewTeam(g){
+  const sq=squad(g), tp=teamPower(g), ni=sq.findIndex(m=>!m.joined), nx=ni<0?null:sq[ni], prev=ni>0?sq[ni-1].th:0;
+  const sh=TEAMSHAPE;
+  const cell=s=>{const w=s.who;
+    const av=w.hero?heroBust(g,"fh"):w.mate?pixSVG(mateOpts(w.mate),"f"+w.mate.id):`<div class="helper">?</div>`;
+    return `<div class="fcell${w.hero?" me":""}"><div class="ava">${av}</div><span>${esc(w.hero?heroName():w.mate?w.mate.n:"すけっと")}</span></div>`;};
+  const rows=POSKEYS.map(p=>`<div class="frow">${tp.lu.filter(s=>s.pos===p).map(cell).join("")}</div>`).join("");
+  const mates=sq.map(m=>m.joined
+    ?`<div class="mate"><div class="ava">${pixSVG(mateOpts(m),"m"+m.id)}</div><div><b>${esc(m.n)} <span class="tag">${m.pos}</span></b><small>${esc(m.cat)}</small><small>スキル【${esc(m.skill)}】 つよさ ${m.power}</small></div></div>`
+    :`<div class="mate locked"><div class="ava">?</div><div><b>??? <span class="tag">${m.pos}</span></b><small>キズナ ${m.th} で なかまに</small></div></div>`).join("");
+  const r1=v=>Math.round(v*10)/10;
+  return `<section class="panel"><h2>キズナ<span class="bondnum">${g.kizuna}</span></h2>
+    <p class="muted">パスや こえかけなど「なかまと つながる」プレーを ノートに かくと、キズナが たまって なかまが ふえるよ。</p>
+    ${nx?`<span class="b bond"><i style="width:${Math.round((g.kizuna-prev)/(nx.th-prev)*100)}%"></i></span><div class="row2"><b>つぎの なかまは ${POS[nx.pos].n}</b><span class="muted">あと ${nx.th-g.kizuna} キズナ</span></div>`:`<b>ぜんいん なかまに なった!</b>`}</section>
+  <section class="panel"><h2>スタメン</h2><div class="pitch">${rows}</div>
+    <p class="muted">8人せい(${sh})。なかまが たりない ところは「すけっと」が はいるよ。</p></section>
+  <section class="panel"><h2>なかま <span class="muted">${sq.filter(m=>m.joined).length} / ${sq.length}</span></h2><div class="mates">${mates}</div></section>
+  <section class="panel"><h2>チームの つよさ</h2><div class="powers">
+    <span>${esc(heroName())}(${esc(posLabel(profile.pos||"MF",profile.side,TEAMSHAPE))})</span><em>${r1(tp.hero)}</em>
+    <span>なかまの へいきん</span><em>${r1(tp.avg)}</em>
+    <span>スキル ボーナス</span><em>+${r1(tp.sk)}</em>
+    <span>アイテム ボーナス</span><em>+${tp.it}</em>
+    ${tp.fire?`<span>くやしさパワー</span><em>+${tp.fire}</em>`:""}
+    <span class="tot">チームりょく</span><em class="tot">${Math.round(tp.total)}</em></div>
+    <p class="muted">チームりょくは、きみ(3人ぶん)と なかま 7人を あわせた へいきんに、ボーナスを たした かず。じぶんも なかまも そだてると つよくなるよ。</p></section>`;
+}
+
+const minLabel=m=>m<=0?"":m>30?"PK":m<=15?`前半${m}分`:`後半${m-15}分`;
+function currentOpp(){
+  if(game.cup>=CUPS.length)return {n:"レジェンドオールスターズ",r:EXBASE+(game.exWins||0)*3,ex:true};
+  const t=CUPS[game.cup].teams[game.round]||CUPS[game.cup].teams[0]; return {n:t[0],r:t[1]};
+}
+const myTeam=()=>profile.team||"マイチーム";
+function viewLive(){
+  const L=live, evs=L.res.ev.slice(0,L.shown+1), last=evs[evs.length-1];
+  const sm=evs.filter(e=>e.goal&&e.side==="me").length, so=evs.filter(e=>e.goal&&e.side==="opp").length;
+  const feed=evs.slice().reverse().map(e=>`<div class="ev${e.goal?" goal "+e.side:""}${e.skill?" skill":""}${e.mate?" mate":""}"><time>${minLabel(e.m)}</time><span>${esc(e.t)}</span></div>`).join("");
+  let result="";
+  if(L.done){
+    const got=L.rewards.map(id=>`<div class="got">${itemIcon(ITEMS[id])}${esc(ITEMS[id].n)}を てにいれた!</div>`).join("");
+    result=`<div class="result"><div class="big${L.res.win?" win":""}">${L.res.win?(L.cupWon?"ゆうしょう!!":"かった!"):"ナイスチャレンジ!"}</div>
+      ${L.cupWon?`<div class="got">${TROPHY.replace("<svg",'<svg style="width:28px;height:28px"')}${esc(L.cupName)}の トロフィー</div>`:""}${got}
+      <p class="muted">${L.res.win?(L.cupWon?"つぎの たいかいに すすめるよ。":"つぎの しあいに すすめるよ。"):"まけても だいじょうぶ。つぎは「くやしさパワー」で すこし つよくなるよ。"}</p>
+      ${L.res.win?"":`<p><b>${esc(L.hint)}</b></p>`}
+      <button class="primary" id="closeLive" type="button" style="align-self:stretch">つぎへ</button></div>`;
+  }
+  return `<section class="panel"><h2>${esc(L.cupName)} ${esc(L.roundName)}</h2>
+    <div class="score"><span class="tn">${esc(myTeam())}</span><span class="sc">${sm} - ${so}</span><span class="tn">${esc(L.opp.n)}</span><span class="min">${L.done?"しあい しゅうりょう"+(L.res.pk?`(PK ${L.res.pk[0]} - ${L.res.pk[1]})`:""):minLabel(last.m)||"キックオフ"}</span></div>
+    ${result}
+    ${L.done?"":`<button class="ghost" id="skipLive" type="button">けっかまで スキップ</button>`}
+    <div class="feed" aria-live="polite">${feed}</div></section>`;
+}
+function viewMatch(g){
+  if(live)return viewLive();
+  if(!gameReady||!loaded())return `<section class="panel empty"><h2>しあい</h2><p class="muted">よみこみ中…</p></section>`;
+  const tk=tickets(g), opp=currentOpp(), tp=teamPower(g), me=Math.round(tp.total), mx=Math.max(me,opp.r);
+  const cup=CUPS[game.cup];
+  const rn=cup?roundNames(cup.teams.length):[], nR=rn.length;
+  const steps=cup?`<div class="steps">${rn.map((r,i)=>{const st=i<game.round?"done":i===game.round?"now":"";const rw=i===nR-2?cup.sf:i===nR-1?cup.f:null;
+      return `<div class="step ${st}"><b>${r}</b><span>${esc(cup.teams[i][0])}</span><span class="muted">${i===game.round?`<span class="here">▶ つぎの しあい</span>`:""}${i<game.round?"かち!":rw?"かつと ごほうび: "+esc(ITEMS[rw].n):"つよさ "+cup.teams[i][1]}</span></div>`}).join("")}</div>`:"";
+  const cups=CUPS.map((c,i)=>{const won=(game.trophies||[]).includes(i);return `<div class="cup${won?" won":""}">${TROPHY}<b>${esc(c.n)}</b><span>${won?"ゆうしょう!":i===game.cup?"ちょうせん中":"これから"}</span></div>`}).join("");
+  const eq=game.equip||{}, owned=game.items||[];
+  const items=SLOTS.map(([k,label])=>{const mine=owned.filter(id=>ITEMS[id]&&ITEMS[id].slot===k);
+    return `<div><span class="label">${label}</span><div class="itemrow">${mine.length?mine.map(id=>`<button type="button" class="item" data-equip="${id}" aria-pressed="${eq[k]===id}">${itemIcon(ITEMS[id])}${esc(ITEMS[id].n)}</button>`).join(""):`<span class="muted">まだ ないよ。たいかいで かつと もらえる!</span>`}</div></div>`}).join("");
+  const log=(game.log||[]).slice(0,6).map(l=>`<div><span>${l.win?"○":"●"} ${esc(l.opp)}</span><span>${l.gm} - ${l.go}${l.pk?` (PK ${l.pk[0]}-${l.pk[1]})`:""}</span></div>`).join("");
+  return `<section class="panel"><h2>${cup?esc(cup.n)+" "+(rn[game.round]||""):"エキシビション"}</h2>
+    ${cup?"":`<p class="muted">ぜんぶの たいかいで ゆうしょうした! さいきょうチームに ちょうせんできるよ。</p>`}
+    ${steps}
+    <div class="vs"><span>${esc(myTeam())}</span><span class="b"><i style="width:${Math.round(me/mx*100)}%"></i></span><em>${me}</em>
+      <span>${esc(opp.n)}</span><span class="b opp"><i style="width:${Math.round(opp.r/mx*100)}%"></i></span><em>${opp.r}</em></div>
+    <div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><span class="muted">ノートを 1かい かくと 1まい もらえる</span></div>
+    ${tk?`<button class="primary" id="kick" type="button">キックオフ!</button>`:`<button class="primary" data-go="write" type="button">ノートを かいて チケットを もらう</button>`}
+  </section>
+  <section class="panel"><h2>トロフィー</h2><div class="cups">${cups}</div></section>
+  <section class="panel"><h2>そうび</h2><p class="muted">タップして つけたり はずしたり できるよ。もっているだけで チームが すこし つよくなるよ。</p><div class="items">${items}</div></section>
+  ${log?`<section class="panel"><h2>さいきんの しあい</h2><div class="loglist">${log}</div></section>`:""}`;
+}
+
+function viewNotes(g){
+  if(!g.es.length)return `<section class="panel empty"><h2>まだノートがないよ</h2><button class="primary" data-go="write" type="button">ノートをかく</button></section>`;
+  const items=g.es.slice().reverse().map(e=>{
+    const kind=(KINDS.find(k=>k[0]===e.kind)||KINDS[0])[1];
+    const res=(RESULTS.find(r=>r[0]===e.goalResult)||[])[1];
+    const chips=(e.chips||[]).map(id=>(CHIP[id]||{}).t).filter(Boolean);
+    const w=WEATHERS.find(x=>x[0]===e.weather), temp=Number.isFinite(e.temp)?e.temp+"℃":"";
+    const sc=v=>Number.isInteger(v)?v:"?";
+    const games=(Array.isArray(e.games)?e.games:[]).filter(gameUsed).map(x=>[x.opp?"vs "+esc(x.opp):"",x.gf!=null||x.ga!=null?`<b>${sc(x.gf)} - ${sc(x.ga)}</b>`:""].filter(Boolean).join(" "));
+    const menu=(Array.isArray(e.menu)?e.menu:[]).map(id=>(MENUS.find(m=>m[0]===id)||[])[1]).filter(Boolean);
+    const focus=focusOf(e).map(id=>fillSide(FOCUS[id].t,e.nside));
+    const parentBlock=editingParent===e.id
+      ?`<div class="voice"><textarea id="pc-${e.id}" maxlength="300" placeholder="ひとこと ほめてあげてください">${esc(own(pcText,e.id)?pcText[e.id]:e.parent)}</textarea>${micBtn("pc-"+e.id)}</div><div class="row"><button class="ghost" data-pcsave="${e.id}" type="button"${pcBusy===e.id?" disabled":""}>${pcBusy===e.id?"ほぞん中…":"コメントをほぞん"}</button><button class="ghost" data-pccancel="${e.id}" type="button">${handoff===e.id?"とじる":"やめる"}</button></div>`
+      :(e.parent?`<div class="parent"><span class="k">おうちの人</span>${esc(e.parent)}</div>`:`<div class="row"><button class="ghost" data-pc="${e.id}" type="button">おうちの人コメントをかく(+10 XP)</button></div>`);
+    const del=confirmDel===e.id
+      ?`<div class="row"><span class="muted">このノートをけしますか?</span><button class="ghost" data-delyes="${e.id}" type="button" style="color:var(--kick)">けす</button><button class="ghost" data-delno type="button">やめる</button></div>`
+      :`<div class="row"><button class="ghost" data-del="${e.id}" type="button" style="font-size:.8rem">けす</button></div>`;
+    return `<article class="note" id="note-${esc(e.id)}" data-date="${esc(e.date)}" data-id="${esc(e.id)}" tabindex="-1"><div class="top"><span class="date">${esc(fmtDate(e.date))}<span class="tag">${kind}</span>${w||temp?`<span class="wx">${w?w[1]+" "+w[2]:""}${w&&temp?" ":""}${temp}</span>`:""}</span><span class="xp">+${g.per[e.id].sum} XP</span></div>
+    ${e.place?`<p><span class="k">ばしょ</span>${esc(e.place)}</p>`:""}
+    ${games.length?`<p><span class="k">しあい</span>${games.join("、")}</p>`:""}
+    ${menu.length?`<p><span class="k">れんしゅう</span>${menu.map(esc).join("、")}</p>`:""}
+    ${e.goal?`<p class="kw"><span class="k">めあて</span>${esc(e.goal)}${res?` → <b>${res}</b>`:""}</p>`:""}
+    ${focus.length?`<p class="kw"><span class="k">${esc(posLabel(e.npos,e.nside,e.nshape))}の ポイント</span>${focus.map(esc).join("、")}</p>`:POSKEYS.includes(e.npos)||e.npos===MIX?`<p><span class="k">ポジション</span>${esc(posLabel(e.npos,e.nside,e.nshape))}</p>`:""}
+    ${chips.length?`<p><span class="k">がんばった</span>${chips.map(esc).join("、")}</p>`:""}
+    ${e.good?`<p><span class="k">うまくいった</span>${esc(e.good)}</p>`:""}
+    ${e.hard?`<p><span class="k">むずかしかった</span>${esc(e.hard)}</p>`:""}
+    ${e.coach?`<p><span class="k">コーチ</span>${esc(e.coach)}</p>`:""}
+    ${e.fun?`<p><span class="k">たのしさ</span>${FACES[e.fun-1]}</p>`:""}
+    ${e.next?`<p><span class="k">つぎ</span>${esc(e.next)}</p>`:""}
+    ${handoff===e.id?`<div class="handoff" id="handoffBox"><b>👪 おうちの人の ばん</b>${stampBlock(e,true)}${parentBlock}</div>`:stampBlock(e)+parentBlock}${del}</article>`;
+  }).join("");
+  const credit=g.es.some(e=>Number.isFinite(e.temp))?`<p class="muted">きおんと てんきの データ:${WXCREDIT}(CC BY 4.0)</p>`:"";
+  return `${calView(g)}<section class="panel"><h2>ノート <span class="muted">${g.es.length}さつめ</span></h2>${items}${credit}</section>`;
+}
+// Stamps on a note, and (for the parents) the row to put them on.
+let stampOpen=null;
+function stampBlock(e,inBox){
+  const st=stampsOf(e), full=st.length>=MAXSTAMPS, id=esc(e.id);
+  const shown=st.length?`<div class="stamps">${st.map(x=>`<span class="stamp">${STAMP[x][1]} ${STAMP[x][2]}</span>`).join("")}</div>`:"";
+  if(stampOpen!==e.id&&!inBox)return `${shown}<div class="row"><button class="ghost mini" id="so-${id}" data-stampopen="${id}" type="button">👏 おうちの人の スタンプ</button></div>`;
+  return `${shown}<div class="stamp-pick"><p class="muted">${inBox?"":"おうちの人へ:"}タップで おせます(${MAXSTAMPS}つまで。もう1かい おすと けせます)</p>
+  <div class="chips">${STAMPS.map(([x,ic,t])=>{const on=st.includes(x);return `<button type="button" id="st-${x}" data-stamp="${x}" data-sid="${id}" aria-pressed="${on}"${!on&&full?" disabled":""}>${ic} ${t}</button>`;}).join("")}</div>
+  ${inBox?"":`<div class="row"><button class="ghost" id="stClose" data-stampclose type="button">とじる</button></div>`}</div>`;
+}
+async function toggleStamp(nid,x){
+  const e=entries.find(n=>n.id===nid); if(!e||!isStamp(x))return;
+  const cur=stampsOf(e), next=cur.includes(x)?cur.filter(y=>y!==x):cur.concat([x]); if(next.length>MAXSTAMPS)return;
+  const patch={stamps:next}; if(!cur.includes(x))patch.stampAt=new Date().toISOString(); // only a new stamp brings the banner on home
+  try{await store.update(nid,patch);render();}catch(err){flash("ほぞんできませんでした。");}
+}
+// The notes calendar: a mark on each day with a note (shape and colour by kind), the month's counts, and a tap that goes to that day's note.
+let calM="";
+function calView(g){
+  const now=today().slice(0,7), d0=g.es.length&&typeof g.es[0].date==="string"?g.es[0].date.slice(0,7):now, first=d0<now?d0:now; // back to the month of the first note
+  const m=/^\d{4}-\d\d$/.test(calM)&&calM<=now?(calM<first?first:calM):now;
+  const y=+m.slice(0,4), mo=+m.slice(5,7), days=new Date(y,mo,0).getDate(), pad=new Date(y,mo-1,1).getDay();
+  const by={}, cnt={}; g.es.forEach(e=>{if(typeof e.date==="string"&&e.date.slice(0,7)===m){(by[e.date]=by[e.date]||[]).push(e);cnt[e.kind]=(cnt[e.kind]||0)+1;}});
+  const total=Object.values(by).reduce((a,l)=>a+l.length,0);
+  const shift=k=>{const d=new Date(y,mo-1+k,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");};
+  const kindOf=e=>KINDS.some(k=>k[0]===e.kind)?e.kind:"practice";
+  let cells=""; for(let i=0;i<pad;i++)cells+=`<span class="cd"></span>`;
+  for(let d=1;d<=days;d++){const ds=m+"-"+String(d).padStart(2,"0"), es=by[ds]||[], td=ds===today()?" today":"";
+    cells+=es.length?`<button type="button" class="cd on${td}" data-calday="${ds}" aria-label="${mo}がつ${d}にち ノート ${es.length}さつ"><span>${d}</span><i>${es.slice(0,2).map(e=>`<b class="mk k-${kindOf(e)}"></b>`).join("")}</i></button>`
+      :`<span class="cd${td}"><span>${d}</span></span>`;}
+  const parts=KINDS.filter(([k])=>cnt[k]).map(([k,t])=>`${t} ${cnt[k]}`).join("・");
+  return `<section class="panel cal" id="cal"><div class="cal-head"><button class="ghost mini" id="calPrev" data-calm="${shift(-1)}" type="button" aria-label="まえの つき"${m<=first?" disabled":""}>◀</button><b>${y}ねん ${mo}がつ</b><button class="ghost mini" id="calNext" data-calm="${shift(1)}" type="button" aria-label="つぎの つき"${m>=now?" disabled":""}>▶</button></div>
+  <div class="cal-grid">${["にち","げつ","か","すい","もく","きん","ど"].map(w=>`<span class="wd">${w}</span>`).join("")}${cells}</div>
+  <p class="cal-sum">${total?`この つきの ノート <b>${total}さつ</b>(${parts})`:"この つきは まだ ノートが ないよ"}</p>
+  <p class="cal-key">${KINDS.map(([k,t])=>`<span><b class="mk k-${k}"></b>${t}</span>`).join("")}</p></section>`;
+}
+// Goes to a note in the list: scrolls it to the top, marks it for a moment and moves the focus there (for keyboards and screen readers).
+function showNote(pred){const el=[...document.querySelectorAll("#view article.note")].find(pred); if(!el)return;
+  holdUntil=Date.now()+500; el.scrollIntoView({behavior:"smooth",block:"start"}); el.classList.add("hl"); setTimeout(()=>el.classList.remove("hl"),2000); try{el.focus({preventScroll:true});}catch(e){}}
+// The parents' turn right after a note is saved: the notes open at that note with its stamps and comment box ready.
+let handoff=null, pcText={}, pcBusy=null, holdUntil=0;
+// A comment being typed is kept in memory per note, so leaving the notes or a re-render from another device does not lose it.
+$("#view").addEventListener("input",e=>{const m=/^pc-(.+)$/.exec(e.target.id||""); if(m)pcText[m[1]]=e.target.value;});
+function openParent(id){go("notes"); if(!entries.some(e=>e.id===id))return; handoff=id; stampOpen=id; editingParent=id; render(); showNote(a=>a.dataset.id===id);}
+function fmtDate(s){const d=new Date(s+"T00:00");return `${d.getMonth()+1}月${d.getDate()}日(${"日月火水木金土"[d.getDay()]})`}
+
+function renderView(g){
+  g=g||lastG;
+  const ae=document.activeElement, active=ae&&ae.id, sg=!active&&ae&&ae.dataset&&ae.dataset.v!==undefined&&ae.parentElement&&ae.parentElement.dataset.seg?[ae.parentElement.dataset.seg,ae.dataset.v]:null;
+  const keep={};document.querySelectorAll('#view [id^="pc-"],#view #s-name,#view #s-num,#view #s-team,#view #bk-code,#view #wx-q,#view #gc-in').forEach(el=>keep[el.id]=el.value);
+  const wait=!loaded()&&(tab==="team"||tab==="notes");
+  $("#view").innerHTML=wait?`<section class="panel empty"><p class="muted">よみこみ中…</p></section>`:tab==="home"?viewHome(g):tab==="write"?viewWrite():tab==="team"?viewTeam(g):tab==="match"?viewMatch(g):viewNotes(g);
+  document.querySelectorAll("nav.tabs button[data-tab]").forEach(b=>{if(b.dataset.tab===tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
+  for(const id in keep){const el=document.getElementById(id);if(el)el.value=keep[id];}
+  if(sg){const el=[...document.querySelectorAll(`#view [data-seg="${sg[0]}"] button`)].find(x=>x.dataset.v===sg[1]); if(el)el.focus({preventScroll:true});}
+  if(active){const el=document.getElementById(active); if(el&&el.focus){el.focus(); if(el.setSelectionRange&&el.type!=="date"){const n=el.value.length;try{el.setSelectionRange(n,n)}catch(e){}}}}
+  if(tab==="write")wxMaybe();
+}
+let flashMsg="", flashT=null;
+function showStatus(){
+  const base=mode==="loading"?"よみこみ中…":mode==="slow"?"データを よみこみ中です。でんぱが よわいかも しれません。このまま すこし まってね。"
+    :mode==="error"?"データを よみこめませんでした。ページを ひらきなおしてね。":mode==="local"?(!lsOK?"この ブラウザでは ノートを ほぞんできません。(おうちの人へ:Safari の せっていで「すべての Cookie を ブロック」が オフに なっているか たしかめてください)"
+      :!STANDALONE?"いまは この端末(ブラウザ)だけに ほぞんしています。"
+      :IOS_TAB?"おうちの人へ:Safari の 共有ボタンから「ホーム画面に追加」して、ホーム画面の アイコンから ひらいてください。Safari の ままだと、ノートが きえることが あります。"
+      :bkDue()?"おうちの人へ:ノートの バックアップを しばらく とっていません。上の「せってい」の いちばん下で とれます。":""):"";
+  const st=$("#status"), t=flashMsg||base; st.hidden=!t; st.textContent=t;
+}
+function render(){
+  checkKept();
+  const g=compute(entries); lastG=g; renderCard(g); showStatus(); renderView(g);
+}
+// After every change to the draft: keep a copy in this browser and refresh the XP preview.
+function draftChanged(){if(draft)touchedId=draft.id;keepDraft();const el=$("#xpprev");if(!el||!draft)return;el.innerHTML=`このノートで <b>+${draftXP()} XP</b> と しあいチケット 1まい`;}
+function flash(msg){flashMsg=msg;clearTimeout(flashT);flashT=setTimeout(()=>{flashMsg="";showStatus();},7000);showStatus();}
+// Messages about the note form go next to its button, where the writer is looking.
+function formMsg(msg){formNote=msg;const el=$("#saveMsg"); if(el){el.textContent=msg;el.hidden=!msg;} else if(msg)flash(msg);}
+function go(t){stopVoice();if(t==="notes"){stampSeen();calM="";}chalOpen=false;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);}
+
+/* match flow: the result is decided and saved at kick-off, then played back line by line */
+function kickoff(){
+  const g=lastG; if(live||!gameReady||!loaded()||tickets(g)<1)return;
+  const opp=currentOpp(), ex=!!opp.ex, cupI=game.cup, round=game.round, res=simulate(g,opp);
+  const prevEquip=Object.assign({},game.equip||{}), rewards=[]; let cupWon=false;
+  const tp0=teamPower(g), joined=squad(g).filter(m=>m.joined).length;
+  const hint=joined<7?"「なかまと つながる」プレーを ノートに かくと、なかまが ふえて チームが ぐっと つよくなるよ。"
+    :tp0.hero<tp0.avg?"「じぶんを きたえる」プレーを ノートに かくと、エースの きみが つよくなるよ。":"ノートを つづけると スキルが ふえて、チームが つよくなるよ。";
+  const next=JSON.parse(JSON.stringify(game)); next.used=(next.used||0)+1;
+  if(res.win){
+    next.lossStreak=0;
+    if(ex)next.exWins=(next.exWins||0)+1;
+    else{
+      const cup=CUPS[cupI];
+      const nR=cup.teams.length;
+      if(round===nR-2)rewards.push(cup.sf);
+      if(round===nR-1){rewards.push(cup.f);cupWon=true;next.trophies=(next.trophies||[]).concat([cupI]);}
+      rewards.forEach(id=>{if(!(next.items||[]).includes(id))next.items=(next.items||[]).concat([id]);next.equip=Object.assign({},next.equip,{[ITEMS[id].slot]:id});});
+      next.round=round+1; if(next.round>=nR){next.cup=cupI+1;next.round=0;}
+    }
+  }else next.lossStreak=(next.lossStreak||0)+1;
+  next.log=[{t:Date.now(),opp:opp.n,gm:res.gm,go:res.go,pk:res.pk,win:res.win}].concat(next.log||[]).slice(0,12);
+  live={res,opp,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,rewards,cupWon,hint,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":roundNames(CUPS[cupI].teams.length)[round],timer:null};
+  game=next;
+  store.setGame().catch(()=>flash("しあいの きろくを ほぞんできませんでした。"));
+  tab="match"; render(); window.scrollTo(0,0);
+  live.timer=setInterval(()=>{if(!live)return; if(live.shown>=live.res.ev.length-1)finishLive(); else{live.shown++;if(tab==="match")renderView();}},1200);
+}
+function finishLive(){if(!live)return;clearInterval(live.timer);live.shown=live.res.ev.length-1;live.done=true;render();}
+
+/* events */
+document.querySelector("nav.tabs").addEventListener("click",e=>{
+  if(e.target.closest("#vstop")){stopVoice();return;}
+  const b=e.target.closest("button[data-tab]");if(!b)return;go(b.dataset.tab);});
+function openSettings(){
+  if(!loaded()||!profReady){flash("よみこみ中です。すこし まってから もういちど おしてね。");return;}
+  settingsOpen=true;sdraft=null;bkReset();wxHits=null;wxMsg="";tab="home";render();const s=$("#settings");if(s)s.scrollIntoView({behavior:"smooth",block:"start"});}
+$("#gearBtn").addEventListener("click",openSettings);
+// The card shows the whole figure or a waist-up close view; a tap on the figure or on the button switches.
+try{figUp=localStorage.getItem("soccer-note-fig")==="up";}catch(e){}
+const toggleZoom=()=>{figUp=!figUp;try{localStorage.setItem("soccer-note-fig",figUp?"up":"full");}catch(e){} if(lastG)renderCard(lastG);};
+$("#zoomBtn").addEventListener("click",toggleZoom); $("#fig").addEventListener("click",toggleZoom);
+window.addEventListener("resize",fitCard); if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitCard);
+document.addEventListener("input",e=>{
+  if(!draft||tab!=="write")return; const id=e.target.id;
+  const map={"f-date":"date","f-goal":"goal","f-good":"good","f-next":"next","f-parent":"parent","f-place":"place","f-hard":"hard","f-coach":"coach"};
+  if(map[id]){draft[map[id]]=e.target.value;
+    if(id==="f-goal"){pressData("#goalPresets button","g",draft.goal);refreshNext();}
+    if(id==="f-next")pressData("#nextPresets button","ng",draft.next);
+    if(id==="f-place")pressData("#placeChips button","place",draft.place);
+    if(id==="f-date")wxDateChanged();
+    draftChanged();return;}
+  const m=/^g-(opp|gf|ga)-(\d)$/.exec(id), gm=m&&draft.games[+m[2]];
+  if(gm){if(m[1]==="opp")gm.opp=e.target.value;
+    else{const v=e.target.value.replace(/[\uFF10-\uFF19]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\D/g,"").slice(0,2);
+      if(!e.isComposing&&v!==e.target.value)e.target.value=v; gm[m[1]]=v===""?null:+v;}
+    draftChanged();}
+});
+// Some browsers send no input event after a Japanese keyboard finishes a word, so the score box is tidied once more then.
+document.addEventListener("compositionend",e=>{if(/^g-g[fa]-\d$/.test(e.target.id||""))e.target.dispatchEvent(new Event("input",{bubbles:true}));});
+// The next-goal buttons depend on today's goal and whether it was done.
+const refreshNext=()=>{const np=$("#nextPresets");if(np&&draft)np.innerHTML=presetBtns(nextPresets(draft),"ng",draft.next);};
+// Marks the preset button whose text is now in the field (if any).
+const pressData=(sel,key,val)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",String(x.dataset[key]===val)));
+$("#view").addEventListener("toggle",e=>{if(e.target.id==="skAll")skOpen=e.target.open;if(e.target.id==="bk")bkOpen=e.target.open;if(e.target.id==="wxp")wxpOpen=e.target.open;},true); // keep these open across re-renders
+$("#view").addEventListener("change",e=>{if(e.target.id==="bk-in")bkFile(e.target);});
+// The side row in settings: shown for FW, MF and DF with the places that line has (left and right for a FW or DF, and the middle
+// too for a MF); a tap on the picked side takes it off.
+function sideShow(){const f=$("#s-sidef"); if(!f)return; const on=SIDEPOS.includes(sdraft.pos), a=sidesFor(sdraft.pos,TEAMSHAPE), sd=$("#s-side"); f.hidden=!on;
+  if(sd.dataset.sides!==a){sd.dataset.sides=a; sd.innerHTML=sideBtns(sdraft.pos,sdraft.side,TEAMSHAPE); $("#s-sideq").innerHTML=sideQ(sdraft.pos,TEAMSHAPE);}
+  document.querySelectorAll("#s-side button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.side===sdraft.side)));
+  $("#s-role").innerHTML=roleLine(sdraft.pos,sdraft.side,TEAMSHAPE);}
+const pressOnly=(sel,b)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+$("#view").addEventListener("click",async e=>{
+  const b=e.target.closest("button"); if(!b)return; if(Date.now()<holdUntil)return;
+  if(b.dataset.mic){toggleMic(b.dataset.mic);return;} // before any await
+  if(b.dataset.go){go(b.dataset.go);return;}
+  if(b.id==="handBtn"){openParent(b.dataset.note);return;}
+  if(b.id==="newsBtn"){const id=b.dataset.note;go("notes");showNote(a=>a.dataset.id===id);return;}
+  if(b.id==="gcEdit"){chalOpen=true;render();const f=document.querySelector("#gcPresets button");if(f)f.focus();return;}
+  if(b.dataset.gc!==undefined&&b.closest("#gcPresets")){setChal(b.dataset.gc);return;}
+  if(b.id==="gcSave"){const el=$("#gc-in");setChal(el?el.value:"");return;}
+  if(b.id==="gcCancel"){chalOpen=false;render();const f=$("#gcEdit");if(f)f.focus();return;}
+  if(b.dataset.stampopen){stampOpen=b.dataset.stampopen;render();const f=document.querySelector(".stamp-pick [data-stamp]:not([disabled])");if(f)f.focus();return;}
+  if(b.dataset.stampclose!==undefined){const id=stampOpen;stampOpen=null;render();const f=document.getElementById("so-"+id);if(f)f.focus();return;}
+  if(b.dataset.stamp){toggleStamp(b.dataset.sid,b.dataset.stamp);return;}
+  if(b.dataset.calm){const kb=document.activeElement===b&&b.id;calM=b.dataset.calm;render();const f=kb&&document.getElementById(kb);
+    if(f&&f.disabled){const o=document.getElementById(kb==="calPrev"?"calNext":"calPrev");if(o&&!o.disabled)o.focus();}return;}
+  if(b.dataset.calday){const d=b.dataset.calday;showNote(a=>a.dataset.date===d);return;}
+  if(b.id==="openSettings"){openSettings();return;}
+  if(b.id==="kick"){kickoff();return;}
+  if(b.id==="skipLive"){finishLive();return;}
+  if(b.id==="closeLive"){live=null;render();window.scrollTo(0,0);return;}
+  if(b.id==="bk-file"){bkSaveFile();return;} // share and clipboard calls need the tap itself, so these come before any await
+  if(b.id==="bk-copy"){bkCopy();return;}
+  if(b.id==="bk-paste"){bkPaste=!bkPaste;bkMsg="";render();const t=$("#bk-code");if(t)t.focus();return;}
+  if(b.id==="bk-check"){const t=$("#bk-code");bkPrepare(t?t.value:"");return;}
+  if(b.id==="bk-go"){await bkApply();return;}
+  if(b.id==="bk-cancel"){bkData=null;bkMsg="";render();return;}
+  if(b.id==="wx-find"){await wxFind();return;}
+  if(b.dataset.wxi!==undefined){await wxPick(+b.dataset.wxi);return;}
+  if(b.id==="wx-off"){await wxOff();return;}
+  if(b.dataset.equip){const id=b.dataset.equip,slot=ITEMS[id].slot;game.equip=Object.assign({},game.equip);
+    if(game.equip[slot]===id)delete game.equip[slot];else game.equip[slot]=id;
+    render();store.setGame().catch(()=>flash("ほぞんできませんでした。"));return;}
+  if(tab==="write"&&draft){
+    const sg=b.closest("[data-seg]");
+    if(sg){const k=sg.dataset.seg, fixed=k==="kind"||k==="npos", v=draft[k]===b.dataset.v&&!fixed?"":b.dataset.v, changed=draft[k]!==v; draft[k]=v;
+      sg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.v===draft[k]));
+      if(k==="weather")draft.wxHand=true; // a tap wins over the weather looked up
+      if(k==="npos"&&changed&&!SIDEPOS.includes(v))draft.nside="";
+      if((k==="npos"||k==="nside")&&changed)draft.focus=[];
+      if(k==="goalResult")refreshNext();
+      draftChanged();
+      if((fixed||k==="nside")&&changed)renderView(); else if(k==="weather")wxShow(); // the match record or the practice list, the position's points and goals follow
+      return;}
+    if(b.dataset.place!==undefined){draft.place=b.dataset.place;$("#f-place").value=draft.place;pressData("#placeChips button","place",draft.place);draftChanged();return;}
+    if(b.dataset.ng!==undefined){draft.next=b.dataset.ng;$("#f-next").value=draft.next;pressData("#nextPresets button","ng",draft.next);draftChanged();return;}
+    if(b.dataset.menu){const i=draft.menu.indexOf(b.dataset.menu); if(i<0)draft.menu.push(b.dataset.menu); else draft.menu.splice(i,1); b.setAttribute("aria-pressed",String(i<0)); draftChanged(); return;}
+    if(b.dataset.focus){const i=draft.focus.indexOf(b.dataset.focus); if(i<0)draft.focus.push(b.dataset.focus); else draft.focus.splice(i,1); b.setAttribute("aria-pressed",String(i<0)); draftChanged(); return;}
+    if(b.id==="addGame"){if(draft.games.length<MAXGAMES){draft.games.push({opp:"",gf:null,ga:null});draftChanged();renderView();const el=$("#g-opp-"+(draft.games.length-1));if(el)el.focus();}return;}
+    if(b.id==="wxRetry"){wx={key:"",st:""};wxMaybe();return;}
+    if(b.dataset.g){draft.goal=b.dataset.g;$("#f-goal").value=draft.goal;document.querySelectorAll("#goalPresets button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.g===draft.goal));refreshNext();draftChanged();return;}
+    if(b.dataset.chip){const i=draft.chips.indexOf(b.dataset.chip);
+      if(i<0){if(chipFull(draft,!!CHIP[b.dataset.chip].team))return;draft.chips.push(b.dataset.chip);}else draft.chips.splice(i,1);
+      document.querySelectorAll("#chipField [data-chip]").forEach(x=>{const on=draft.chips.includes(x.dataset.chip);x.setAttribute("aria-pressed",on);x.disabled=!on&&chipFull(draft,!!CHIP[x.dataset.chip].team);});
+      $("#chipN").textContent=draft.chips.length;draftChanged();return;}
+    if(b.dataset.f){const v=+b.dataset.f;draft.fun=draft.fun===v?0:v;document.querySelectorAll("#faces button").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.f===draft.fun));draftChanged();return;}
+    if(b.id==="saveBtn"){await save();return;}
+  }
+  if(b.id==="s-close"){settingsOpen=false;sdraft=null;render();return;}
+  if(sdraft){
+    if(b.dataset.pos){sdraft.pos=b.dataset.pos;pressOnly("#s-pos button",b);sideShow();renderCard(lastG);return;}
+    if(b.dataset.side){sdraft.side=sdraft.side===b.dataset.side?"":b.dataset.side;sideShow();renderCard(lastG);return;}
+    if(b.dataset.c){sdraft.color=b.dataset.c;pressOnly("#s-color button",b);renderCard(lastG);return;}
+    if(b.dataset.hair){sdraft.hair=+b.dataset.hair;pressOnly("#s-hair button",b);renderCard(lastG);return;}
+    if(b.dataset.hc){sdraft.hairColor=+b.dataset.hc;pressOnly("#s-hc button",b);renderCard(lastG);return;}
+    if(b.dataset.sk){sdraft.skin=+b.dataset.sk;pressOnly("#s-skin button",b);renderCard(lastG);return;}
+    if(b.id==="s-save"){
+      const p={name:$("#s-name").value.trim(),number:$("#s-num").value.replace(/\D/g,"").slice(0,2)||"10",team:$("#s-team").value.trim(),pos:sdraft.pos,side:sideOf(sdraft.pos,sdraft.side,TEAMSHAPE),color:sdraft.color,hair:sdraft.hair,hairColor:sdraft.hairColor,skin:sdraft.skin};
+      try{await store.setProfile(p);settingsOpen=false;sdraft=null;freshDraft();render();window.scrollTo(0,0);}catch(err){flash("ほぞんできませんでした。もういちど ためしてください。");}
+      return;}
+  }
+  if(b.dataset.pc){editingParent=b.dataset.pc;render();const t=$("#pc-"+editingParent);if(t)t.focus();return;}
+  if(b.dataset.pccancel!==undefined){const id=b.dataset.pccancel||editingParent; if(dictTarget==="pc-"+id)stopVoice();
+    if(handoff&&handoff===id){handoff=null;stampOpen=null;editingParent=null;render();const f=document.getElementById("so-"+id);if(f)f.focus();return;} // とじる ends the parents' turn; the words typed stay
+    delete pcText[id];editingParent=null;render();const f=document.querySelector(`[data-pc="${id}"]`)||document.getElementById("note-"+id);if(f)f.focus();return;}
+  if(b.dataset.pcsave){if(pcBusy)return;const id=b.dataset.pcsave;pcBusy=id;b.disabled=true;b.textContent="ほぞん中…";
+    try{await stopVoice();const pcEl=$("#pc-"+id);if(!pcEl)return;const v=pcEl.value.trim();const before=lastG;
+      await store.update(id,{parent:v,parentAt:v?new Date().toISOString():""});pcBusy=null;delete pcText[id];editingParent=null;if(handoff===id){handoff=null;stampOpen=null;}render();if(v)celebrate(before,{parts:[["おうちの人のコメント",10]],sum:10},lastG,false);}
+    catch(err){flash("ほぞんできませんでした。");}
+    finally{if(pcBusy===id){pcBusy=null;render();}}return;}
+  if(b.dataset.del){confirmDel=b.dataset.del;render();return;}
+  if(b.dataset.delno!==undefined){confirmDel=null;render();return;}
+  if(b.dataset.delyes){const id=b.dataset.delyes; if(dictTarget==="pc-"+id)stopVoice();
+    if(handoff===id)handoff=null; if(stampOpen===id)stampOpen=null; if(editingParent===id)editingParent=null; delete pcText[id];
+    try{await store.remove(b.dataset.delyes);
+      if(gameReady&&(game.used||0)>entries.length){game.used=entries.length;store.setGame().catch(()=>{});} // a deleted note's used ticket should not cost the next note its ticket
+    }catch(err){flash("けせませんでした。");}
+    confirmDel=null;render();return;}
+});
+
+// "saving" and the form message live outside the DOM because a snapshot can re-render the form while a save is still on its way.
+function setSaving(v,msg){saving=v;const b=$("#saveBtn");if(b){b.disabled=v;b.textContent=v?"ほぞん中…":"ノートをつける!";}if(msg!==undefined)formMsg(msg);}
+async function save(){
+  if(saving)return;
+  if(!loaded()||!profReady){formMsg("データを よみこみ中です。すこし まってから もういちど おしてね。");return;}
+  setSaving(true,"");
+  await stopVoice(); // let the last spoken words land in the form first
+  const d=draft; if(!d){setSaving(false);return;}
+  const stop=msg=>setSaving(false,msg);
+  if(!d.date)return stop("日づけを えらんでね。");
+  if(d.date>today())return stop("みらいの日は えらべないよ。きょうか、まえの日を えらんでね。");
+  // A note has to say something, and a day holds two at most (say, practice and a match), so tickets cannot be farmed with empty notes.
+  if(!d.chips.length&&!focusOf(d).length&&!d.good.trim()&&!d.hard.trim()&&!d.coach.trim())return stop("「がんばったこと」を 1つ えらぶか、「うまくいったこと」を かいてね。");
+  if(entries.filter(x=>x.date===d.date&&x.id!==d.id).length>=MAXPERDAY)return stop(`この日の ノートは もう ${MAXPERDAY}さつ あるよ。ちがう日を えらんでね。`);
+  const before=compute(entries.filter(x=>x.id!==d.id));
+  // The draft keeps one id, so pressing the button again after a slow or failed save rewrites the same note instead of adding a copy.
+  const e=Object.assign({},d,{createdAt:d.createdAt||(d.createdAt=new Date().toISOString()),chips:d.chips.slice(0,MAXCHIPS),goal:d.goal.trim(),good:d.good.trim(),next:d.next.trim(),parent:d.parent.trim(),
+    place:d.place.trim(),hard:d.hard.trim(),coach:d.coach.trim(),focus:focusOf(d),nside:sideOf(d.npos,d.nside,d.nshape),nshape:isShape(d.nshape)?d.nshape:"",
+    menu:d.kind==="match"?[]:d.menu.slice(),games:d.kind==="match"?d.games.map(g=>({opp:g.opp.trim(),gf:g.gf,ga:g.ga})).filter(gameUsed):[]});
+  delete e.wxHand; delete e.wxFor; delete e.goalFrom; // only the form needs these
+  const slow=setTimeout(()=>{if(draft===d)setSaving(false,"まだ ほぞんできていません。でんぱを たしかめて、もういちど おしてね。");},10000);
+  try{await store.add(e);}catch(err){clearTimeout(slow);if(draft===d)setSaving(false,"ほぞんできませんでした。もういちど ためしてね。");return;}
+  clearTimeout(slow);
+  if(draft!==d)return; // another press already finished this note
+  if(db){entries=entries.filter(x=>x.id!==e.id).concat([e]);} // optimistic until the snapshot lands
+  saving=false; formNote=""; draft=null; dropKept(); if(!e.parent)handSet(e.id); tab="home"; render(); window.scrollTo(0,0);
+  celebrate(before,lastG.per[e.id],lastG,true,e.parent?null:e.id);
+}
+
+function celebrate(before,gain,after,ticket,handoff){
+  const lvup=after.level>before.level;
+  const sb=skillList(before), newSkills=skillList(after).filter((s,i)=>s.lv>sb[i].lv);
+  const qb=squad(before), newMates=squad(after).filter((m,i)=>m.joined&&!qb[i].joined);
+  const looks=UNLOCKS.filter(x=>x[0]>before.level&&x[0]<=after.level).map(x=>x[1]);
+  const ov=document.createElement("div"); ov.className="overlay";
+  ov.innerHTML=`<div class="reward" role="dialog" aria-modal="true" aria-label="けっか">
+    <div class="big">+${gain.sum} XP</div>
+    ${lvup?`<div class="lvup">レベルアップ! Lv.${after.level}</div>${rankOf(after.level)!==rankOf(before.level)?`<div><b>「${rankOf(after.level)}」になった!</b></div>`:""}`:`<div class="muted">つぎのレベルまで あと ${need(after.level)-after.rest} XP</div>`}
+    <ul>${gain.parts.map(p=>`<li><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>
+    ${looks.length?`<div class="newmate"><div class="ava look">${pixSVG(Object.assign(heroOpts(after,equipNow()),{crop:"up",label:heroName()}),"lk")}</div><div><b>あたらしい すがた!</b><br><span class="muted">${esc(looks.join("、"))}</span></div></div>`:""}
+    ${newSkills.map(s=>`<div><span class="sk${s.lv===2?" gold":""}">${s.lv===2?"★ ":""}${esc(s.n)}</span> ${s.lv===2?"が ゴールドスキルに なった!":"を おぼえた!"}</div>`).join("")}
+    ${newMates.map(m=>`<div class="newmate"><div class="ava">${pixSVG(mateOpts(m),"n"+m.id)}</div><div><b>${esc(m.n)}(${m.pos})が なかまに なった!</b><br><span class="muted">${esc(m.cat)}</span></div></div>`).join("")}
+    ${ticket?`<div><b>しあいチケット +1</b> <span class="muted">(いま ${tickets(after)}まい)</span></div>`:""}
+    ${handoff?`<div class="handoff-ask"><b>👪 つぎは おうちの人の ばん!</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
+    <div class="row" style="justify-content:center">${ticket?`<button class="ghost" type="button" id="ovmatch">しあいに いく</button>`:""}<button class="primary" type="button" id="ovok" style="flex:1">やったね!</button></div></div>`;
+  document.body.appendChild(ov);
+  // The second tap of a double tap on the save button lands on the reward, so for half a second it ignores taps: it must not vanish before it has been seen.
+  const born=Date.now(), early=()=>Date.now()-born<500, close=()=>ov.remove();
+  ov.querySelector("#ovok").addEventListener("click",()=>{if(!early())close();});
+  const mb=ov.querySelector("#ovmatch"); if(mb)mb.addEventListener("click",()=>{if(early())return;close();go("match");});
+  const pb=ov.querySelector("#ovpar"); if(pb)pb.addEventListener("click",()=>{if(early())return;close();openParent(handoff);});
+  ov.addEventListener("click",ev=>{if(ev.target===ov&&!early())close()});
+  // A reward that does not fit (a level up with new looks and teammates) leaves the parents' ask to the button on home.
+  const rw=ov.querySelector(".reward"), ask=rw.querySelector(".handoff-ask"); if(ask&&rw.scrollHeight>rw.clientHeight+1)ask.remove();
+  ov.querySelector("#ovok").focus({preventScroll:true}); rw.scrollTop=0;
+}
+
+/* ---------- boot ---------- */
+render();
+function goLocal(){if(mode!=="loading")return;mode="local";lsLoad();profReady=gameReady=true;render();}
+const use=window.claude&&window.claude.use?window.claude.use("db"):Promise.resolve(null);
+Promise.resolve(use).then(d=>{
+  if(!d){goLocal();return;}
+  db=d;
+  const timer=setTimeout(()=>{if(mode==="loading"){mode="slow";render();}},10000);
+  db.collection("entries").onSnapshot(snap=>{clearTimeout(timer);mode="db";entries=snap.docs.map(x=>Object.assign({id:x.id},x.data()));render();},
+    err=>{clearTimeout(timer);mode="error";render();});
+  db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists)profile=cleanProfile(Object.assign({},profile,s.data()));if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
+  // Skip echoes of our own writes while one is queued or a match is being played back: the local state is already ahead.
+  db.doc("game/main").onSnapshot(s=>{if(gameBusy||(live&&!live.done))return;gameReady=true;if(s.exists)game=Object.assign(newGame(),s.data());render();},()=>{});
+}).catch(()=>{goLocal();});
+if(window.claude&&window.claude.use){
+  Promise.resolve(window.claude.use("dictation")).then(d=>{dictReady=true;if(d)wireDictation(d);render();}).catch(()=>{dictReady=true;render();});
+}else{dictReady=true;}
+})();
+</script>
+
+</body>
+</html>
