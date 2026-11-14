@@ -24,18 +24,18 @@
 :root{
   --bg:#eceff6; --paper:#ffffff; --ink:#141a2e; --muted:#5a6480; --rule:#d3d9e8;
   --accent:#ffc928; --accent-ink:#3a2c00; --accent-text:#8a6800; --kick:#e8501f; --on:#ffffff;
-  --good:#2f6fe4; --soft:#e3e9fb; --chip:#f2f5fc; --bond:#d93a74; --bond-soft:#fde6ee;
+  --good:#2f6fe4; --soft:#e3e9fb; --chip:#f2f5fc; --bond:#d93a74; --bond-soft:#fde6ee; --msn:#6c44c8; --msn-soft:#efe8fd;
   --display:"Dela Gothic One","Hiragino Sans","Noto Sans JP",sans-serif;
   --body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#090d18; --paper:#121a2e; --ink:#e8ecf8; --muted:#98a3bf; --rule:#27314f;
   --accent:#ffd34f; --accent-ink:#2a2000; --accent-text:#ffd34f; --kick:#ff875f; --on:#160b05;
-  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; color-scheme:dark}}
+  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; --msn:#b99bff; --msn-soft:#261d42; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#090d18; --paper:#121a2e; --ink:#e8ecf8; --muted:#98a3bf; --rule:#27314f;
   --accent:#ffd34f; --accent-ink:#2a2000; --accent-text:#ffd34f; --kick:#ff875f; --on:#160b05;
-  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; color-scheme:dark}
+  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; --msn:#b99bff; --msn-soft:#261d42; color-scheme:dark}
 html,body{background:var(--bg);color:var(--ink)}
 /* Paints the strip under the status bar, so the page does not show through it while it scrolls past the pinned card. */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -172,7 +172,7 @@ textarea{min-height:76px;resize:vertical}
 .xpprev{font-size:.85rem;color:var(--muted);text-align:center}
 .formmsg{font-weight:800;color:var(--kick);text-align:center}
 /* v9 note items */
-.write h3.sec{font-family:var(--body);font-weight:800;font-size:.8rem;letter-spacing:.14em;color:var(--muted);border-top:2px dashed var(--rule);padding-top:12px}
+.write h3.sec,.msf h3.sec{font-family:var(--body);font-weight:800;font-size:.8rem;letter-spacing:.14em;color:var(--muted);border-top:2px dashed var(--rule);padding-top:12px}
 .gamerow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .gamerow>input{flex:1 1 9em;min-width:0}
 .gamerow .sc{display:flex;align-items:center;gap:6px;flex:none}
@@ -406,6 +406,54 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-t
 .newmate .ava{width:54px;height:61px}.newmate .ava.look{width:66px;height:110px}
 @media (prefers-reduced-motion:no-preference){.reward{animation:pop .35s ease-out}@keyframes pop{from{transform:scale(.8);opacity:.3}}
   .ev:first-child{animation:slide .3s ease-out}@keyframes slide{from{transform:translateY(-8px);opacity:0}}}
+/* v14 missions (spec14 §6.9): the purple of the missions is --msn; colour is never the only sign (the ✓ pill, the ▲ and the words carry it too) */
+.ms .msnew{font-family:var(--body);font-weight:800;font-size:.8rem;color:var(--kick);margin-left:8px}
+.ms-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:12px}
+.msc{display:flex;flex-direction:column;gap:8px;background:var(--chip);border:1px solid var(--rule);border-left:4px solid var(--msn);border-radius:14px;padding:12px}
+.msc.lift{grid-column:1/-1} .msc.done{background:var(--msn-soft);border:2px solid var(--msn)}
+.msc-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:wrap}
+.ms-pill{font-size:.8rem;font-weight:800;color:var(--msn);border:2px solid var(--msn);background:var(--paper);border-radius:999px;padding:0 8px}
+.msc.done .ms-pill{background:var(--msn);color:var(--on)} .msc-f{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto}
+.ms-go{min-height:44px;min-width:88px;border:2px solid var(--msn);background:var(--paper);color:var(--msn);border-radius:12px;padding:8px 16px;font-weight:800}
+.lts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.lt{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:8px 4px;text-align:center}
+.lt b{font-size:.85rem} .lt .lb{font-family:var(--display);font-size:1.5rem;line-height:1.1} .lt .lb small{font-size:.7rem;margin-left:2px;white-space:nowrap}
+.lt .lb .n{white-space:nowrap} .lt .lb.long{font-size:1.15rem}
+.lt .lb.none{font-family:var(--body);font-size:.95rem;color:var(--muted)} .lt .ld{font-size:.72rem;color:var(--muted)} .lt .ld.today{color:var(--accent-text);font-weight:800}
+.lt .b{display:block;width:100%;height:6px;background:var(--soft);border-radius:3px;overflow:hidden} .lt .b i{display:block;height:100%;background:var(--msn)} .lt .ln{font-size:.75rem;font-weight:800}
+@media (max-width:359px){.lt b{font-size:.72rem}.lt .lb{font-size:1.25rem}.lt .lb.long{font-size:1rem}.lt .ln{font-size:.7rem}.chips.hints button{font-size:.85rem;padding:8px 10px;min-height:44px}}
+.msf-top{display:flex;justify-content:space-between;align-items:center} #msBack{min-height:44px}
+.msbox{border:2px dashed var(--msn);border-radius:14px;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
+.msbox .slots{display:flex;flex-wrap:wrap;gap:6px} .msbox .slot{border:2px solid var(--msn);border-radius:999px;padding:0 10px;font-weight:800;font-size:.85rem;color:var(--msn)} .msbox .slot.on{background:var(--msn);color:var(--on)}
+.msmsg{font-weight:800;text-align:center} .lmsg{font-weight:700;font-size:.88rem}
+.formmsg.ask{color:var(--ink);background:var(--paper);border:2px solid var(--accent-text);border-radius:14px;padding:8px 12px}
+.msclear,.pbest{display:flex;flex-direction:column;gap:2px;border-radius:14px;padding:8px 12px} .msclear{background:var(--msn-soft);border:2px solid var(--msn)} .msclear b{color:var(--msn)}
+.pbest{border:2px solid var(--accent-text)} .pbest b{color:var(--accent-text)} .reward li.msn span,.reward li.msn b{color:var(--msn)}
+.trygoal{border:2px dashed var(--msn);border-radius:14px;padding:8px 12px;display:flex;flex-direction:column;gap:6px;align-items:center} .trygoal .ghost{min-height:44px}
+.lifts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px} .lifts>.lift{display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:.85rem}
+.lift input.num{text-align:center;font-variant-numeric:tabular-nums} .lift .lh{font-weight:400;font-size:.75rem;color:var(--muted)}
+.tag.msn{background:var(--msn-soft);color:var(--msn)} .note b.pb{font-size:.72rem;color:var(--accent-text);border:1.5px solid var(--accent-text);border-radius:999px;padding:0 6px}
+.note .mlink{min-height:44px} .handoff .phint{font-size:.85rem;color:var(--muted)}
+.mk.k-msn{width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:0 4px 8px;border-color:transparent transparent var(--msn)} .cal-grid .cd i{gap:2px}
+.ms,.msf,.msbox,.msclear,.pbest,.trygoal,.lifts,.stampnews,.handoff .phint{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+/* v14, beside the spec's block: the note form's .lift rule is scoped to its boxes (.lifts>.lift), so it does not restyle the ⚽ card (class "msc lift");
+   かく scrolls the form's top clear of the status bar strip (as #settings); a card never grows wider than its column; the form's tip boxes sit in
+   the panel's own gap, and their summary is a 44 px target */
+#msForm{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px)}
+.msc{min-width:0}
+.msf .sidetip{margin:0} .msf .sidetip p{margin:4px 0 0} .msf summary{cursor:pointer;font-weight:800;color:var(--good);padding:10px 0} #mvGoal .muted{display:block}
+/* the forms' boxes are three lines tall, so the longest example (なおしたい ところ, three lines at 320 and 390 px) is never cut off */
+.msf textarea{min-height:102px}
+/* the other new words (the juggling row, the record rows, the calendar lines, the status line, the big-jump question, the reward's ask) break only at spaces too */
+#liftBox,.note.mission,.cal-sum,.cal-key,#status,.formmsg.ask,.reward .handoff-ask{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+/* v14 pro (spec14_pro.md): the 「か」 between the two parts of the pro box; at two columns the 🌟 card spans its row, as ⚽ does */
+.msc.pro{grid-column:1/-1} .msbox .or{align-self:center;font-weight:800;font-size:.85rem;color:var(--muted)}
+/* v14 (p_v14_fix.py): the reward may use the overlay's whole height inside its 16 px padding (やったね! stays on the first screen of
+   an iPad held sideways; the parents' ask still goes to home's button when it cannot fit); a reward row (🎯 with several targets) and the
+   backup panel's lines break at spaces and after 、 or ・ only; the mission forms' headings and NEW! in the missions' purple, 4.5:1 or more on
+   --soft and --paper in both schemes (the blue and orange were 3.8:1 in light); 「かずを みる」 centred under the big-jump question */
+.reward{max-height:100%} .reward li,.bk li,.bk p{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+.msf .sidetip b,.msf summary,.ms .msnew{color:var(--msn)} #jugBack{display:block;margin:0 auto;min-height:44px}
 </style>
 <script>if("serviceWorker"in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});</script>
 </head>
@@ -632,6 +680,29 @@ const posTitle=(pos,side,shape)=>{const r=roleOf(pos,side,shape); return r?`${po
 const SIDETIP="どこに いても、せめも まもりも するよ。チームで ならう ことと ちがう ときは、コーチの いう ことが いちばん!",
   LRTIP="ひだりと みぎで ちがうのは、おもに つかう あし。れんしゅうは りょうあしで、ひだりからも みぎからも やって みよう!";
 const KINDS=[["practice","れんしゅう"],["match","しあい"],["self","じしゅれん"]];
+// v14 リフティング (counts in the note) and the missions (cards on home, records kept apart from the notes). All XP is worked out on every render.
+// Forward-only: an XP value may go up, never down; LADDER may gain targets, never lose or move one; MINCHARS and JUGASK may go down, never up.
+const JUGS=[["r","みぎあし"],["l","ひだりあし"],["b","りょうあし"]], JUGMAX=9999, LADDER=[5,10,20,50,100];
+const JUGXP=5, JUGPB=10, JUGSTEP=20, JUGASK=20; // a note with any count; the first new best of a writing day; each target, once; ask once from this count
+const VIDEOBONUS=50, LEARNBONUS=30, PROBONUS=30, MINCHARS=2;  // once a day each, for the first finished record of its day (mday)
+const MKINDS=[["video","🎬 どうが ふりかえり",VIDEOBONUS],["learn","🔍 しらべて まなぶ",LEARNBONUS],["pro","🌟 プロの しあいを みる",PROBONUS]];
+const LEARNSRC=[["book","本"],["movie","どうが"],["coach","コーチに きいた"],["family","おうちの人に きいた"],["other","ほか"]];
+// v14 pro (spec14_pro.md): how he watched (one at most, never required; 「ネット・どうが」 also names the video apps on the iPad); three plays
+// a pro makes without the ball (the hints with no position, and the third hint for a FW, MF or DF: proLooks); two safety lines, new with
+// this mission and listed for the parent; the points a viewer cannot see on a screen, left out of the hints (where the other FW of a front
+// two stands, the DFs' calls to each other); each record kind's icon and name on the cards, the forms, the list and the box (MKINDS keeps
+// the reward part's label).
+const PROHOW=[["tv","テレビ"],["net","ネット・どうが"],["live","スタジアム"],["other","ほか"]];
+const PROOFF=["パスを もらう まえに うごく","こぼれだまに いちばんに はしる","ボールが ない ときも はしりつづける"];
+const PRORULE="ネットや どうがで みる ときは おうちの人と いっしょに。<br>よるの おそい しあいは、 おうちの人と きめた じかんまで。";
+const PROSKIP=["fws_wide","df2_voice"];
+const MTITLE={video:["🎬","どうが ふりかえり"],learn:["🔍","しらべて まなぶ"],pro:["🌟","プロの しあいを みる"]};
+const LEARNHINTS=["ボールを もらう うごき","リフティングの コツ","スタミナが つく あそび","こえの かけかた","こぼれだまへの はしりかた",
+  "ボールを ピタッと とめる コツ","ミスした あとの きりかえかた","もらう まえに まわりを みる コツ","インサイドキックの けりかた",
+  "ごはんと すいみんの ひみつ","パスを もらいやすい ばしょ","はんたいの あしで ける れんしゅう","あいてに うまく ちかづく コツ",
+  "じぶんの ポジションの やくわり","しあいの まえの じゅんびうんどう","スローインの なげかた"]; // v14 pro: not 「すきな せんしゅの すごい ところ」 (a pro match is its own mission)
+const VGOODASK=["ボールに むかって はしった ところは?","パスを もらいに うごいた ところは?","「パス!」\u2060と こえを だした ところは?","あいてに ちかづいた ところは?","ボールに さわった ところを ぜんぶ さがそう!"];
+const VFIXASK=["ボールを まって いた ところ、 あった? どこへ うごけば もらえた かな?","こぼれだまが きた とき、 もっと はやく いけた ところは?","「パス!」\u2060と いえたら よかった ところは?","もう いちど できるなら、 どう する?"];
 const RESULTS=[["done","できた!"],["half","やってみた!"],["notyet","まだ"]]; // "half" was "すこしできた" until v9: trying counts
 const FACES=["😣","😕","🙂","😄","🤩"];
 // Since v9 a note can also hold the weather, the place, what was practised (or the matches played), the position played and which of its
@@ -647,6 +718,7 @@ const MAXSTAMPS=3;
 const isStamp=id=>typeof id==="string"&&Object.prototype.hasOwnProperty.call(STAMP,id);
 const stampsOf=e=>(e&&Array.isArray(e.stamps)?e.stamps:[]).filter((id,i,a)=>isStamp(id)&&a.indexOf(id)===i).slice(0,MAXSTAMPS);
 const isoOr=(v,d)=>typeof v==="string"&&Number.isFinite(Date.parse(v))?new Date(Date.parse(v)).toISOString():d;
+const isDay=v=>typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(v);
 // v13: a title every 5 levels up to the cap (5 characters at most, so the tag never wraps on a phone); レジェンド moved from Lv.30 to the cap.
 const RANKS=[[1,"たまご選手"],[3,"ルーキー"],[6,"レギュラー"],[10,"エース"],[15,"キャプテン"],[20,"スター"],[25,"ヒーロー"],[30,"ミラクル"],[35,"マスター"],[40,"たいよう"],[45,"ぎんが"],[50,"レジェンド"]];
 const TEAMCOLORS=["#2f7bff","#ff3b4a","#ff9a1f","#a45bff","#19c9b6","#b6f000"];
@@ -759,6 +831,50 @@ function entryXP(e,prev){
 const focusOf=e=>{const ok=pointsOf(e.npos,e.nside,e.nshape).map(p=>p[0]); return (Array.isArray(e.focus)?e.focus:[]).filter((id,i,a)=>typeof id==="string"&&ok.includes(id)&&a.indexOf(id)===i);};
 function daysBetween(a,b){return Math.round((new Date(b+"T00:00")-new Date(a+"T00:00"))/864e5)}
 function sortEntries(list){return list.slice().sort((a,b)=>(a.date+(a.createdAt||"")).localeCompare(b.date+(b.createdAt||"")))}
+// v14 (moved up from the backup section: missionOf needs it, and sim13.js runs compute from this part of the page)
+const localDay=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+// v14 the order things were written in: save time, then id (one without a readable save time comes last). A note written later for an
+// earlier day still counts as written later, so it never changes what an earlier note got.
+const wkey=e=>isoOr(e.createdAt,"~")+"|"+e.id;
+const byWritten=(a,b)=>{const x=wkey(a), y=wkey(b); return x<y?-1:x>y?1:0;};
+// The writing day of a note: the day of its save time in Japan time (UTC+9) on every device, so XP never depends on the device's time zone.
+const wday=e=>{const d=new Date(Date.parse(e.createdAt||"")+9*36e5); return isNaN(d.getTime())?String(e.date):d.toISOString().slice(0,10);};
+// The day of a record: the date stored at save (the writer's own day), so XP, the card, the list and the calendar ▲ agree on every device.
+const mday=m=>isDay(m.date)?m.date:wday(m);
+// v14 a box counts as written with MINCHARS characters, not counting spaces and 、。!? marks.
+const nchars=s=>Array.from(String(s==null?"":s).replace(/[\s、。,.!?！？・…〜~～]/g,"")).length;
+const written=s=>nchars(s)>=MINCHARS;
+// v14 a note's juggling counts, known kinds only ({r:12,b:3}). cleanJug keeps every count of the right shape, so a later version's kinds survive a restore.
+const jugOf=e=>{const j=e&&e.jug, o={}; if(j&&typeof j==="object")JUGS.forEach(([k])=>{const n=j[k]; if(Number.isInteger(n)&&n>=0&&n<=JUGMAX)o[k]=n;}); return o;};
+const cleanJug=v=>{const o={}; if(v&&typeof v==="object"&&!Array.isArray(v))Object.keys(v).filter(k=>/^[a-z]{1,8}$/.test(k)).slice(0,8).forEach(k=>{const n=v[k]; if(Number.isInteger(n)&&n>=0&&n<=JUGMAX)o[k]=n;}); return o;};
+// v14 the juggling XP of each note, taken in writing order: JUGXP for any count ("jug", note XP); JUGPB for the first note of a writing day with a count
+// above every earlier count of that kind; JUGSTEP for each LADDER target, to the first note that reaches it ("msn", mission XP). A kind's first count is
+// not a best. info: pb (kinds beaten), first (kinds written the first time), clr ([kind, targets]), paid (this note got the day's +10).
+function jugPass(es){
+  const top=Object.create(null), best={}, pbDay=Object.create(null), per=Object.create(null);
+  es.slice().sort(byWritten).forEach(e=>{
+    const c=jugOf(e), ks=JUGS.filter(([k])=>c[k]!==undefined); if(!ks.length)return;
+    const parts=[["リフティングを かいた",JUGXP,"jug"]], info={pb:[],first:[],clr:[],paid:false};
+    ks.forEach(([k,t])=>{const n=c[k], b=top[k]===undefined?-1:top[k], hit=LADDER.filter(x=>x>b&&x<=n);
+      if(b<0)info.first.push(k); else if(n>b)info.pb.push(k);
+      if(hit.length){info.clr.push([k,hit]); parts.push([`🎯 ${t} ${hit.join("かい・")}かい クリア`,JUGSTEP*hit.length,"msn"]);}
+      if(n>b){top[k]=n; best[k]={n,date:e.date,id:e.id};}});
+    if(info.pb.length){const d=wday(e); if(!pbDay[d]){pbDay[d]=1; info.paid=true; parts.splice(1,0,["🏅 じこベスト",JUGPB,"msn"]);}}
+    per[e.id]={parts,info};});
+  return {per,best};
+}
+// v14 what a mission record is worth: its kind's XP for the first finished record of that kind on its day (mday), in writing order, nothing for the
+// others; a parent's comment +10, as on notes. Worked out every time and never stored, so deleting a record moves its XP to the next one of that day.
+const missionDone=m=>m.kind==="video"?written(m.good)&&written(m.fix):m.kind==="learn"?written(m.learn):m.kind==="pro"?written(m.wow)||written(m.next):false;
+function missionPass(ms){
+  const list=(Array.isArray(ms)?ms:[]).filter(m=>m&&typeof m==="object"&&typeof m.id==="string"&&MKINDS.some(k=>k[0]===m.kind)).sort(byWritten);
+  const won=Object.create(null), per=Object.create(null); let pn=0;
+  list.forEach(m=>{const key=m.kind+"|"+mday(m), mk=MKINDS.find(k=>k[0]===m.kind), parts=[];
+    if(!won[key]&&missionDone(m)){won[key]=m.id; parts.push([mk[1],mk[2],"msn"]);}
+    if(String(m.parent||"").trim()){parts.push(["おうちの人のコメント",10]); pn++;} // as on notes (entryXP)
+    per[m.id]={parts,sum:parts.reduce((a,p)=>a+p[1],0),mat:{hane:0,ishi:0,ito:0}};});
+  return {list,per,pn};
+}
 
 // v13 materials from one note: one for each "がんばったこと", a はね for position points or a next goal, an いし for a goal that was tried, an いと for
 // "うまくいったこと". Parent comments, stamps, wins, streaks and length give none, and nothing is random.
@@ -768,19 +884,20 @@ function noteMat(e){const m={hane:0,ishi:0,ito:0};
   if(String(e.goal||"").trim()&&(e.goalResult==="done"||e.goalResult==="half"))m.ishi++;
   if(String(e.good||"").trim())m.ito++;
   return m;}
-function compute(list){
-  const es=sortEntries(list); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
+function compute(list,ms){
+  const es=sortEntries(list), jp=jugPass(es), mp=missionPass(ms); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
   const per={}, chipCount={}, mat={hane:0,ishi:0,ito:0}; let kizuna=0, done=0, parentN=0;
   es.forEach((e,i)=>{
-    const parts=entryXP(e,es[i-1]); const sum=parts.reduce((a,p)=>a+p[1],0);
-    const nm=noteMat(e); per[e.id]={parts,sum,mat:nm}; xp+=sum; for(const k in nm)mat[k]+=nm[k];
+    const j=jp.per[e.id], parts=entryXP(e,es[i-1]).concat(j?j.parts:[]); const sum=parts.reduce((a,p)=>a+p[1],0);
+    const nm=noteMat(e); per[e.id]={parts,sum,mat:nm,jug:j?j.info:null}; xp+=sum; for(const k in nm)mat[k]+=nm[k];
     (e.chips||[]).slice(0,MAXCHIPS).forEach(id=>{const c=CHIP[id]; if(!c)return; chipCount[id]=(chipCount[id]||0)+1; for(const k in c.s)stats[k]+=c.s[k]; if(c.team)kizuna++;});
     if(e.goalResult==="done")done++;
     if((e.parent||"").trim())parentN++;
   });
+  for(const id in mp.per)xp+=mp.per[id].sum; parentN+=mp.pn; // v14 records add XP (and a parent's comment counts for おうえんパワー): no ticket, stats, materials or streak
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
-  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat};
+  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per};
 }
 const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
 
@@ -1035,6 +1152,17 @@ function cleanProfile(p){const pick=(v,n)=>Number.isInteger(v)&&v>=0&&v<n?v:0;
   return p;}
 function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");entries=d.entries||[];if(d.profile)profile=cleanProfile(Object.assign(profile,d.profile));if(d.game){game=Object.assign(newGame(),d.game);game.made=cleanMade(game.made);}}catch(e){}}
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify({entries,profile,game}));return true;}catch(e){return false;}}
+// v14 mission records live apart from the notes (db collection "missions"; here, their own key), so an older page never counts them as notes and never
+// drops them when it saves (it writes LS with entries, profile and game only). Loaded as they are (only objects are kept, so every reader can look
+// inside one); read field by field only from a backup (cleanMission). msReady: the records are known; msErr: they cannot be read now.
+let missions=[], msReady=false, msErr=false; const MS="soccer-note-missions";
+function msLoad(){try{const d=JSON.parse(localStorage.getItem(MS)||"{}");missions=d&&Array.isArray(d.missions)?d.missions.filter(m=>m&&typeof m==="object"&&!Array.isArray(m)):[];}catch(e){missions=[];}}
+function msSave(){try{localStorage.setItem(MS,JSON.stringify({missions}));return true;}catch(e){return false;}}
+// v14 the records' listener (db only). It never sets mode: when the collection cannot be read, the notes keep working and the cards say so. A listener
+// that never answers counts as failed after 10 s (like the entries one), and a late answer clears that.
+function msListen(){try{const mt=setTimeout(()=>{if(!msReady){msReady=true;msErr=true;render();}},10000);
+    db.collection("missions").onSnapshot(snap=>{clearTimeout(mt);msReady=true;msErr=false;missions=snap.docs.map(x=>Object.assign({},x.data(),{id:x.id}));render();},
+      ()=>{clearTimeout(mt);msReady=true;msErr=true;render();});}catch(e){msReady=true;msErr=true;}}
 const lsOK=(()=>{try{localStorage.setItem(LS+"-t","1");localStorage.removeItem(LS+"-t");return true;}catch(e){return false;}})();
 
 /* ---------- backup (for parents): the notes as a file or a code, and back ---------- */
@@ -1048,17 +1176,16 @@ if(STANDALONE&&navigator.storage&&navigator.storage.persisted&&navigator.storage
 const BK="soccer-note-backup-at";
 let bkOpen=false, bkPaste=false, bkData=null, bkBusy=false, bkMsg="", bkShow="";
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
-const localDay=t=>{const d=new Date(t);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 function bkLast(){try{const v=localStorage.getItem(BK)||"";return isNaN(Date.parse(v))?"":v;}catch(e){return "";}}
 function bkMark(at){const t=Math.min(Date.parse(at),Date.now()), cur=Date.parse(bkLast());if(isNaN(t)||(!isNaN(cur)&&t<=cur))return;try{localStorage.setItem(BK,new Date(t).toISOString());}catch(e){}}
-// Due when a note is missing from the last backup and that backup (or, without one, the oldest note) is two weeks old.
+// Due when a note (v14: or a mission record) is missing from the last backup and that backup (or, without one, the oldest) is two weeks old.
 function bkDue(){
-  if(!STANDALONE||!entries.length)return false;
-  const ts=entries.map(e=>Date.parse(e.createdAt||e.date+"T12:00:00")).filter(t=>!isNaN(t)); if(!ts.length)return false;
+  if(!STANDALONE||(!entries.length&&!missions.length))return false;
+  const ts=entries.concat(missions).map(e=>Date.parse(e.createdAt||e.date+"T12:00:00")).filter(t=>!isNaN(t)); if(!ts.length)return false;
   const last=Date.parse(bkLast()); if(!isNaN(last)&&Math.max(...ts)<=last)return false;
   return Date.now()-(isNaN(last)?Math.min(...ts):last)>=14*864e5;
 }
-const backupJSON=()=>JSON.stringify({app:"soccer-note",v:1,at:new Date().toISOString(),entries:sortEntries(entries),profile,game});
+const backupJSON=()=>JSON.stringify({app:"soccer-note",v:1,at:new Date().toISOString(),entries:sortEntries(entries),missions:missions.slice().sort(byWritten),profile,game});
 // A backup is read field by field, so a damaged or edited file cannot put anything odd into the notes, the player or the game.
 // The v9 fields, read field by field: only known choices, small whole numbers and short texts.
 function noteExtras(x){
@@ -1069,11 +1196,11 @@ function noteExtras(x){
     place:s(x.place,20),menu:ids(x.menu,id=>MENUS.some(m=>m[0]===id)),
     games:(Array.isArray(x.games)?x.games:[]).filter(g=>g&&typeof g==="object").slice(0,20).map(g=>({opp:s(g.opp,20),gf:n2(g.gf),ga:n2(g.ga)})),
     npos,nside,nshape,focus:focusOf({npos,nside,nshape,focus:x.focus}).slice(0,pointsOf(npos,nside,nshape).length),
-    hard:s(x.hard,200),coach:s(x.coach,200),stamps:stampsOf(x),stampAt:isoOr(x.stampAt,""),parentAt:isoOr(x.parentAt,"")};
+    hard:s(x.hard,200),coach:s(x.coach,200),stamps:stampsOf(x),stampAt:isoOr(x.stampAt,""),parentAt:isoOr(x.parentAt,""),jug:cleanJug(x.jug)};
 }
 function cleanEntry(x){
   if(!x||typeof x!=="object"||typeof x.id!=="string"||!/^[A-Za-z0-9_-]{1,40}$/.test(x.id))return null;
-  if(typeof x.date!=="string"||!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(x.date))return null;
+  if(!isDay(x.date))return null;
   const s=(v,n)=>typeof v==="string"?v.slice(0,n):"", chips=[];
   (Array.isArray(x.chips)?x.chips:[]).forEach(id=>{if(CHIPS.some(c=>c.id===id)&&!chips.includes(id)&&!chipFull({chips},!!CHIP[id].team))chips.push(id);});
   const e={id:x.id,date:x.date,kind:KINDS.some(k=>k[0]===x.kind)?x.kind:"practice",goal:s(x.goal,40),goalResult:RESULTS.some(r=>r[0]===x.goalResult)?x.goalResult:"",
@@ -1081,6 +1208,19 @@ function cleanEntry(x){
   Object.assign(e,noteExtras(x)); e.games=e.games.filter(gameUsed).slice(0,MAXGAMES); // empty rows go first, so they never push a real game out
   if(typeof x.createdAt==="string"&&x.createdAt.length<=40&&!isNaN(Date.parse(x.createdAt)))e.createdAt=x.createdAt;
   return e;
+}
+// v14 a mission record read from a backup, field by field: a known kind, a real date, texts at the form's lengths. The match watched is a date on or
+// before the record's own day; the typed name of a match is kept only without one.
+function cleanMission(x){
+  if(!x||typeof x!=="object"||typeof x.id!=="string"||!/^[A-Za-z0-9_-]{1,40}$/.test(x.id)||!MKINDS.some(k=>k[0]===x.kind)||!isDay(x.date))return null;
+  const s=(v,n)=>typeof v==="string"?v.slice(0,n):"";
+  const m={id:x.id,kind:x.kind,date:x.date,next:s(x.next,40),parent:s(x.parent,300),parentAt:isoOr(x.parentAt,""),stamps:stampsOf(x),stampAt:isoOr(x.stampAt,"")};
+  if(x.kind==="video"){m.good=s(x.good,300);m.fix=s(x.fix,200);m.fun=[1,2,3,4,5].includes(x.fun)?x.fun:0;
+    m.vdate=isDay(x.vdate)&&x.vdate<=x.date?x.vdate:"";m.vtext=m.vdate?"":s(x.vtext,20);}
+  else if(x.kind==="pro"){m.how=PROHOW.some(c=>c[0]===x.how)?x.how:"";m.match=s(x.match,30);m.look=s(x.look,40);m.wow=s(x.wow,300);}
+  else{m.src=(Array.isArray(x.src)?x.src:[]).filter((id,i,a)=>typeof id==="string"&&LEARNSRC.some(c=>c[0]===id)&&a.indexOf(id)===i);m.topic=s(x.topic,20);m.learn=s(x.learn,300);}
+  if(typeof x.createdAt==="string"&&x.createdAt.length<=40&&!isNaN(Date.parse(x.createdAt)))m.createdAt=x.createdAt;
+  return m;
 }
 // v13 made pieces: {id: {c}}. Ids of the right shape that this version does not know are kept (not drawn or counted), so a later version's pieces survive.
 function cleanMade(x){const out={}; if(!x||typeof x!=="object"||Array.isArray(x))return out;
@@ -1107,7 +1247,10 @@ function bkParse(text){
   if(!d||typeof d!=="object"||d.app!=="soccer-note"||!Array.isArray(d.entries))return null;
   const list=[], ids=new Set();
   d.entries.slice(0,5000).forEach(x=>{const e=cleanEntry(x);if(e&&!ids.has(e.id)){ids.add(e.id);list.push(e);}});
-  return {at:typeof d.at==="string"&&d.at.length<=40&&!isNaN(Date.parse(d.at))?d.at:"",entries:list,given:d.entries.length,
+  // v14 the mission records, read the same way (a file from an older page has none)
+  const ml=[], mids=new Set(), mg=Array.isArray(d.missions)?d.missions:[];
+  mg.slice(0,5000).forEach(x=>{const m=cleanMission(x);if(m&&!mids.has(m.id)){mids.add(m.id);ml.push(m);}});
+  return {at:typeof d.at==="string"&&d.at.length<=40&&!isNaN(Date.parse(d.at))?d.at:"",entries:list,given:d.entries.length,missions:ml,givenM:mg.length,
     profile:d.profile&&typeof d.profile==="object"?cleanBackupProfile(d.profile):null,game:d.game&&typeof d.game==="object"?cleanGame(d.game):null};
 }
 // Restoring never deletes: notes are added by id, the match record that got further is kept, and the player's look comes back only if none is set yet.
@@ -1119,8 +1262,17 @@ function bkPlan(d){
   const addMade=d.game?Object.keys(d.game.made||{}).filter(id=>own(GEAR,id)&&!own(game.made||{},id)):[];
   // v13: teammates' names from the backup come back where this device has not changed them (a name changed here stays).
   const bn=d.profile&&d.profile.mnames||{}, mn=profile.mnames||{}, addNames=Object.keys(bn).filter(id=>!own(mn,id));
-  return {add,addMade,addNames,names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+  // v14: records come back by id too, but not while they cannot be read here (they could not be compared).
+  const haveM=new Set(missions.map(m=>m.id)), addM=msErr?[]:(d.missions||[]).filter(m=>!haveM.has(m.id));
+  // v14: the counts an older page dropped when it restored a v14 file: notes this device has with no counts (no jug object, or {} when the
+  // note came here in that older page's own backup), whose copy in the file has counts. A note is never edited, so only a drop makes them differ.
+  const mine=new Map(entries.map(e=>[e.id,e]));
+  const fixJ=d.entries.filter(e=>{const x=mine.get(e.id); return !!x&&!Object.keys(cleanJug(x.jug)).length&&Object.keys(cleanJug(e.jug)).length>0;});
+  return {add,addM,fixJ,addMade,addNames,names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
 }
+// v14 the notes with the file's counts put back on the notes in fixJ (only {jug} changes), and what the device would hold after a restore.
+const withJug=(list,fixJ)=>{const f=new Map(fixJ.map(e=>[e.id,e])); return list.map(e=>f.has(e.id)?Object.assign({},e,{jug:cleanJug(f.get(e.id).jug)}):e);};
+const bkAfter=p=>compute(withJug(entries,p.fixJ).concat(p.add),missions.concat(p.addM));
 // The game after a restore: the backup's when it got further, with this device's made pieces copied over it (its colours win), else this one with the backup's missing pieces.
 function bkGame(p,d){
   const g=JSON.parse(JSON.stringify(p.useGame?d.game:game)), mine=JSON.parse(JSON.stringify(game.made||{}));
@@ -1144,19 +1296,27 @@ const store={
     return p;
   }
 };
+// v14 the same three writes for mission records. Here a failed add puts the old list back and throws, so a save is never shown that did not happen.
+const mstore={
+  async add(m){if(db){await db.collection("missions").doc(m.id).set(m);}else{const was=missions;missions=missions.filter(x=>x.id!==m.id).concat([m]);if(!msSave()){missions=was;throw new Error("local");}}},
+  async update(id,patch){if(db){await db.doc("missions/"+id).update(patch);} const x=missions.find(x=>x.id===id); if(x)Object.assign(x,patch); if(!db)msSave();},
+  async remove(id){if(db){await db.doc("missions/"+id).delete();} missions=missions.filter(x=>x.id!==id); if(!db)msSave();}
+};
+// v14 whether an id is a mission record's (a note's own id wins, so a note is never written through the records' store)
+const isMission=id=>!entries.some(e=>e.id===id)&&missions.some(m=>m.id===id);
 
 /* ---------- voice input (dictation) ---------- */
 const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 let dict=null, dictReady=false, dictHidden=false, dictState="idle", dictTarget=null, dictLang="ja", dictPartial="";
 let sess=0, sessHandled=-1, sessLang="", startPending=false, noticeTimer=null;
-const FIELD_NAMES={"f-goal":"きょうの めあて","f-good":"うまくいったこと","f-hard":"むずかしかったこと","f-coach":"コーチに いわれたこと・ほめられたこと","f-next":"つぎの めあて","f-parent":"おうちの人から"};
+const FIELD_NAMES={"f-goal":"きょうの めあて","f-good":"うまくいったこと","f-hard":"むずかしかったこと","f-coach":"コーチに いわれたこと・ほめられたこと","f-next":"つぎの めあて","f-parent":"おうちの人から","mv-good":"よかった ところ","mv-fix":"なおしたい ところ","mv-next":"つぎに やってみる こと","ml-learn":"まなんだ こと","ml-next":"やってみたい こと","mp-wow":"すごかった プレー","mp-next":"まねしたい こと"};
 function micBtn(id){
   if(!dict||dictHidden)return "";
-  return `<button type="button" class="mic" data-mic="${id}" aria-pressed="${dictState!=="idle"&&dictTarget===id}" aria-label="こえで入力">${MIC}</button>`;
+  return `<button type="button" class="mic" data-mic="${esc(id)}" aria-pressed="${dictState!=="idle"&&dictTarget===id}" aria-label="こえで入力">${MIC}</button>`;
 }
 function voiceHint(){
   if(dict&&!dictHidden)return `<p class="muted">マイクの ボタンを おすと、こえで かけるよ。</p>`;
-  if(dictReady)return `<p class="muted">こえで かきたいときは、キーボードの マイク(🎤)を おして はなしてね。</p>`;
+  if(dictReady)return `<p class="muted">こえで かきたいときは、キーボードの マイク\u2060(🎤)\u2060を おして はなしてね。</p>`;
   return "";
 }
 function updateVoiceUI(){
@@ -1223,7 +1383,7 @@ function wireDictation(d){
 // Inside Claude the page cannot reach other sites, so there the weather is a tap. The Home Screen copy asks Open-Meteo (no key needed; data
 // CC BY 4.0, credited wherever it is shown) about the note's day at the town the parents chose. Only that town's position and the date are sent.
 const WX_ON=STANDALONE&&typeof fetch==="function";
-const WXCREDIT='<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>';
+const WXCREDIT="Open-Meteo.com"; // v14: plain text (the source and the licence named, no link out of the app)
 let wx={key:"",st:""}, wxpOpen=false, wxHits=null, wxMsg="", wxBusy=false; // wx.st: "busy" | "ok" | "fail" for the day in wx.key
 const wxKey=d=>profile.wx&&d?profile.wx.lat+","+profile.wx.lon+","+d.date:"";
 // WMO weather codes: 0-2 clear to partly cloudy, 3 overcast, 45 and 48 fog, 71-77 and 85-86 snow; the rest is drizzle, rain, showers or thunder.
@@ -1324,15 +1484,27 @@ let tab="home", figUp=false, draft=null, settingsOpen=false, sdraft=null, confir
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 // A new note starts from the last one: its next goal becomes today's goal, its place today's place, and the position is the player's own.
 // The goal shown on home and given to a new note: the one picked on home when it was picked after the last note was written
-// (a note written later for an earlier day does not take over), else the last note's next goal.
+// (a note written later for an earlier day does not take over), else the last note's next goal, or its own goal when it was not rated
+// (v14: a note with counts only takes the goal without playing it, so the goal stays for home and the next note).
 function curGoal(){
   const es=sortEntries(entries), last=es[es.length-1], c=profile.chal;
   if(c&&c.t&&(!last||Date.parse(c.at)>(Date.parse(last.createdAt||"")||0)))return c.t;
-  return last&&last.next?last.next:"";
+  return last&&last.next?last.next:last&&!last.goalResult&&last.goal?last.goal:"";
 }
 function newDraft(){const es=sortEntries(entries), last=es[es.length-1], lp=es.slice().reverse().find(e=>typeof e.place==="string"&&e.place.trim()), g0=loaded()&&profReady?curGoal():"";
   return {id:uid(),date:today(),kind:"practice",goal:g0,goalFrom:g0,goalResult:"",chips:[],fun:0,good:"",next:"",parent:"",
-    weather:"",temp:null,place:lp?lp.place.trim().slice(0,20):"",menu:[],games:[{opp:"",gf:null,ga:null}],npos:profile.pos||"",nside:profile.side||"",nshape:TEAMSHAPE,focus:[],hard:"",coach:"",wxHand:false,wxFor:""};}
+    weather:"",temp:null,place:lp?lp.place.trim().slice(0,20):"",menu:[],games:[{opp:"",gf:null,ga:null}],npos:profile.pos||"",nside:profile.side||"",nshape:TEAMSHAPE,focus:[],hard:"",coach:"",jug:{},wxHand:false,wxFor:""};}
+// v14 the note as save() stores it; the XP preview scores exactly this, so the two never differ. at: its save time.
+function noteOf(d,at){const e=Object.assign({},d,{createdAt:at,chips:d.chips.slice(0,MAXCHIPS),goal:d.goal.trim(),good:d.good.trim(),next:d.next.trim(),parent:d.parent.trim(),
+    place:d.place.trim(),hard:d.hard.trim(),coach:d.coach.trim(),focus:focusOf(d),nside:sideOf(d.npos,d.nside,d.nshape),nshape:isShape(d.nshape)?d.nshape:"",
+    menu:d.kind==="match"?[]:d.menu.slice(),games:d.kind==="match"?d.games.map(g=>({opp:g.opp.trim(),gf:g.gf,ga:g.ga})).filter(gameUsed):[],jug:cleanJug(d.jug)});
+  delete e.wxHand; delete e.wxFor; delete e.goalFrom; delete e.jugAsk; return e;} // only the form needs these
+// v14: reads a count box. ０-９ become 0-9, and かい, 回 or spaces at the ends are taken off. Then 0-4 digits are a count ("" = none),
+// 5 digits or more are "big" (the box is emptied, so 10000 never turns into 1000), and anything else is "nan" (v:null: the last count is put back).
+const jugRead=raw=>{const s=String(raw==null?"":raw).replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).trim().replace(/(かい|回)$/,"").trim();
+  return /^\d{0,4}$/.test(s)?{v:s,why:""}:/^\d+$/.test(s)?{v:"",why:"big"}:{v:null,why:"nan"};};
+// v14 the kinds whose count is JUGASK or more and over twice the best so far (0 when there is none): asked about once before saving.
+const jugBig=(d,g)=>JUGS.filter(([k])=>{const n=jugOf(d)[k], b=g.jug[k]; return n!==undefined&&n>=JUGASK&&n>2*(b?b.n:0);});
 // The v9 part of a draft read back from this browser, plus what only the form needs: a match row to type into and where the weather came from.
 function draftExtras(base,d){
   const x=noteExtras(d); if(!own(d,"npos")){x.npos=profile.pos||"";x.nside=profile.side||"";x.nshape=TEAMSHAPE;} // a draft kept by v8 has no position yet (one kept by v10 has no side and one kept by v11 no shape: they keep the points they ticked)
@@ -1360,6 +1532,12 @@ function checkKept(){
   if(!keptPending||!loaded())return; keptPending=false;
   if(draft&&entries.some(e=>e.id===draft.id)){draft=null;dropKept();flash("かきかけの ノートは、もう ほぞんできていたよ。「ノート」で みられるよ。");}
 }
+// v14: once the records are loaded and readable, a kept mission draft whose record is already saved is dropped (only then is the kept copy
+// rewritten, so starting the app does not restart a draft's 7 days).
+let keptMCheck=true;
+function checkKeptM(){if(!keptMCheck||!msReady||msErr)return; keptMCheck=false; let drop=false;
+  MKINDS.forEach(([kind])=>{const d=mdraft[kind]; if(d&&missions.some(m=>m.id===d.id)){mdraft[kind]=null; drop=true; if(missionOpen===kind)missionOpen=null;}});
+  if(drop)keepMission();}
 const heroName=()=>profile.name||"きみ";
 // The look shown on the card: the saved profile, or the choices being tried in the settings panel.
 const look=()=>settingsOpen&&sdraft?Object.assign({},profile,sdraft):profile;
@@ -1421,18 +1599,19 @@ function looksPanel(g){
   ${g.level>=MAXLV?`<p class="muted"><b>ぜんぶの すがたに なった! これからは ★を あつめよう${g.stars?" (いま ★×"+g.stars+")":""}</b></p>`:""}</section>`;
 }
 function viewHome(g){
+  if(missionOpen&&mdraft[missionOpen])return missionForm(g); // v14: an open mission form takes the page (the tab bar keeps せんしゅ marked)
   const tk=gameReady?tickets(g):0;
   const ready=loaded();
   const setup=ready&&profReady&&(!profile.name||!profile.pos)&&!settingsOpen?`<section class="panel empty"><h2>はじめに</h2><p class="muted">せんしゅの なまえと ポジションを きめよう!</p><button class="primary" id="openSettings" type="button">せっていを ひらく</button></section>`:"";
   const empty=ready&&!g.es.length?`<section class="panel empty"><h2>さいしょのノートをかこう!</h2><p class="muted">れんしゅうや しあいのあとに かくと、せんしゅが そだって、なかまが ふえて、しあいにも でられるよ。</p><button class="primary" data-go="write" type="button">ノートをかく</button></section>`:"";
-  const hp=handGet(), he=hp&&g.es.find(e=>e.id===hp.id), hb=he&&!stampsOf(he).length&&!String(he.parent||"").trim()
-    ?`<button class="stampnews handnote" id="handBtn" data-note="${esc(he.id)}" type="button">👪 きょうの ノートを おうちの人に みせよう!<small>タップで おうちの人の ばんに なるよ</small></button>`:"";
+  const hp=handGet(), he=hp&&(g.es.find(e=>e.id===hp.id)||g.ms.find(m=>m.id===hp.id)), hm=he&&g.ms.includes(he)?he.kind:"", hb=he&&!stampsOf(he).length&&!String(he.parent||"").trim()
+    ?`<button class="stampnews handnote" id="handBtn" data-note="${esc(he.id)}" type="button">${hm==="video"?"👪 きょうの どうが ふりかえりを おうちの人に みせよう!":hm==="learn"?"👪 しらべた ことを おうちの人に おしえよう!":hm==="pro"?"👪 プロの しあいで みつけた ことを おうちの人に みせよう!":"👪 きょうの ノートを おうちの人に みせよう!"}<small>タップで おうちの人の ばんに なるよ</small></button>`:"";
   const ng=goalCard(g), nw=stampNews(g), sn=nw?`<button class="stampnews" id="newsBtn" data-note="${esc(nw.id)}" type="button">🎉 おうちの人から ${nw.stamp&&nw.comment?"コメントと スタンプが":nw.comment?"コメントが":"スタンプが"} とどいたよ!<small>タップで みてね</small></button>`:"";
   const tkb=tk?`<div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><button class="ghost" data-go="match" type="button">しあいに いく</button></div>`:"";
   const max=Math.max(10,...Object.values(g.stats));
   const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
   const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに だいじ。</p>`:"";
-  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${tkb}${shopNews(g)}
+  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${tkb}${shopNews(g)}
   <section class="panel"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   <p class="muted">「がんばったこと」を えらぶと のうりょくが のびるよ。</p>${pw}</section>
   ${posPanel(g)}${skillsPanel(g)}${looksPanel(g)}`;
@@ -1454,7 +1633,8 @@ function goalCard(g){
   if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
   // Once today's note is written, the goal shown is the one for next time.
   const t=curGoal(), top=topChips(g), last=g.es[g.es.length-1], after=!!(last&&last.date>=today());
-  const pick=`<div class="chips" id="gcPresets">${presetBtns(goalPresets(profile.pos,profile.side,TEAMSHAPE),"gc",t)}</div>
+  const plans=chalOpen?goalPlans(g,t):[]; // v14: up to three plans from the records (one of each kind), then the presets, 7 chips in all
+  const pick=`<div class="chips" id="gcPresets">${plans.map(([ic,p])=>`<button type="button" data-gc="${esc(p)}"><span aria-hidden="true">${ic} </span>${esc(p)}</button>`).join("")}${presetBtns(goalPresets(profile.pos,profile.side,TEAMSHAPE).filter(x=>!plans.some(p=>p[1]===x)).slice(0,7-plans.length),"gc",t)}</div>
   <div class="gc-own"><input type="text" id="gc-in" maxlength="40" placeholder="じぶんで かく" aria-label="めあてを じぶんで かく"><button class="primary" id="gcSave" type="button">これに する</button></div>
   <div class="row"><button class="ghost" id="gcCancel" type="button">やめる</button></div>`;
   return `<section class="panel goalcard" id="goalCard"><div class="gc-head"><span class="label">${after?"つぎの めあて":"きょうの めあて"}</span>${chalOpen?"":`<button class="ghost mini" id="gcEdit" type="button">${t?"かえる":"きめる"}</button>`}</div>
@@ -1464,12 +1644,13 @@ function goalCard(g){
 }
 // The がんばったこと picked most often (three times or more): something to be proud of, measured against nobody else.
 function topChips(g){return Object.entries(g.chipCount||{}).filter(([id,c])=>c>=3&&Object.prototype.hasOwnProperty.call(CHIP,id)).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([id,c])=>[CHIP[id].t,c]);}
-async function setChal(t){
-  t=String(t||"").trim().slice(0,40); if(!t){flash("めあてを えらぶか、かいてね。");return;}
+async function setChal(t,quiet){
+  t=String(t||"").trim().slice(0,40); if(!t){if(!quiet)flash("めあてを えらぶか、かいてね。");return false;}
   const before=curGoal();
-  try{await store.setProfile({chal:{t,at:new Date().toISOString()}});}catch(e){flash("ほぞんできませんでした。");return;}
+  try{await store.setProfile({chal:{t,at:new Date().toISOString()}});}catch(e){if(!quiet)flash("ほぞんできませんでした。");return false;}
   followGoal(before,curGoal());
-  chalOpen=false; render(); const eb=$("#gcEdit"); if(eb)eb.focus();
+  chalOpen=false; render(); if(!quiet){const eb=$("#gcEdit"); if(eb)eb.focus();}
+  return true; // v14: the reward's plan button shows 「ほぞんできませんでした。」 itself when this is false
 }
 // A note begun follows a new goal while its goal is still the one it was given and not yet marked done or not. A note that already
 // says how its goal went was written after playing: it keeps its goal (that belongs to the practice it was played in), and the new
@@ -1483,6 +1664,269 @@ function followGoal(before,t){
   try{const k=JSON.parse(localStorage.getItem(DRAFT)||"null");
     if(k&&k.day===today()&&k.d&&typeof k.d==="object"&&fit(k.d))localStorage.setItem(DRAFT,JSON.stringify(k));}catch(e){}
 }
+/* ---------- v14 missions: どうが ふりかえり and しらべて まなぶ records (the logic; the cards and the forms draw from it) ---------- */
+// The words typed in a mission form are kept on this device at every change ({day, video, learn, pro}, never in backups) and come back for a week.
+const MDRAFT="soccer-note-mission-draft", MDRAFTDAYS=7; // a kept mission draft comes back for a week after it was last kept
+let missionOpen=null, mdraft={video:null,learn:null,pro:null}, msaving=false, msNote="", msWhy=false, vhowOpen=null;
+let drawnDay="", mdDay=""; // v14: the day home was last drawn for (newDay); the day the drafts in memory were last kept or read (proTapsGo)
+// Three topic hints a day, by date, never random (the same on every device that day).
+const dayNo=d=>Math.floor(Date.parse(d+"T00:00:00Z")/864e5);
+const hintsFor=d=>{const n=dayNo(d), L=LEARNHINTS.length; return [0,1,2].map(k=>LEARNHINTS[((n+k)%L+L)%L]);};
+// v14 pro: three plays to look for in a pro match, by date (never random), from his own position in the settings (profile.pos and
+// profile.side, through pointsOf): the role's points a viewer can see (PROSKIP left out), topped up from the position's own points, two
+// of them a day, and one play without the ball; a keeper gets the keeper's three points; no position gets the three plays without the ball.
+// Over three days a FW, MF or DF sees each of his three points. The card shows one of them (proCardLook); the form shows all three.
+function proLooks(d){const n=dayNo(d), r=k=>((n+k)%3+3)%3, pos=POSKEYS.includes(profile.pos)?profile.pos:"";
+  const pts=pos?[...new Set(pointsOf(pos,profile.side,TEAMSHAPE).concat(POSNOTE[pos].focus).filter(p=>!PROSKIP.includes(p[0])).map(p=>p[1]))].slice(0,3):[];
+  if(pts.length<3)return [0,1,2].map(k=>PROOFF[r(k)]);
+  return pos==="GK"?[0,1,2].map(k=>pts[r(k)]):[pts[r(0)],pts[r(1)],PROOFF[r(0)]];}
+// v14 pro: the hint on the home card, which he reads before the match: the first, but one day in three (dayNo % 3 = 0) a FW, MF or DF
+// sees the third, the play without the ball (「パスを もらう まえに うごく」). A keeper and no position keep the first,
+// which already turns through all three.
+const proCardLook=d=>{const l=proLooks(d); return (dayNo(d)%3+3)%3===0&&PROOFF.includes(l[2])&&!PROOFF.includes(l[0])?l[2]:l[0];};
+// v14 pro: the name under the hints: the role of a MF or DF (サイドハーフ, センターハーフ, センターバック), else the position (フォワード,
+// ゴールキーパー, ...). Never the side: on a TV picture a team's left is the far touchline when it attacks to the right, and it swaps at half time.
+const proTitle=pos=>{const r=(pos==="MF"||pos==="DF")&&roleOf(pos,profile.side,TEAMSHAPE); return r?r.n:POS[pos]?POS[pos].n:"";};
+// A new record's form: the newest match note of the last 3 days is picked for a video review; with no match notes the box for the match shows at once.
+function newMission(kind){const base={id:uid(),kind,createdAt:"",next:""};
+  if(kind==="learn")return Object.assign(base,{src:[],topic:"",learn:""});
+  if(kind==="pro")return Object.assign(base,{how:"",match:"",look:"",wow:""});
+  const md=matchDays(), pre=md.length&&daysBetween(md[0].date,today())<=3?md[0].date:"";
+  return Object.assign(base,{vdate:pre,vother:!md.length,vtext:"",good:"",fix:"",fun:0});}
+// v14 (spec14_pro R16): taps alone in a 🌟 draft belong to the day they were kept, in memory too: on a later day, with its form closed,
+// they go (as a reload already does); typed words keep the draft for its week. A form left open across midnight keeps its taps.
+function proTapsGo(){const d=mdraft.pro; if(mdDay&&mdDay!==today()&&d&&missionOpen!=="pro"&&!(String(d.wow||"").trim()||String(d.next||"").trim()||String(d.match||"").trim()))mdraft.pro=null;}
+function keepMission(){proTapsGo(); mdDay=today(); try{localStorage.setItem(MDRAFT,JSON.stringify({day:today(),video:mdraft.video,learn:mdraft.learn,pro:mdraft.pro}));}catch(e){}}
+// Reads the kept words back as clean drafts (only known choices and texts of the lengths the forms allow), while 0-7 days old.
+function keptMissions(){const out={video:null,learn:null,pro:null};
+  try{const k=JSON.parse(localStorage.getItem(MDRAFT)||"null"), age=k&&isDay(k.day)?daysBetween(k.day,today()):-1; if(age<0||age>MDRAFTDAYS)return out;
+    MKINDS.forEach(([kind])=>{const d=k[kind]; if(!d||typeof d!=="object"||typeof d.id!=="string"||!/^[a-z0-9]{1,24}$/.test(d.id))return;
+      const s=(v,n)=>typeof v==="string"?v.slice(0,n):"", m=newMission(kind); m.id=d.id;
+      m.createdAt=age?"":isoOr(d.createdAt,""); // kept from an earlier day: dated and counted on the day it is saved
+      m.next=s(d.next,40);
+      if(kind==="video"){m.vdate=isDay(d.vdate)&&d.vdate<=today()?d.vdate:""; m.vother=d.vother===true; m.vtext=s(d.vtext,20); m.good=s(d.good,300); m.fix=s(d.fix,200); m.fun=[1,2,3,4,5].includes(d.fun)?d.fun:0;}
+      else if(kind==="pro"){m.how=PROHOW.some(c=>c[0]===d.how)?d.how:""; m.match=s(d.match,30); m.look=s(d.look,40); m.wow=s(d.wow,300);}
+      else{m.src=(Array.isArray(d.src)?d.src:[]).filter((id,i,a)=>LEARNSRC.some(c=>c[0]===id)&&a.indexOf(id)===i); m.topic=s(d.topic,20); m.learn=s(d.learn,300);}
+      if(kind==="pro"&&age&&!(m.wow.trim()||m.next.trim()||m.match.trim()))return; // v14 pro: taps alone come back the same day only
+      out[kind]=m;});}catch(e){}
+  return out;}
+// The record as saved: dated from its save time on the writer's own clock (never picked), texts trimmed to the forms' lengths.
+function missionOf(d,at){const day=localDay(Date.parse(at)), s=(v,n)=>String(v==null?"":v).trim().slice(0,n);
+  const m={id:d.id,kind:d.kind,date:day,createdAt:at,next:s(d.next,40),parent:"",parentAt:"",stamps:[],stampAt:""};
+  if(d.kind==="video"){m.good=s(d.good,300);m.fix=s(d.fix,200);m.fun=[1,2,3,4,5].includes(d.fun)?d.fun:0;m.vdate=isDay(d.vdate)&&d.vdate<=day?d.vdate:"";m.vtext=!m.vdate&&d.vother?s(d.vtext,20):"";}
+  else if(d.kind==="pro"){m.how=PROHOW.some(c=>c[0]===d.how)?d.how:"";m.match=s(d.match,30);m.look=s(d.look,40);m.wow=s(d.wow,300);}
+  else{m.src=(Array.isArray(d.src)?d.src:[]).filter((id,i,a)=>LEARNSRC.some(c=>c[0]===id)&&a.indexOf(id)===i);m.topic=s(d.topic,20);m.learn=s(d.learn,300);}
+  return m;}
+// Web addresses are not kept in a record (the app keeps no links); v14 pro: also the hosts of streaming and share links typed without a
+// scheme (abema.tv, youtu.be, bit.ly).
+const hasLink=v=>/(https?:|www\.|[a-z0-9-]+\.(com|jp|net|org|tv|be|me|io|ly)\b)/i.test(String(v||""));
+// Whether a kind can still earn today: no other finished record of that kind on today's date (worked out on every render, so it opens again after midnight).
+const missionLeft=(kind,id)=>!missions.some(m=>m.id!==id&&m.kind===kind&&mday(m)===today()&&missionDone(m));
+// What to say when the record is not finished yet: [message, box to focus], or null when it is.
+function missionWhy(m){
+  // v14 pro: \u2060 (WORD JOINER) keeps each particle on the line of its 」 (keep-all still breaks after a closing bracket)
+  if(m.kind==="pro")return written(m.wow)||written(m.next)?null:nchars(m.wow)?["「すごかった プレー」\u2060を もう すこし かいてね。","mp-wow"]
+    :nchars(m.next)?["「まねしたい こと」\u2060を もう すこし かいてね。","mp-next"]:["「すごかった プレー」\u2060か 「まねしたい こと」\u2060を かいてね。 どちらか 1つで OK!","mp-wow"];
+  if(m.kind==="learn")return written(m.learn)?null:nchars(m.learn)?["「まなんだ こと」\u2060を もう すこし かいてね。","ml-learn"]:["「まなんだ こと」\u2060を かいてね。 みじかくて OK!","ml-learn"];
+  const bad=[["よかった ところ",m.good,"mv-good"],["なおしたい ところ",m.fix,"mv-fix"]].filter(x=>!written(x[1])); if(!bad.length)return null;
+  const [t,v,id]=bad[0];
+  if(nchars(v))return [`「${t}」\u2060を もう すこし かいてね。`,id];                                   // 1 character
+  if(bad.length===2)return nchars(bad[1][1])?[`「${t}」\u2060を かいてね。`,id]:["「よかった ところ」\u2060と「なおしたい ところ」\u2060を かいてね。","mv-good"];
+  return [id==="mv-fix"?"あと「なおしたい ところ」\u2060を かいたら ミッション クリア! 1つで OK だよ。":"あと「よかった ところ」\u2060を かいたら ミッション クリア!",id];}
+// The 4 newest dates with a match note, today or earlier, newest first: {date, note (the newest that day), opp (opponents typed, in order)}.
+function matchDays(){const by={}; entries.forEach(e=>{if(e&&e.kind==="match"&&isDay(e.date)&&e.date<=today())(by[e.date]=by[e.date]||[]).push(e);});
+  return Object.keys(by).sort().reverse().slice(0,4).map(date=>{const es=sortEntries(by[date]), opp=[];
+    es.forEach(e=>(Array.isArray(e.games)?e.games:[]).filter(gameUsed).forEach(g=>{const o=String(g.opp||"").trim(); if(o&&!opp.includes(o))opp.push(o);}));
+    return {date,note:es[es.length-1],opp};});}
+const matchName=(x,f)=>`${f(x.date)}${x.opp.length?" vs "+x.opp[0]+(x.opp.length>1?" ほか":""):"の しあい"}`;
+// Words typed in a mission draft (chips alone are not kept once the form closes). v14 pro: a tapped hint or way counts too, because he
+// taps them while the match is on, before he writes.
+const mWords=d=>!!d&&(d.kind==="video"?["good","fix","next","vtext"]:d.kind==="pro"?["wow","next","match","look","how"]:["learn","next"]).some(k=>String(d[k]==null?"":d[k]).trim()!=="");
+/* ---------- v14 missions: the screens (spec14 §6.1-6.3) ---------- */
+// After every change in a mission form (each box and each chip) the box under it is refreshed (never a re-render) and the draft is kept at
+// once, as draftChanged keeps the note, so a reload (iOS dropping the app while a video plays in another app) brings back every box and chip.
+function missionChanged(){const d=missionOpen&&mdraft[missionOpen]; if(!d)return; msBox(d); keepMission();}
+// もどる (focus true), a tab (go) or the settings: the form closes; a draft with no words is dropped, so the card reads 「かく」 again.
+function closeMission(focus){const kind=missionOpen; if(!kind)return; missionOpen=null; msNote="";
+  if(!mWords(mdraft[kind]))mdraft[kind]=null; keepMission();
+  if(focus){render(); const b=document.getElementById("msgo-"+kind); if(b)b.focus();}}
+// かく: the form opens on home with the words kept for this kind (or a new draft), its top in view and the focus on its heading (the
+// keyboard stays closed). The double tap's second tap must not land on the form.
+function openMission(kind){
+  if(!msReady||msErr||!missionLeft(kind))return;
+  proTapsGo(); missionOpen=kind; settingsOpen=false; sdraft=null;
+  mdraft[kind]=mdraft[kind]||newMission(kind); keepMission();
+  holdUntil=Date.now()+400; msNote=""; render();
+  const f=$("#msForm"); if(f&&f.scrollIntoView)f.scrollIntoView({block:"start"});
+  const h=$("#msfH"); if(h){try{h.focus({preventScroll:true});}catch(e){h.focus();}}}
+// The box under a form: a pill for each part (✓ once written()), and what is left to clear the mission.
+const mSlots=d=>d.kind==="video"?[["よかった ところ",d.good],["なおしたい ところ",d.fix]]:d.kind==="pro"?[["すごかった プレー",d.wow],["まねしたい こと",d.next]]:[["まなんだ こと",d.learn]];
+const mNeed=d=>d.kind==="video"?2:1; // the parts to write: both for a video review, the one for learning, either one for a pro match
+const mCount=d=>mSlots(d).filter(x=>written(x[1])).length;
+let msBoxN=0; // the parts written when the box was drawn: say() speaks only when the number goes up
+function msBoxHTML(d){const v=d.kind==="video", p=d.kind==="pro", sl=mSlots(d), n=mCount(d);
+  const line=n>=mNeed(d)?"じゅんび OK! 「かけた!」\u2060を おしてね。":v?(n?"あと 1つ!":`2つ かくと クリア! +${VIDEOBONUS} XP`):p?`どちらか 1つ かくと クリア! +${PROBONUS} XP`:`かくと クリア! +${LEARNBONUS} XP`;
+  return `<b><span aria-hidden="true">${MTITLE[d.kind][0]} </span>ミッション クリアまで</b><div class="slots">${sl.map(([t,x])=>{const on=written(x);
+    return `<span class="slot${on?" on":""}" aria-label="${t}:${on?"かけた":"まだ"}">${on?"✓":"○"} ${t}</span>`;}).join(p?`<span class="or">か</span>`:"")}</div><p>${line}</p>`;}
+function msBox(d){const el=$("#msBox"), n=mCount(d), up=n>msBoxN; msBoxN=n; if(!el)return; el.innerHTML=msBoxHTML(d);
+  if(msWhy&&n>=mNeed(d)){msWhy=false; msNote=""; const m=$("#msMsg"); if(m){m.textContent=""; m.hidden=true;}} // v14: the box says it now
+  if(up)say(d.kind==="video"?(n>=2?"2つ かけたよ! 「かけた!」を おすと ミッション クリア!":"あと 1つ!"):d.kind==="pro"&&n>=2?"2つとも かけたね! 「かけた!」を おすと ミッション クリア!":"じゅんび OK! 「かけた!」を おすと ミッション クリア!");}
+// A form's message goes under its box, where he is looking, and is read out once (#say stays the only live region); with the form gone it
+// shows in the status line. focusId: the box to fix.
+function mformMsg(msg,focusId,why){msNote=msg; msWhy=!!(why&&msg); const el=$("#msMsg");
+  if(el){el.textContent=msg; el.hidden=!msg; if(msg)say(msg);} else if(msg)flash(msg);
+  const f=focusId&&document.getElementById(focusId); if(f)f.focus();}
+// While a save runs the button is disabled; a disabled button loses the focus, so when it was on the button it goes back there (it "stays").
+let msFocus=false;
+function msSaving(v){msaving=v; const b=$("#msSave"); if(!b)return; if(v)msFocus=document.activeElement===b; b.disabled=v; b.textContent=v?"ほぞん中…":"かけた!";
+  if(!v){const lost=!document.activeElement||document.activeElement===document.body; if(msFocus&&lost){try{b.focus({preventScroll:true});}catch(e){b.focus();}} msFocus=false;}}
+// かけた!: the checks of §6.2 in order, then the record is written to its own store (never a note: no ticket). One id and one save time
+// per draft, so pressing again after a slow save rewrites the same record.
+async function saveMission(kind){
+  const d=mdraft[kind]; if(msaving||!d)return;
+  if(!msReady||!loaded())return mformMsg("データを よみこみ中です。すこし まってから もういちど おしてね。");
+  if(msErr)return mformMsg("いまは ミッションを ひらけないよ。 あとで もういちど ためしてね。");
+  msSaving(true); await stopVoice(); msSaving(false); // the last spoken words land in the form first; a second press meanwhile does nothing
+  if(mdraft[kind]!==d)return;
+  const at=d.createdAt||new Date().toISOString(), m=missionOf(d,at), why=missionWhy(m);
+  if(why)return mformMsg(why[0],why[1],true);
+  const lk=(kind==="video"?["mv-good","mv-fix","mv-next","mv-vtext"]:kind==="pro"?["mp-wow","mp-next","mp-match"]:["ml-learn","ml-next"]).find(id=>hasLink(m[id.slice(3)]));
+  if(lk)return mformMsg("アドレス(URL)は のこさないよ。 ことばで かいてね。",lk);
+  d.createdAt=at; keepMission(); msSaving(true); mformMsg("");
+  const before=compute(entries,missions.filter(x=>x.id!==m.id));
+  const slow=setTimeout(()=>{if(msaving&&mdraft[kind]===d){msSaving(false);mformMsg("まだ ほぞんできていません。でんぱを たしかめて、もういちど おしてね。");}},10000);
+  try{await mstore.add(m);}catch(e){clearTimeout(slow); if(mdraft[kind]===d){msSaving(false);mformMsg("ほぞんできませんでした。もういちど ためしてね。");} return;}
+  clearTimeout(slow); if(mdraft[kind]!==d)return; // another press already finished this record
+  msaving=false; if(db)missions=missions.filter(x=>x.id!==m.id).concat([m]); // until the snapshot lands
+  mdraft[kind]=null; keepMission(); missionOpen=null; msNote=""; handSet(m.id); tab="home"; render(); window.scrollTo(0,0);
+  const gain=lastG.mper[m.id];
+  if(gain&&gain.sum)celebrate(before,gain,lastG,false,m.id,{mk:kind,plan:m.next,focus:"#ms-"+kind});
+  else{flash("かけたね! きょうの XP は もう もらって いるよ。 また あした!"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
+}
+// The ミッション panel on home, under the goal card's own condition. NEW! until the first record or count.
+function missionPanel(g){
+  if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
+  const fresh=msReady&&!g.ms.length&&!g.es.some(e=>Object.keys(jugOf(e)).length);
+  return `<section class="panel ms" id="missions" aria-labelledby="msH"><h2 id="msH">ミッション${fresh?`<span class="msnew">NEW!</span>`:""}</h2>
+  <div class="ms-grid">${mCard(g,"video")}${mCard(g,"learn")}${mCard(g,"pro")}${liftTiles(g)}</div></section>`;
+}
+// One writing card. Whether it is done today is worked out on every render, so it opens again after midnight with no message.
+const MDONE={video:"きょうは できたね! つぎの しあいの どうがで また やろう。",learn:"きょうは できたね! まなんだ ことを ためして みよう。",pro:"きょうは できたね! みた プレーを まねして みよう。"};
+function mCard(g,kind){
+  const [ic,nm]=MTITLE[kind], n=g.ms.filter(m=>m.kind===kind).length, xp=MKINDS.find(k=>k[0]===kind)[2], c="msc"+(kind==="pro"?" pro":"");
+  const head=pill=>`<div class="msc-h"><h3><span aria-hidden="true">${ic} </span>${nm}</h3>${pill}</div>`;
+  if(!msReady||msErr)return `<div class="${c}" id="ms-${kind}" tabindex="-1">${head("")}<p class="muted">${msReady?"いまは ミッションを ひらけないよ。 あとで もういちど ためしてね。":"よみこみ中…"}</p></div>`;
+  if(!missionLeft(kind))return `<div class="${c} done" id="ms-${kind}" tabindex="-1">${head(`<span class="ms-pill">✓ クリア!</span>`)}<p>${MDONE[kind]} (これまで ${n}かい)</p></div>`;
+  const body=kind==="video"?`<p>じぶんの しあいの どうがを みて かこう。</p>`
+    :kind==="learn"?`<p><span class="label">きょうの ヒント</span> ${esc(hintsFor(today())[0])}</p><p class="muted"><span aria-hidden="true">👪 </span>ネットで しらべる ときは おうちの人と いっしょに。<br>どうがを みる ときも、 おうちの人と いっしょに。</p>`
+    :`<p>しあいを みたら かこう。 ぜんはんだけ、 こうはんだけでも OK!</p><p><span class="label">プロの ここを みよう</span> ${esc(proCardLook(today()))}</p><p class="muted"><span aria-hidden="true">👪 </span>${PRORULE}</p>`;
+  return `<div class="${c}" id="ms-${kind}" tabindex="-1">${head(`<span class="ms-pill">+${xp} XP</span>`)}${body}
+  <div class="msc-f"><button class="ms-go" id="msgo-${kind}" data-mopen="${kind}" type="button">${mWords(mdraft[kind])?"つづきを かく":"かく"}</button>${n?`<span class="muted">これまで ${n}かい</span>`:""}</div></div>`;
+}
+// The ⚽ card reads only the notes, so it never waits.
+function liftTiles(g){
+  return `<div class="msc lift" id="ms-lift" tabindex="-1"><div class="msc-h"><h3><span aria-hidden="true">⚽ </span>リフティングの めあて</h3></div>
+  <div class="lts">${JUGS.map(([k,t])=>liftTile(k,t,g)).join("")}</div>
+  <p class="muted">めあてに とどくと クリア! 1つ +${JUGSTEP} XP</p>
+  <p class="muted">れんしゅうや しあいの 日は、 その ノートに いっしょに かこう!</p>
+  <div class="msc-f"><button class="ms-go" id="msgo-lift" type="button">ノートに かく</button></div></div>`;
+}
+// One tile: the number never breaks inside, and 「かい」 moves to the next line whole when it does not fit (the one <wbr>).
+function liftTile(k,t,g){const b=g.jug[k], n=b?b.n:-1, next=LADDER.find(x=>x>n), all=next===undefined;
+  const num=n>0?`<span class="lb${n>=100?" long":""}"><span class="sr">じこベスト </span><span class="n">${n}</span><wbr><small>かい</small></span>`:`<span class="lb none">まだ</span>`;
+  const date=n>0&&isDay(b.date)?(b.date===today()?`<span class="ld today">きょう!</span>`:`<span class="ld">${esc(fmtShort(b.date))}</span>`):"";
+  const pct=all?100:Math.round(100*Math.max(0,Math.min(n,next))/next);
+  return `<div class="lt"><b>${t}</b>${num}${date}<span class="b" aria-hidden="true"><i style="width:${pct}%"></i></span><span class="ln">${all?"ぜんぶ クリア!":`つぎ ${next}かい`}</span></div>`;}
+// The match day of a video review: {date, note (the newest match note that day), opp (opponents typed, in order)}, or null.
+function matchOn(date){const es=isDay(date)?sortEntries(entries.filter(e=>e&&e.kind==="match"&&e.date===date)):[], opp=[]; if(!es.length)return null;
+  es.forEach(e=>(Array.isArray(e.games)?e.games:[]).filter(gameUsed).forEach(x=>{const o=String(x.opp||"").trim(); if(o&&!opp.includes(o))opp.push(o);}));
+  return {date,note:es[es.length-1],opp};}
+const mstr=v=>typeof v==="string"?v.trim():"";
+// The position the video tips and plan chips follow: the picked match note's, or the player's own when nothing is picked or it has none.
+function vPos(n){const own=n&&POSKEYS.includes(n.npos); return own?[n.npos,n.nside||"",n.nshape||""]:[profile.pos||"",profile.side||"",TEAMSHAPE];}
+const GLINE={done:"「できた!」って かいたね。 どうがに うつって いたら、 みて みよう!",half:"「やってみた!」って かいたね。 どうがに うつって いたら、 みて みよう!",notyet:"おしい ところが あるかも。 どうがで さがして みよう!"};
+function missionForm(g){const kind=missionOpen, d=mdraft[kind], v=kind==="video", [ic,nm]=MTITLE[kind]; msBoxN=mCount(d);
+  return `<section class="panel msf" id="msForm" aria-labelledby="msfH"><div class="msf-top"><button class="ghost" id="msBack" type="button"><span aria-hidden="true">← </span>もどる</button><span class="label">ミッション</span></div>
+  <h2 id="msfH" tabindex="-1">${ic} ${nm}</h2>
+  ${v?videoForm(g,d):kind==="pro"?proForm(d):learnForm(d)}
+  <div class="msbox" id="msBox">${msBoxHTML(d)}</div>
+  <p class="msmsg" id="msMsg"${msNote?"":" hidden"}>${esc(msNote)}</p>
+  <button class="primary" id="msSave" type="button"${msaving?" disabled":""}>${msaving?"ほぞん中…":"かけた!"}</button></section>`;}
+function videoForm(g,d){
+  const md=matchDays(), mo=d.vdate?matchOn(d.vdate):null, n=mo&&mo.note, [pos,side,shape]=vPos(n), pts=pointsOf(pos,side,shape).slice(0,3), lab=posLabel(pos,side,shape);
+  const days=md.concat(d.vdate&&!md.some(x=>x.date===d.vdate)?[mo||{date:d.vdate,opp:[]}]:[]); // a kept pick older than the four newest stays in view
+  const open=vhowOpen===null?!g.ms.some(m=>m.kind==="video"):vhowOpen; // open until his first video review, then as he left it
+  const goal=n?mstr(n.goal):"";
+  const plans=[...new Set([goal&&n.goalResult!=="done"?goal:"",curGoal(),...goalPresets(pos,side,shape),...GOALS].map(x=>String(x||"").trim().slice(0,40)).filter(Boolean))].slice(0,4);
+  return `<p class="muted">しあいの どうがを みて、 じぶんの プレーを ふりかえろう。</p>${voiceHint()}
+  <details class="sidetip" id="vhow" data-open="${open?1:0}"${open?" open":""}><summary>🎬 どうがの みかた</summary>
+    <p>・ボールより じぶんを みよう。 ボールを もって いない ときも!</p>
+    <p>・「いいね!」\u2060と おもったら どうがを とめて、 かいて おこう。</p>
+    <p>・「こう したら もっと よく なる」\u2060も 1つ さがそう。</p>
+    ${pts.length&&lab?`<p>・とくに みる ところ(${esc(lab)}):${pts.map(p=>esc(p[1])).join("、 ")}</p>`:""}
+    <p class="muted">どうがは おうちの人の スマホなどで みてね。 この アプリには いれないよ。</p></details>
+  <h3 class="sec">みた どうが</h3>
+  <div class="field"><span class="q">みた しあい <small>タップで えらぶ</small></span>
+    <div class="chips" id="mvDays">${days.map(x=>`<button type="button" data-mvd="${esc(x.date)}" aria-pressed="${d.vdate===x.date}">${esc(matchName(x,fmtShort))}</button>`).join("")}<button type="button" data-mvo="" aria-pressed="${!!d.vother}">ほかの しあい</button></div>
+    ${!d.vdate&&!d.vother?`<p class="muted">わからなければ えらばなくて OK</p>`:""}${md.length?"":`<p class="muted">しあいの ノートを かくと、 ここから えらべるよ。</p>`}
+    ${d.vother?`<input type="text" id="mv-vtext" maxlength="20" value="${esc(d.vtext)}" placeholder="れい:11月14日 ○○FCとの しあい" aria-label="どんな しあい?">`:""}
+    ${goal?`<div class="sidetip" id="mvGoal"><b>この しあいの めあて</b>${esc(goal)}<span class="muted">${own(GLINE,n.goalResult)?GLINE[n.goalResult]:"どうがで さがして みよう!"}</span></div>`:""}</div>
+  <h3 class="sec">みつけた こと</h3>
+  <div class="field"><label class="q" for="mv-good">よかった ところ <small>2つ みつけたら すごい!</small></label>
+    <p class="muted hint">かんがえて みよう:${esc(VGOODASK[dayNo(today())%VGOODASK.length])}</p>
+    <div class="voice"><textarea id="mv-good" maxlength="300" placeholder="れい:こぼれだまに はしって、 さいしょに さわれた">${esc(d.good)}</textarea>${micBtn("mv-good")}</div></div>
+  <div class="field"><label class="q" for="mv-fix">なおしたい ところ <small>1つで OK</small></label>
+    <p class="muted hint">かんがえて みよう:${esc(VFIXASK[dayNo(today())%VFIXASK.length])}</p>
+    <div class="voice"><textarea id="mv-fix" maxlength="200" placeholder="れい:ボールを みて とまって いた。 つぎは パスが もらえる ところへ うごく">${esc(d.fix)}</textarea>${micBtn("mv-fix")}</div></div>
+  <div class="field"><span class="q">どうがを みて、 どんな きもち? <small>えらばなくても OK</small></span>
+    <div class="faces" id="mfaces">${FACES.map((f,i)=>`<button type="button" data-mf="${i+1}" aria-pressed="${d.fun===i+1}" aria-label="${i+1}">${f}</button>`).join("")}</div></div>
+  <h3 class="sec">つぎに むけて</h3>
+  <div class="field"><label class="q" for="mv-next">つぎに やってみる こと <small>めあてに できるよ</small></label>
+    <div class="voice"><input type="text" id="mv-next" maxlength="40" value="${esc(d.next)}" placeholder="れい:こぼれだまに 1回 さわる">${micBtn("mv-next")}</div>
+    <div class="chips" id="mvNext">${presetBtns(plans,"mng",d.next)}</div></div>`;
+}
+function learnForm(d){
+  const hints=hintsFor(today()), tps=d.topic&&!hints.includes(d.topic)?hints.concat([d.topic]):hints; // a topic kept from an earlier day stays in view
+  return `<p class="muted">サッカーが うまく なる ことを しらべて、 まなんだ ことを かこう。</p>
+  <div class="sidetip" id="mlRule"><b><span aria-hidden="true">👪 </span>しらべる ときの やくそく</b>ネットで しらべる ときは おうちの人と いっしょに。<br>どうがを みる ときも、 おうちの人と いっしょに。</div>
+  ${voiceHint()}
+  <div class="field"><span class="q">きょうの ヒント <small>しらべた ものが あれば タップ</small></span>
+    <div class="chips hints" id="mlHints">${tps.map(t=>`<button type="button" data-mtopic="${esc(t)}" aria-pressed="${d.topic===t}">${esc(t)}</button>`).join("")}</div>
+    <p class="muted">ほかの ことでも OK!</p></div>
+  <div class="field"><span class="q">なにで しらべた? <small>いくつでも</small></span>
+    <div class="chips" id="mlSrc">${LEARNSRC.map(([id,t])=>`<button type="button" data-msrc="${id}" aria-pressed="${d.src.includes(id)}">${t}</button>`).join("")}</div></div>
+  <div class="field"><label class="q" for="ml-learn">まなんだ こと <small>みじかくて OK</small></label>
+    <div class="voice"><textarea id="ml-learn" maxlength="300" placeholder="れい:もらう まえに くびを ふって、 まわりを みると いい">${esc(d.learn)}</textarea>${micBtn("ml-learn")}</div></div>
+  <div class="field"><label class="q" for="ml-next">やってみたい こと <small>めあてに できるよ</small></label>
+    <div class="voice"><input type="text" id="ml-next" maxlength="40" value="${esc(d.next)}" placeholder="れい:もらう まえに 2回 みる">${micBtn("ml-next")}</div></div>`;
+}
+// v14 pro: what he saw (one hint at most; the plays to look for come first, since he looks for them while the match is on), how he
+// watched (one way at most) and his words. A hint kept from an earlier day stays in view as a fourth chip, as in the learning form.
+function proForm(d){
+  const looks=proLooks(today()), lks=d.look&&!looks.includes(d.look)?looks.concat([d.look]):looks;
+  const pos=POSKEYS.includes(profile.pos)?profile.pos:"", t=pos?proTitle(pos):"";
+  return `<p class="muted">プロの しあいを みて、 すごかった プレーを かこう。</p>
+  <div class="sidetip" id="mpRule"><b><span aria-hidden="true">👪 </span>みる ときの やくそく</b>${PRORULE}</div>
+  ${voiceHint()}
+  <div class="field"><span class="q">プロの ここを みよう <small>みつけたら タップ</small></span>
+    <div class="chips hints" id="mpLook">${lks.map(x=>`<button type="button" data-mlook="${esc(x)}" aria-pressed="${d.look===x}">${esc(x)}</button>`).join("")}</div>
+    <p class="muted" id="mpPos">${t?`${esc(t)}の せんしゅを よく みて みよう。`:"「せってい」\u2060で ポジションを えらぶと、 その ポジションの みる ところも でるよ。"} ほかの プレーでも OK!</p></div>
+  <h3 class="sec">みた しあい</h3>
+  <div class="field"><span class="q">なにで みた? <small>タップで えらぶ</small></span>
+    <div class="chips" id="mpHow">${PROHOW.map(([id,x])=>`<button type="button" data-mhow="${id}" aria-pressed="${d.how===id}">${x}</button>`).join("")}</div></div>
+  <div class="field"><label class="q" for="mp-match">どの しあい? <small>かかなくても OK</small></label>
+    <input type="text" id="mp-match" maxlength="30" value="${esc(d.match)}" placeholder="れい:にほん vs ブラジル"></div>
+  <h3 class="sec">みつけた こと</h3>
+  <div class="field"><label class="q" for="mp-wow">すごかった プレー <small>1つで OK</small></label>
+    <div class="voice"><textarea id="mp-wow" maxlength="300" placeholder="れい:こぼれだまに だれより はやく はしって いった">${esc(d.wow)}</textarea>${micBtn("mp-wow")}</div></div>
+  <div class="field"><label class="q" for="mp-next">まねしたい こと <small>めあてに できるよ</small></label>
+    <div class="voice"><input type="text" id="mp-next" maxlength="40" value="${esc(d.next)}" placeholder="れい:こぼれだまを 1回 おいかける">${micBtn("mp-next")}</div></div>`;
+}
+// The goal card's plan chips: the newest plan of each kind of record (video review, learning, pro match), each dated within the last 14 days and not the goal now.
+function goalPlans(g,t){const out=[];
+  [["video","🎬"],["learn","🔍"],["pro","🌟"]].forEach(([k,ic])=>{const m=g.ms.filter(x=>{const d=mday(x); return x.kind===k&&mstr(x.next)&&isDay(d)&&d<=today()&&daysBetween(d,today())<14;}).pop(), p=m?mstr(m.next).slice(0,40):"";
+    if(p&&p!==t&&!out.some(o=>o[1]===p))out.push([ic,p]);});
+  return out;}
 // A banner on home when a parent stamped a note or wrote on it after the notes were last opened on this device. What is kept is the
 // newest of this device's clock and every stamp and comment time, so another device's clock running ahead cannot bring it back, and it
 // is also kept in memory for a browser that keeps nothing. A comment written in the form before saving brings no banner (no time).
@@ -1501,14 +1945,14 @@ const stampTime=e=>stampsOf(e).length?Date.parse(e.stampAt||"")||0:0, commentTim
 // The banner names what the note it opens has.
 function stampNews(g){
   const s=seenNow(); let id=null,t=0,stamp=false,comment=false;
-  g.es.forEach(e=>{const a=stampTime(e),c=commentTime(e),r=Array.isArray(s.m[e.id])?s.m[e.id]:null;
+  g.es.concat(g.ms).forEach(e=>{const a=stampTime(e),c=commentTime(e),r=Array.isArray(s.m[e.id])?s.m[e.id]:null; // v14: mission records too
     const na=a>0&&(r?a!==r[0]:a>s.at), nc=c>0&&(r?c!==r[1]:c>s.at), m=Math.max(na?a:0,nc?c:0);
     if(m>t){t=m;id=e.id;stamp=na;comment=nc;}});
   return id?{id,stamp,comment}:null;
 }
 // With no list, everything now on screen is seen; with a list (notes brought back from a backup), only those are added.
 function stampSeen(list){const s=list?seenNow():{at:Date.now(),m:{}}, m=list?Object.assign({},s.m):s.m;
-  (list||entries).forEach(e=>{m[e.id]=[stampTime(e),commentTime(e)];}); // every note, so a stamp from a clock that is behind still counts
+  (list||entries.concat(missions)).forEach(e=>{m[e.id]=[stampTime(e),commentTime(e)];}); // every note and record, so a stamp from a clock that is behind still counts
   seenMem={at:s.at,m}; try{localStorage.setItem(STAMPSEEN,JSON.stringify(seenMem));}catch(e){}}
 // The player's position: what to look out for (with how often a note said it was done) and practice that suits it.
 function posPanel(g){
@@ -1566,17 +2010,25 @@ function backupPanel(){
 function bkConfirm(){
   const d=bkData, p=bkPlan(d), dup=d.entries.length-p.add.length;
   return `<div class="bkbox" id="bkbox"><b>${d.at?`${esc(fmtDate(localDay(d.at)))}の バックアップ`:"この バックアップ"}から もどします。</b><ul>
-  <li>ノート:${p.add.length?`${p.add.length}さつ ふえます`:"ふえる ノートは ありません"}${dup?`(もう ある ${dup}さつは そのまま)`:""}</li>
+  <li>ノート:${p.add.length?`${p.add.length}さつ ふえます`:"ふえる ノートは ありません"}${dup&&!p.fixJ.length?`(もう ある ${dup}さつは そのまま)`:""}</li>
   <li>しあいの きろく:${p.useGame?"バックアップの ほうが すすんでいるので、そちらに します":"いまの まま"}</li>
   <li>せんしゅの なまえと みため:${p.useProfile?"バックアップの ものに します":"いまの まま"}</li>
   ${p.addMade.length?`<li>つくった そうび:${p.addMade.length}こ もどります</li>`:""}
-  ${p.addNames.length?`<li>なかまの なまえ:${p.addNames.length}にん もどります</li>`:""}</ul>
+  ${p.addNames.length?`<li>なかまの なまえ:${p.addNames.length}にん もどります</li>`:""}${bkConfirmM(d,p)}</ul>
   <p class="muted">いまの ノートは けしません。</p>
   <div class="row"><button class="primary" id="bk-go" type="button" style="flex:1"${bkBusy?" disabled":""}>もどす</button><button class="ghost" id="bk-cancel" type="button"${bkBusy?" disabled":""}>やめる</button></div></div>`;
 }
+// v14 the confirm box's new lines, in v13's backup style (no space after 、 or :): counts put back, records, and the XP and level a restore would lower
+// (a じこベスト +10 comes once a writing day, so restored notes with higher counts written earlier can take it from later days).
+function bkConfirmM(d,p){const now=compute(entries,missions), after=bkAfter(p);
+  return (p.fixJ.length?`<li>リフティングの きろく:${p.fixJ.length}さつの ノートに もどります</li>`:"")
+    +(p.addM.length?`<li>ミッションの きろく:${p.addM.length}こ ふえます</li>`:msErr&&d.missions.length?"<li>ミッションの きろく:いまは よみこめないので、もどせません</li>":"")
+    +(after.xp<now.xp?`<li>XP:${now.xp} → ${after.xp}${after.level<now.level?`、レベル:Lv.${now.level} → Lv.${after.level}`:""}(じこベストの +10は 1日 1かいなので、もどすと へる ことが あります)</li>`:"");}
 function bkReset(){if(bkBusy)return;bkOpen=false;bkPaste=false;bkData=null;bkMsg="";bkShow="";}
-const bkReady=()=>{if(loaded()&&profReady&&gameReady)return true;bkMsg="よみこみ中です。すこし まってから もういちど おしてね。";render();return false;};
-function bkSaved(msg){bkMark(new Date().toISOString());bkShow="";bkMsg=msg;render();}
+const bkReady=()=>{if(loaded()&&profReady&&gameReady&&msReady)return true;bkMsg="よみこみ中です。すこし まってから もういちど おしてね。";render();return false;};
+// v14: a backup taken while the records cannot be read holds none of them (missions:[]), and its message says so.
+const bkNoM=()=>msErr?"ミッションの きろくは よみこめて いないので、この バックアップには はいって いません。":"";
+function bkSaved(msg){bkMark(new Date().toISOString());bkShow="";bkMsg=msg+bkNoM();render();}
 // A file goes through the share sheet where there is one (on iPad: "ファイルに保存"), otherwise it is downloaded.
 function bkSaveFile(){
   if(!bkReady())return;
@@ -1594,7 +2046,7 @@ function bkDownload(json,name){
 function bkCopy(){
   if(!bkReady())return;
   const json=backupJSON();
-  const manual=()=>{bkShow=json;bkMsg="下の コードを ながおしして、ぜんぶ えらんで コピーしてください。";render();const t=$("#bk-show");if(t){t.focus();t.select();}};
+  const manual=()=>{bkShow=json;bkMsg="下の コードを ながおしして、ぜんぶ えらんで コピーしてください。"+bkNoM();render();const t=$("#bk-show");if(t){t.focus();t.select();}};
   try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(json).then(()=>bkSaved("コードを コピーしました。メモや メッセージに はりつけて とっておいてください。"),manual);return;}}catch(e){}
   manual();
 }
@@ -1603,12 +2055,18 @@ function bkPrepare(text){
   const d=bkParse(text);
   if(!d)bkMsg="バックアップの コードでは ないようです。もういちど たしかめてください。";
   else if(!d.entries.length&&d.given)bkMsg="ノートを よみとれませんでした。";
-  else{const p=bkPlan(d);
-    if(!p.add.length&&!p.useGame&&!p.useProfile&&!p.addMade.length&&!p.addNames.length)bkMsg=d.entries.length?"この バックアップの ノートは、もう ぜんぶ はいっています。":"この バックアップには ノートが ありません。";
+  else{const p=bkPlan(d), none=bkNothing(d,p);
+    if(none)bkMsg=none;
     else{bkMsg="";bkData=d;bkPaste=false;}}
   render();
   const el=$(bkData?"#bkbox":"#bkmsg"); if(el&&el.scrollIntoView)el.scrollIntoView({block:"nearest"});
 }
+// v14 what to say when a backup brings nothing new (records and counts included), or "" when it does.
+const BKMNOW="ミッションの きろくは いまは よみこめないので、もどせません。あとで もういちど ためしてください。";
+function bkNothing(d,p){if(p.add.length||p.fixJ.length||p.addM.length||p.useGame||p.useProfile||p.addMade.length||p.addNames.length)return "";
+  return !d.entries.length&&!d.missions.length?"この バックアップには ノートが ありません。"
+    :d.missions.length&&msErr?(d.entries.length?"この バックアップの ノートは、もう ぜんぶ はいっています。":"")+BKMNOW
+    :d.missions.length?"この バックアップの ノートと ミッションは、もう ぜんぶ はいっています。":"この バックアップの ノートは、もう ぜんぶ はいっています。";}
 function bkFile(input){
   const f=input.files&&input.files[0]; input.value=""; if(!f)return;
   if(f.size>5e6){bkMsg="ファイルが 大きすぎます。";render();return;}
@@ -1619,36 +2077,50 @@ async function bkApply(){
   if(live&&!live.done){bkMsg="しあいの さいせいが おわってから もどしてね。";render();return;}
   if(saving||!bkReady())return;
   if(crafting){bkMsg="そうびを ほぞんして いるよ。 すこし まってから もどしてね。";render();return;}
-  let p=bkPlan(d); bkBusy=true; bkMsg="もどしています…"; render();
+  let p=bkPlan(d), mFail=false; bkBusy=true; bkMsg="もどしています…"; render();
   try{
     if(db){
       for(let i=0;i<p.add.length;i++){await db.collection("entries").doc(p.add[i].id).set(p.add[i]);const m=$("#bkmsg");if(m)m.textContent=`もどしています… ${i+1} / ${p.add.length}`;}
-      entries=entries.filter(e=>!p.add.some(a=>a.id===e.id)).concat(p.add); // until the snapshot lands
-      {const add=p.add; p=bkPlan(d); p.add=add;} // a name changed or a match record that came in meanwhile is not overwritten
+      await bkApplyNotesDb(p); // v14: the counts an older page dropped go back on those notes ({jug} only); the notes stay here until the snapshot lands
+      {const add=p.add, addM=p.addM, fixJ=p.fixJ; p=bkPlan(d); p.add=add; p.addM=addM; p.fixJ=fixJ;} // a name changed or a match record that came in meanwhile is not overwritten
       if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names}));
       else if(p.addNames.length)await store.setProfile({mnames:p.names});
       {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade;} // and the match record as it is after that write
       if(p.useGame||p.addMade.length){game=bkGame(p,d);await store.setGame();}
     }else{
       const before=[entries,game,profile];
-      entries=entries.concat(p.add);
+      entries=withJug(entries,p.fixJ).concat(p.add); // v14: a new array (and new objects for the counts put back), so the roll-back below still holds
       if(p.useGame||p.addMade.length)game=bkGame(p,d);
       if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names}));
       else if(p.addNames.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names}));
       if(!lsSave()){[entries,game,profile]=before;throw new Error("local");}
     }
+    // v14: the records last, on their own: a failure there never undoes the notes, the match record, the look, the made pieces or the names.
+    mFail=await bkApplyMissions(p);
     if(d.at)bkMark(d.at);
-    stampSeen(p.add); // old stamps and comments brought back are not news
+    stampSeen(p.add.concat(mFail?[]:p.addM)); // old stamps and comments brought back are not news
     // The open settings show the player brought back, not the choices made or the words typed before it (render keeps typed words).
     if(p.useProfile){sdraft=null; [["#s-name",profile.name],["#s-num",profile.number],["#s-team",profile.team||""]].forEach(([k,v])=>{const el=$(k); if(el)el.value=v;});}
-    bkData=null; bkMsg=`ノートを ${p.add.length}さつ もどしました。`+(p.useGame?"しあいの きろくも もどしました。":"")+(p.addMade.length?"つくった そうびも もどしました。":"")+(p.addNames.length?"なかまの なまえも もどしました。":"");
+    bkData=null; bkMsg=`ノートを ${p.add.length}さつ もどしました。`+(p.useGame?"しあいの きろくも もどしました。":"")+(p.addMade.length?"つくった そうびも もどしました。":"")+(p.addNames.length?"なかまの なまえも もどしました。":"")+bkApplyMsg(p,mFail);
     flash(bkMsg);
   }catch(err){bkMsg="とちゅうで うまく いきませんでした。もういちど ためしてください。(もどせた ノートは そのまま のこります)";}
   bkBusy=false; waitOver("bk",bkMsg); render();
 }
 
+// v14 bkApply's steps. In db mode the counts go back with the notes ({jug} only, nothing removed). The records are written last and on their own:
+// a failure there returns true and never throws, and a second restore adds the records still missing (by id).
+async function bkApplyNotesDb(p){for(const e of p.fixJ)await db.doc("entries/"+e.id).update({jug:cleanJug(e.jug)});
+  entries=withJug(entries.filter(e=>!p.add.some(a=>a.id===e.id)),p.fixJ).concat(p.add);}
+async function bkApplyMissions(p){if(!p.addM.length)return false;
+  if(db){try{for(const m of p.addM)await db.collection("missions").doc(m.id).set(m); missions=missions.filter(x=>!p.addM.some(a=>a.id===x.id)).concat(p.addM); return false;}catch(e){return true;}}
+  const was=missions; missions=missions.concat(p.addM); if(!msSave()){missions=was; return true;} return false;}
+const bkApplyMsg=(p,mFail)=>(p.fixJ.length?"リフティングの きろくも もどしました。":"")+(p.addM.length?(mFail?"ミッションの きろくは もどせませんでした。あとで もういちど ためしてください。":`ミッションの きろくも ${p.addM.length}こ もどしました。`):"");
+
 function seg(name,opts,val){return `<div class="seg" data-seg="${name}">${opts.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${val===v}">${t}</button>`).join("")}</div>`}
-const draftXP=()=>entryXP(draft,sortEntries(entries).filter(e=>e.date<=draft.date).pop()).reduce((a,p)=>a+p[1],0);
+// v14: the note's XP as save() will store it (the +5 for counts included), without the mission XP (🏅 and 🎯, tag "msn"), so a bigger count typed
+// never makes the number grow, and the reward is never smaller than the preview.
+const draftXP=()=>{const e=noteOf(draft,draft.createdAt||new Date().toISOString());
+  return compute(entries.filter(x=>x.id!==e.id).concat([e]),missions).per[e.id].parts.filter(p=>p[2]!=="msn").reduce((a,p)=>a+p[1],0);};
 const chipFull=(d,team)=>d.chips.length>=MAXCHIPS||d.chips.filter(id=>CHIP[id]&&!!CHIP[id].team===team).length>=MAXGROUP;
 // What a group of chips says about how many more can be picked: both limits count (each group, and the whole note).
 const grpN=(d,team)=>d.chips.filter(id=>CHIP[id]&&!!CHIP[id].team===team).length;
@@ -1697,6 +2169,27 @@ function freshDraft(){if(!draft||saving||touchedId===draft.id)return;
   const p=profile.pos||"", sh=TEAMSHAPE, s=sideOf(p,profile.side,sh);
   if(draft.npos!==p||(draft.nside||"")!==s||(draft.nshape||"")!==sh){if(keptIs(draft))dropKept();draft=null;}}
 const keptIs=d=>{try{const k=JSON.parse(localStorage.getItem(DRAFT)||"null");return !!(k&&k.d&&k.d.id===d.id);}catch(e){return false;}};
+// v14 the count boxes. A message about a box (#liftMsg, plain text) is read out once; the same message again is not re-read.
+const LIFTMSG={nan:"すうじで かいてね。 れい:12",big:"かずは 9999かいまで かけるよ。"};
+let liftNote="";
+function liftMsg(why){const t=LIFTMSG[why]||"", el=$("#liftMsg"); if(el){el.textContent=t; el.hidden=!t;} if(t&&t!==liftNote)say(t); liftNote=t;}
+// The input handler's part for the boxes (after its guard): nothing during IME composition (compositionend sends input again), then jugRead.
+function jugInput(e,id){const jm=/^f-jug-([a-z])$/.exec(id); if(!jm||!JUGS.some(([k])=>k===jm[1]))return false; if(e.isComposing)return true;
+  const k=jm[1], r=jugRead(e.target.value); draft.jug=Object.assign({},draft.jug);
+  if(r.v===null){const back=draft.jug[k]==null?"":String(draft.jug[k]); if(e.target.value!==back)e.target.value=back;}
+  else{if(e.target.value!==r.v)e.target.value=r.v; if(r.v==="")delete draft.jug[k]; else draft.jug[k]=+r.v;}
+  liftMsg(r.why); draftChanged(); return true;}
+// One box (ES2017: no ??); a 0 stays 0.
+const liftBox=(d,k,t)=>{const j=d.jug||{}; return `<input type="text" class="num" id="f-jug-${k}" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="off" enterkeyhint="${k==="b"?"done":"next"}" value="${j[k]==null?"":esc(j[k])}" placeholder="–" aria-describedby="liftQ lh-${k}">`;};
+// The hint under a box comes from the saved notes (lastG.jug), never from what is being typed.
+const liftHint=(g,k)=>{const b=g&&g.jug[k], n=b?b.n:-1, next=LADDER.find(x=>x>n); return `${n>=1?`ベスト ${n}かい<br>`:""}${next===undefined?"ぜんぶ クリア!":`つぎ ${next}かい`}`;};
+function liftField(d){
+  return `<div class="field" id="liftBox"><span class="q" id="liftQ">リフティング なんかい できた?<small>きょうの いちばん いい かず。 かいたら +${JUGXP} XP</small></span>
+  <div class="lifts">${JUGS.map(([k,t])=>`<label class="lift" for="f-jug-${k}"><span>${t}</span>${liftBox(d,k,t)}<span class="lh" id="lh-${k}">${liftHint(lastG,k)}</span></label>`).join("")}</div>
+  <p class="muted">りょうあしは、 みぎ・ひだり・みぎ・ひだり…\u2060と じゅんばんに ついて かぞえるよ。</p>
+  <p class="muted">れんしゅうや しあいの 日は、 その ノートに いっしょに かこう!</p>
+  <p class="lmsg" id="liftMsg"${liftNote?"":" hidden"}>${esc(liftNote)}</p></div>`;
+}
 function viewWrite(){
   if(!draft){draft=keptDraft();keptPending=!!draft;draftStale=!!draft;if(draft)touchedId=draft.id;checkKept();}
   if(!draft){draft=newDraft();draftEarly=!(loaded()&&profReady);}
@@ -1717,6 +2210,7 @@ function viewWrite(){
   <div class="field"><span class="q">きょうの ポジション</span>${seg("npos",[...POSKEYS.map(k=>[k,k]),[MIX,"いろいろ"]],d.npos)}
     ${sidesFor(d.npos,d.nshape).length>1?`<div class="sidef" id="sideBox"><span class="q2">${sideHead(d.npos,d.nshape)}<small>せめる ゴールに むかって。わかれば</small></span>${seg("nside",sideOpts(d.npos,d.nshape),d.nside)}</div>`:""}</div>
   ${kindField(d)}
+  ${liftField(d)}
   <h3 class="sec">めあて</h3>
   <div class="field"><label class="q" for="f-goal">きょうの めあて<small>小さくてOK</small></label>
     <div class="voice"><input type="text" id="f-goal" maxlength="40" value="${esc(d.goal)}" placeholder="れい:ルーズボールを1回おいかける">${micBtn("f-goal")}</div>
@@ -1737,7 +2231,8 @@ function viewWrite(){
     <div class="chips" id="nextPresets">${presetBtns(nextPresets(d),"ng",d.next)}</div></div>
   <div class="field"><label class="q" for="f-parent">おうちの人から<small>あとで書いてもOK</small></label><div class="voice"><textarea id="f-parent" maxlength="300" placeholder="ひとこと ほめてあげてください">${esc(d.parent)}</textarea>${micBtn("f-parent")}</div></div>
   <p class="xpprev" id="xpprev">このノートで <b>+${draftXP()} XP</b> と しあいチケット 1まい</p>
-  <p class="formmsg" id="saveMsg" role="alert"${formNote?"":" hidden"}>${esc(formNote)}</p>
+  <p class="formmsg${formAsk?" ask":""}" id="saveMsg" role="alert"${formNote?"":" hidden"}>${esc(formNote)}</p>
+  <button class="ghost" id="jugBack" type="button"${formAsk?"":" hidden"}><span aria-hidden="true">⚽ </span>かずを みる</button>
   <button class="primary" id="saveBtn" type="button"${saving?" disabled":""}>${saving?"ほぞん中…":"ノートをつける!"}</button></section>`;
 }
 function viewTeam(g){
@@ -1960,8 +2455,10 @@ function celebrateMade(id){
 }
 
 function viewNotes(g){
-  if(!g.es.length)return `<section class="panel empty"><h2>まだノートがないよ</h2><button class="primary" data-go="write" type="button">ノートをかく</button></section>`;
-  const items=g.es.slice().reverse().map(e=>{
+  if(!g.es.length&&!g.ms.length)return `<section class="panel empty"><h2>まだノートがないよ</h2><button class="primary" data-go="write" type="button">ノートをかく</button></section>`;
+  const recs=new Set(g.ms), revs=revByDate(g); // v14: mission records are listed with the notes, newest first by date and save time
+  const items=sortEntries(g.es.concat(g.ms)).reverse().map(e=>{
+    if(recs.has(e))return recordItem(g,e);
     const kind=(KINDS.find(k=>k[0]===e.kind)||KINDS[0])[1];
     const res=(RESULTS.find(r=>r[0]===e.goalResult)||[])[1];
     const chips=(e.chips||[]).map(id=>(CHIP[id]||{}).t).filter(Boolean);
@@ -1980,6 +2477,7 @@ function viewNotes(g){
     ${e.place?`<p><span class="k">ばしょ</span>${esc(e.place)}</p>`:""}
     ${games.length?`<p><span class="k">しあい</span>${games.join("、")}</p>`:""}
     ${menu.length?`<p><span class="k">れんしゅう</span>${menu.map(esc).join("、")}</p>`:""}
+    ${jugLine(g,e)}
     ${e.goal?`<p class="kw"><span class="k">めあて</span>${esc(e.goal)}${res?` → <b>${res}</b>`:""}</p>`:""}
     ${focus.length?`<p class="kw"><span class="k">${esc(posLabel(e.npos,e.nside,e.nshape))}の ポイント</span>${focus.map(esc).join("、")}</p>`:POSKEYS.includes(e.npos)||e.npos===MIX?`<p><span class="k">ポジション</span>${esc(posLabel(e.npos,e.nside,e.nshape))}</p>`:""}
     ${chips.length?`<p><span class="k">がんばった</span>${chips.map(esc).join("、")}</p>`:""}
@@ -1988,10 +2486,44 @@ function viewNotes(g){
     ${e.coach?`<p><span class="k">コーチ</span>${esc(e.coach)}</p>`:""}
     ${e.fun?`<p><span class="k">たのしさ</span>${FACES[e.fun-1]}</p>`:""}
     ${e.next?`<p><span class="k">つぎ</span>${esc(e.next)}</p>`:""}
+    ${e.kind==="match"&&isDay(e.date)&&revs[e.date]?revLine(revs[e.date]):""}
     ${handoff===e.id?`<div class="handoff" id="handoffBox"><b>👪 おうちの人の ばん</b>${stampBlock(e,true)}${parentBlock}</div>`:stampBlock(e)+parentBlock}${del}</article>`;
   }).join("");
   const credit=g.es.some(e=>Number.isFinite(e.temp))?`<p class="muted">きおんと てんきの データ:${WXCREDIT}(CC BY 4.0)</p>`:"";
-  return `${calView(g)}<section class="panel"><h2>ノート <span class="muted">${g.es.length}さつめ</span></h2>${items}${credit}</section>`;
+  const hd=g.ms.length?(g.es.length?`${g.es.length}さつめ・ミッション ${g.ms.length}かい`:`ミッション ${g.ms.length}かい`):`${g.es.length}さつめ`;
+  return `${calView(g)}<section class="panel"><h2>ノート <span class="muted">${hd}</span></h2>${items}${credit}</section>`;
+}
+// v14 the newest video review of each match day (g.ms is in writing order, so the last one wins), for the line on that day's match notes.
+function revByDate(g){const r=Object.create(null); g.ms.forEach(m=>{if(m.kind==="video"&&isDay(m.vdate))r[m.vdate]=m;}); return r;}
+const dayText=s=>isDay(s)?fmtDate(s):"";
+const revLine=m=>`<p class="kw"><span aria-hidden="true">🎬 </span>どうがで ふりかえった ${esc(dayText(mday(m)))} <button class="ghost mini mlink" data-shownote="${esc(m.id)}" type="button">ふりかえりへ</button></p>`;
+// A note's counts, the kinds written only, with じこベスト! on the kinds it beat (a first record gets no mark).
+function jugLine(g,e){const c=jugOf(e), p=g.per[e.id], pb=p&&p.jug?p.jug.pb:[];
+  const l=JUGS.filter(([k])=>c[k]!==undefined).map(([k,t])=>`${t} ${c[k]}かい${pb.includes(k)?` <b class="pb">じこベスト!</b>`:""}`);
+  return l.length?`<p class="kw"><span class="k">リフティング</span>${l.join("、 ")}</p>`:"";}
+const PHINT={video:"おうちの人へ:じぶんで みつけた ことを、 まず ほめて あげてください。 「なおしたい ところ」\u2060は、 いっしょに\u2060「どう したら できそう?」\u2060と かんがえて みてください。",
+  learn:"おうちの人へ:まなんだ ことを きいて あげてください。 「やってみたい こと」\u2060を いっしょに ためせると いいですね。 「どうが」\u2060で しらべた ときは、 どの どうがか いっしょに みて あげてください。",
+  pro:"おうちの人へ:プロの しあいで みつけた ことを きいて あげてください。 「まねしたい こと」\u2060は、 つぎの れんしゅうで いっしょに ためせると いいですね。 ネットで みた ときは、 どの どうがか いっしょに みて あげてください。 よるの おそい しあいは、 みる じかんを いっしょに きめて あげてください。 ぜんはんだけ、 こうはんだけでも ミッションに なります。 ハイライトの どうがだけの ときは なりません。"};
+// A mission record in the list: its own lines (empty fields left out), then stamps, the parent's comment (+10 XP, as on notes) and delete.
+function recordItem(g,m){
+  const v=m.kind==="video", p=m.kind==="pro", id=esc(m.id), day=mday(m), sum=(g.mper[m.id]||{sum:0}).sum, line=(k,t)=>t?`<p class="kw"><span class="k">${k}</span>${t}</p>`:"";
+  let rows;
+  if(v){const mo=isDay(m.vdate)?matchOn(m.vdate):null, seen=isDay(m.vdate)?esc(mo?matchName(mo,fmtDate):fmtDate(m.vdate)+"の しあい"):esc(mstr(m.vtext));
+    rows=line("みた しあい",seen&&seen+(mo?` <button class="ghost mini mlink" data-shownote="${esc(mo.note.id)}" type="button">しあいの ノートへ</button>`:""))
+      +line("よかった",esc(mstr(m.good)))+line("なおしたい",esc(mstr(m.fix)))+line("きもち",[1,2,3,4,5].includes(m.fun)?FACES[m.fun-1]:"")+line("つぎ",esc(mstr(m.next)));}
+  else if(p){const how=(PROHOW.find(c=>c[0]===m.how)||[])[1]||"";
+    rows=line("なにで みた",how)+line("みた しあい",esc(mstr(m.match)))+line("みた ところ",esc(mstr(m.look)))+line("すごかった",esc(mstr(m.wow)))+line("まねしたい",esc(mstr(m.next)));}
+  else{const src=(Array.isArray(m.src)?m.src:[]).filter((x,i,a)=>a.indexOf(x)===i).map(x=>(LEARNSRC.find(c=>c[0]===x)||[])[1]).filter(Boolean);
+    rows=line("しらべた",src.map(esc).join("、 "))+line("テーマ",esc(mstr(m.topic)))+line("まなんだ",esc(mstr(m.learn)))+line("やってみたい",esc(mstr(m.next)));}
+  const pb=editingParent===m.id
+    ?`<div class="voice"><textarea id="pc-${id}" maxlength="300" placeholder="${v?"どうがで みつけた いい プレーを、 ひとこと ほめて あげてください":p?"プロの しあいで みつけた ことを、 ひとこと ほめて あげてください":"まなんだ ことを、 ひとこと ほめて あげてください"}">${esc(own(pcText,m.id)?pcText[m.id]:m.parent)}</textarea>${micBtn("pc-"+m.id)}</div><div class="row"><button class="ghost" data-pcsave="${id}" type="button"${pcBusy===m.id?" disabled":""}>${pcBusy===m.id?"ほぞん中…":"コメントをほぞん"}</button><button class="ghost" data-pccancel="${id}" type="button">${handoff===m.id?"とじる":"やめる"}</button></div>`
+    :(mstr(m.parent)?`<div class="parent"><span class="k">おうちの人</span>${esc(m.parent)}</div>`:`<div class="row"><button class="ghost" data-pc="${id}" type="button">おうちの人コメントをかく(+10 XP)</button></div>`);
+  const del=confirmDel===m.id
+    ?`<div class="row"><span class="muted">この きろくを けしますか? (XP も へるよ)</span><button class="ghost" data-delyes="${id}" type="button" style="color:var(--kick)">けす</button><button class="ghost" data-delno type="button">やめる</button></div>`
+    :`<div class="row"><button class="ghost" data-del="${id}" type="button" style="font-size:.8rem">けす</button></div>`;
+  return `<article class="note mission" id="note-${id}" data-id="${id}" data-date="${esc(day)}" data-mkind="${esc(m.kind)}" tabindex="-1"><div class="top"><span class="date">${esc(dayText(day))}<span class="tag msn"><span aria-hidden="true">${MTITLE[m.kind][0]} </span>${MTITLE[m.kind][1]}</span></span>${sum>0?`<span class="xp">+${sum} XP</span>`:""}</div>
+    ${rows}
+    ${handoff===m.id?`<div class="handoff" id="handoffBox"><b>👪 おうちの人の ばん</b><p class="phint">${PHINT[m.kind]}</p>${stampBlock(m,true)}${pb}</div>`:stampBlock(m)+pb}${del}</article>`;
 }
 // Stamps on a note, and (for the parents) the row to put them on.
 let stampOpen=null;
@@ -2004,30 +2536,32 @@ function stampBlock(e,inBox){
   ${inBox?"":`<div class="row"><button class="ghost" id="stClose" data-stampclose type="button">とじる</button></div>`}</div>`;
 }
 async function toggleStamp(nid,x){
-  const e=entries.find(n=>n.id===nid); if(!e||!isStamp(x))return;
+  const rec=isMission(nid), e=rec?missions.find(n=>n.id===nid):entries.find(n=>n.id===nid), st=rec?mstore:store; if(!e||!isStamp(x))return; // v14: a record keeps its stamps in its own store
   const cur=stampsOf(e), next=cur.includes(x)?cur.filter(y=>y!==x):cur.concat([x]); if(next.length>MAXSTAMPS)return;
   const patch={stamps:next}; if(!cur.includes(x))patch.stampAt=new Date().toISOString(); // only a new stamp brings the banner on home
-  try{await store.update(nid,patch);render();}catch(err){flash("ほぞんできませんでした。");}
+  try{await st.update(nid,patch);render();}catch(err){flash("ほぞんできませんでした。");}
 }
 // The notes calendar: a mark on each day with a note (shape and colour by kind), the month's counts, and a tap that goes to that day's note.
 let calM="";
 function calView(g){
-  const now=today().slice(0,7), d0=g.es.length&&typeof g.es[0].date==="string"?g.es[0].date.slice(0,7):now, first=d0<now?d0:now; // back to the month of the first note
+  const now=today().slice(0,7), dn=g.es.length&&typeof g.es[0].date==="string"?g.es[0].date.slice(0,7):now, dr=g.ms.map(mday).filter(isDay).sort()[0],
+    d0=dr&&dr.slice(0,7)<dn?dr.slice(0,7):dn, first=d0<now?d0:now; // back to the month of the first note or mission record (v14)
   const m=/^\d{4}-\d\d$/.test(calM)&&calM<=now?(calM<first?first:calM):now;
   const y=+m.slice(0,4), mo=+m.slice(5,7), days=new Date(y,mo,0).getDate(), pad=new Date(y,mo-1,1).getDay();
   const by={}, cnt={}; g.es.forEach(e=>{if(typeof e.date==="string"&&e.date.slice(0,7)===m){(by[e.date]=by[e.date]||[]).push(e);cnt[e.kind]=(cnt[e.kind]||0)+1;}});
+  const mb={}; g.ms.forEach(r=>{const md=mday(r); if(isDay(md)&&md.slice(0,7)===m)mb[md]=(mb[md]||0)+1;}); const mtot=Object.keys(mb).reduce((a,k)=>a+mb[k],0); // v14 records per day
   const total=Object.values(by).reduce((a,l)=>a+l.length,0);
   const shift=k=>{const d=new Date(y,mo-1+k,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");};
   const kindOf=e=>KINDS.some(k=>k[0]===e.kind)?e.kind:"practice";
   let cells=""; for(let i=0;i<pad;i++)cells+=`<span class="cd"></span>`;
-  for(let d=1;d<=days;d++){const ds=m+"-"+String(d).padStart(2,"0"), es=by[ds]||[], td=ds===today()?" today":"";
-    cells+=es.length?`<button type="button" class="cd on${td}" data-calday="${ds}" aria-label="${mo}がつ${d}にち ノート ${es.length}さつ"><span>${d}</span><i>${es.slice(0,2).map(e=>`<b class="mk k-${kindOf(e)}"></b>`).join("")}</i></button>`
+  for(let d=1;d<=days;d++){const ds=m+"-"+String(d).padStart(2,"0"), es=by[ds]||[], k=mb[ds]||0, td=ds===today()?" today":"";
+    cells+=es.length||k?`<button type="button" class="cd on${td}" data-calday="${ds}" aria-label="${mo}がつ${d}にち ${[es.length?`ノート ${es.length}さつ`:"",k?`ミッション ${k}かい`:""].filter(Boolean).join("・")}"><span>${d}</span><i>${es.slice(0,2).map(e=>`<b class="mk k-${kindOf(e)}"></b>`).join("")}${k?`<b class="mk k-msn"></b>`:""}</i></button>`
       :`<span class="cd${td}"><span>${d}</span></span>`;}
   const parts=KINDS.filter(([k])=>cnt[k]).map(([k,t])=>`${t} ${cnt[k]}`).join("・");
   return `<section class="panel cal" id="cal"><div class="cal-head"><button class="ghost mini" id="calPrev" data-calm="${shift(-1)}" type="button" aria-label="まえの つき"${m<=first?" disabled":""}>◀</button><b>${y}ねん ${mo}がつ</b><button class="ghost mini" id="calNext" data-calm="${shift(1)}" type="button" aria-label="つぎの つき"${m>=now?" disabled":""}>▶</button></div>
   <div class="cal-grid">${["にち","げつ","か","すい","もく","きん","ど"].map(w=>`<span class="wd">${w}</span>`).join("")}${cells}</div>
-  <p class="cal-sum">${total?`この つきの ノート <b>${total}さつ</b>(${parts})`:"この つきは まだ ノートが ないよ"}</p>
-  <p class="cal-key">${KINDS.map(([k,t])=>`<span><b class="mk k-${k}"></b>${t}</span>`).join("")}</p></section>`;
+  <p class="cal-sum">${total?`この つきの ノート <b>${total}さつ</b>(${parts})${mtot?`・ミッション <b>${mtot}かい</b>`:""}`:mtot?`この つきの ミッション <b>${mtot}かい</b>`:"この つきは まだ ノートが ないよ"}</p>
+  <p class="cal-key">${KINDS.map(([k,t])=>`<span><b class="mk k-${k}"></b>${t}</span>`).join("")}<span><b class="mk k-msn"></b>ミッション</span></p></section>`;
 }
 // Goes to a note in the list: scrolls it to the top, marks it for a moment and moves the focus there (for keyboards and screen readers).
 function showNote(pred){const el=[...document.querySelectorAll("#view article.note")].find(pred); if(!el)return;
@@ -2036,8 +2570,9 @@ function showNote(pred){const el=[...document.querySelectorAll("#view article.no
 let handoff=null, pcText={}, pcBusy=null, holdUntil=0;
 // A comment being typed is kept in memory per note, so leaving the notes or a re-render from another device does not lose it.
 $("#view").addEventListener("input",e=>{const m=/^pc-(.+)$/.exec(e.target.id||""); if(m)pcText[m[1]]=e.target.value;});
-function openParent(id){go("notes"); if(!entries.some(e=>e.id===id))return; handoff=id; stampOpen=id; editingParent=id; render(); showNote(a=>a.dataset.id===id);}
+function openParent(id){go("notes"); if(!entries.some(e=>e.id===id)&&!missions.some(m=>m.id===id))return; handoff=id; stampOpen=id; editingParent=id; render(); showNote(a=>a.dataset.id===id);}
 function fmtDate(s){const d=new Date(s+"T00:00");return `${d.getMonth()+1}月${d.getDate()}日(${"日月火水木金土"[d.getDay()]})`}
+const fmtShort=s=>{const d=new Date(s+"T00:00");return `${d.getMonth()+1}月${d.getDate()}日`;};
 
 function renderView(g){
   g=g||lastG;
@@ -2063,18 +2598,26 @@ function showStatus(){
 }
 function render(){
   if(tab!=="match"||live){shopSheet=null;shopTry=null;gearMenu=null;} // the workshop is not on screen, so neither are its sheet and try-on
-  checkKept();
-  const g=compute(entries); lastG=g; renderCard(g); showStatus(); renderView(g);
+  checkKept(); checkKeptM(); proTapsGo(); drawnDay=today();
+  const g=compute(entries,missions); lastG=g; renderCard(g); showStatus(); renderView(g);
 }
+// v14: an app left open draws home again when it is back on a new day, so a card cleared yesterday opens with no message. Only on home
+// with nothing open (a form, the settings, the goal picker, a match, the reward), so nothing he is typing or reading is drawn again.
+function newDay(){if(document.hidden||today()===drawnDay)return; if(tab==="home"&&!missionOpen&&!settingsOpen&&!chalOpen&&!live&&!document.querySelector(".overlay"))render();}
+document.addEventListener("visibilitychange",newDay); window.addEventListener("pageshow",newDay); window.addEventListener("focus",newDay); setInterval(newDay,60000);
 // After every change to the draft: keep a copy in this browser and refresh the XP preview.
 function draftChanged(){if(draft)touchedId=draft.id;keepDraft();const el=$("#xpprev");if(!el||!draft)return;el.innerHTML=`このノートで <b>+${draftXP()} XP</b> と しあいチケット 1まい`;}
 // Words for screen readers: the region is emptied first, so the same words are read again.
 let sayT=null;
 function say(t){const el=$("#say"); if(!el)return; el.textContent=""; clearTimeout(sayT); if(t)sayT=setTimeout(()=>{el.textContent=t;},60);}
 function flash(msg){flashMsg=msg;clearTimeout(flashT);flashT=setTimeout(()=>{flashMsg="";showStatus();},7000);showStatus();say(msg);}
-// Messages about the note form go next to its button, where the writer is looking.
-function formMsg(msg){formNote=msg;const el=$("#saveMsg"); if(el){el.textContent=msg;el.hidden=!msg;} else if(msg)flash(msg);}
-function go(t){stopVoice();if(t==="notes"){stampSeen();calM="";}chalOpen=false;mateEdit=null;shopSheet=null;shopTry=null;gearMenu=null;craftNote=null;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);}
+// Messages about the note form go next to its button, where the writer is looking. v14: ask marks the big-jump question (a calm gold box, class
+// ask); every other message keeps v13's orange.
+let formAsk=false;
+function formMsg(msg,ask){formNote=msg; formAsk=!!(ask&&msg); const el=$("#saveMsg"); if(el){el.textContent=msg; el.hidden=!msg; el.classList.toggle("ask",formAsk);} else if(msg)flash(msg);
+  const jb=$("#jugBack"); if(jb)jb.hidden=!formAsk;} // v14: 「かずを みる」 shows with the big-jump question only
+function go(t){stopVoice();const mk=missionOpen;closeMission();liftNote="";if(t==="notes"){stampSeen();calM="";}chalOpen=false;mateEdit=null;shopSheet=null;shopTry=null;gearMenu=null;craftNote=null;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);
+  if(mk&&t==="home"){const b=document.getElementById("msgo-"+mk);if(b)b.focus();}}
 
 /* match flow: the result is decided and saved at kick-off, then played back line by line */
 function kickoff(){
@@ -2115,7 +2658,7 @@ document.querySelector("nav.tabs").addEventListener("click",e=>{
   const b=e.target.closest("button[data-tab]");if(!b)return;go(b.dataset.tab);});
 function openSettings(){
   if(!loaded()||!profReady){flash("よみこみ中です。すこし まってから もういちど おしてね。");return;}
-  settingsOpen=true;sdraft=null;bkReset();wxHits=null;wxMsg="";shopSheet=null;shopTry=null;gearMenu=null;tab="home";render();const s=$("#settings");if(s)s.scrollIntoView({behavior:"smooth",block:"start"});}
+  closeMission();settingsOpen=true;sdraft=null;bkReset();wxHits=null;wxMsg="";shopSheet=null;shopTry=null;gearMenu=null;tab="home";render();const s=$("#settings");if(s)s.scrollIntoView({behavior:"smooth",block:"start"});}
 $("#gearBtn").addEventListener("click",openSettings);
 // The card shows the whole figure or a waist-up close view; a tap on the figure or on the button switches.
 try{figUp=localStorage.getItem("soccer-note-fig")==="up";}catch(e){}
@@ -2123,7 +2666,11 @@ const toggleZoom=()=>{figUp=!figUp;try{localStorage.setItem("soccer-note-fig",fi
 $("#zoomBtn").addEventListener("click",toggleZoom); $("#fig").addEventListener("click",toggleZoom);
 window.addEventListener("resize",fitCard); if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitCard);
 document.addEventListener("input",e=>{
+  // v14: every change in a mission form is kept at once (dictation's onFinal sends input too, so voice works there)
+  const mm=/^m([vlp])-(vtext|good|fix|next|learn|match|wow)$/.exec(e.target.id||"");
+  if(mm){const d=missionOpen&&mdraft[missionOpen]; if(d&&d.kind===({v:"video",l:"learn",p:"pro"})[mm[1]]){d[mm[2]]=e.target.value; if(e.target.id==="mv-next")pressData("#mvNext button","mng",d.next);} missionChanged(); return;}
   if(!draft||tab!=="write")return; const id=e.target.id;
+  if(jugInput(e,id))return; // v14 the juggling counts (§6.4)
   const map={"f-date":"date","f-goal":"goal","f-good":"good","f-next":"next","f-parent":"parent","f-place":"place","f-hard":"hard","f-coach":"coach"};
   if(map[id]){draft[map[id]]=e.target.value;
     if(id==="f-goal"){pressData("#goalPresets button","g",draft.goal);refreshNext();}
@@ -2138,12 +2685,12 @@ document.addEventListener("input",e=>{
     draftChanged();}
 });
 // Some browsers send no input event after a Japanese keyboard finishes a word, so the score box is tidied once more then.
-document.addEventListener("compositionend",e=>{if(/^g-g[fa]-\d$/.test(e.target.id||""))e.target.dispatchEvent(new Event("input",{bubbles:true}));});
+document.addEventListener("compositionend",e=>{if(/^(g-g[fa]-\d|f-jug-[a-z])$/.test(e.target.id||""))e.target.dispatchEvent(new Event("input",{bubbles:true}));});
 // The next-goal buttons depend on today's goal and whether it was done.
 const refreshNext=()=>{const np=$("#nextPresets");if(np&&draft)np.innerHTML=presetBtns(nextPresets(draft),"ng",draft.next);};
 // Marks the preset button whose text is now in the field (if any).
 const pressData=(sel,key,val)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",String(x.dataset[key]===val)));
-$("#view").addEventListener("toggle",e=>{if(e.target.id==="matHow")matHowOpen=e.target.open;if(e.target.id==="skAll")skOpen=e.target.open;if(e.target.id==="bk")bkOpen=e.target.open;if(e.target.id==="wxp")wxpOpen=e.target.open;},true); // keep these open across re-renders
+$("#view").addEventListener("toggle",e=>{if(e.target.id==="vhow"&&e.target.open!==(e.target.dataset.open==="1"))vhowOpen=e.target.open;if(e.target.id==="matHow")matHowOpen=e.target.open;if(e.target.id==="skAll")skOpen=e.target.open;if(e.target.id==="bk")bkOpen=e.target.open;if(e.target.id==="wxp")wxpOpen=e.target.open;},true); // keep these open across re-renders
 $("#view").addEventListener("change",e=>{if(e.target.id==="bk-in")bkFile(e.target);});
 // A teammate's new name: OK or the keyboard's done key saves it, an empty box or the teammate's own name puts the own name back.
 async function setMateName(id,v){
@@ -2207,6 +2754,23 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.equip){const id=b.dataset.equip,slot=slotOf(id);if(!slot||!gearOf(id))return;game.equip=Object.assign({},game.equip);
     if(game.equip[slot]===id)delete game.equip[slot];else game.equip[slot]=id;
     render();store.setGame().catch(()=>flash("ほぞんできませんでした。"));return;}
+  // v14 missions: the cards on home, the three forms (each chip ends with missionChanged, so the draft is kept at once), the links in the list
+  if(b.dataset.mopen){openMission(b.dataset.mopen);return;}
+  if(b.id==="jugBack"){const k=((draft&&jugBig(draft,lastG)[0])||["r"])[0], f=$("#f-jug-"+k); if(f){f.scrollIntoView({block:"center"});try{f.focus({preventScroll:true});}catch(err){f.focus();}}return;} // v14
+  if(b.id==="msgo-lift"){go("write");const f=$("#f-jug-r");if(f){f.scrollIntoView({block:"center"});try{f.focus({preventScroll:true});}catch(err){f.focus();}}return;}
+  if(missionOpen&&mdraft[missionOpen]){const d=mdraft[missionOpen];
+    if(b.id==="msBack"){stopVoice();closeMission(true);return;}
+    if(b.dataset.mvd!==undefined){const v=b.dataset.mvd;d.vdate=d.vdate===v?"":v;d.vother=false;renderView();const f=[...document.querySelectorAll("#mvDays [data-mvd]")].find(x=>x.dataset.mvd===v);if(f)f.focus();missionChanged();return;}
+    if(b.dataset.mvo!==undefined){d.vother=!d.vother;d.vdate="";renderView();const f=d.vother?$("#mv-vtext"):$("#mvDays [data-mvo]");if(f)f.focus();missionChanged();return;}
+    if(b.dataset.mf){const v=+b.dataset.mf;d.fun=d.fun===v?0:v;document.querySelectorAll("#mfaces button").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.mf===d.fun)));missionChanged();return;}
+    if(b.dataset.mng!==undefined){d.next=b.dataset.mng;const f=$("#mv-next");if(f)f.value=d.next;pressData("#mvNext button","mng",d.next);missionChanged();return;}
+    if(b.dataset.mtopic!==undefined){d.topic=d.topic===b.dataset.mtopic?"":b.dataset.mtopic;document.querySelectorAll("#mlHints button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.mtopic===d.topic)));missionChanged();return;}
+    if(b.dataset.msrc){const i=d.src.indexOf(b.dataset.msrc);if(i<0)d.src.push(b.dataset.msrc);else d.src.splice(i,1);b.setAttribute("aria-pressed",String(i<0));missionChanged();return;}
+    if(b.dataset.mlook!==undefined){d.look=d.look===b.dataset.mlook?"":b.dataset.mlook;document.querySelectorAll("#mpLook button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.mlook===d.look)));missionChanged();return;}
+    if(b.dataset.mhow){d.how=d.how===b.dataset.mhow?"":b.dataset.mhow;document.querySelectorAll("#mpHow button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.mhow===d.how)));missionChanged();return;}
+    if(b.id==="msSave"){await saveMission(missionOpen);return;}
+  }
+  if(b.dataset.shownote){const id=b.dataset.shownote;showNote(a=>a.dataset.id===id);return;}
   if(tab==="write"&&draft){
     const sg=b.closest("[data-seg]");
     if(sg){const k=sg.dataset.seg, fixed=k==="kind"||k==="npos", v=draft[k]===b.dataset.v&&!fixed?"":b.dataset.v, changed=draft[k]!==v; draft[k]=v;
@@ -2251,21 +2815,27 @@ $("#view").addEventListener("click",async e=>{
     delete pcText[id];editingParent=null;render();const f=document.querySelector(`[data-pc="${id}"]`)||document.getElementById("note-"+id);if(f)f.focus();return;}
   if(b.dataset.pcsave){if(pcBusy)return;const id=b.dataset.pcsave;pcBusy=id;b.disabled=true;b.textContent="ほぞん中…";
     try{await stopVoice();const pcEl=$("#pc-"+id);if(!pcEl)return;const v=pcEl.value.trim();const before=lastG;
-      await store.update(id,{parent:v,parentAt:v?new Date().toISOString():""});pcBusy=null;delete pcText[id];editingParent=null;if(handoff===id){handoff=null;stampOpen=null;}render();if(v)celebrate(before,{parts:[["おうちの人のコメント",10]],sum:10},lastG,false);}
+      await (isMission(id)?mstore:store).update(id,{parent:v,parentAt:v?new Date().toISOString():""});pcBusy=null;delete pcText[id];editingParent=null;if(handoff===id){handoff=null;stampOpen=null;}render();if(v)celebrate(before,{parts:[["おうちの人のコメント",10]],sum:10},lastG,false);}
     catch(err){flash("ほぞんできませんでした。");}
     finally{if(pcBusy===id){pcBusy=null;render();}}return;}
   if(b.dataset.del){confirmDel=b.dataset.del;render();return;}
   if(b.dataset.delno!==undefined){confirmDel=null;render();return;}
   if(b.dataset.delyes){const id=b.dataset.delyes; if(dictTarget==="pc-"+id)stopVoice();
     if(handoff===id)handoff=null; if(stampOpen===id)stampOpen=null; if(editingParent===id)editingParent=null; delete pcText[id];
-    try{await store.remove(b.dataset.delyes);
-      if(gameReady&&(game.used||0)>entries.length){game.used=entries.length;store.setGame().catch(()=>{});} // a deleted note's used ticket should not cost the next note its ticket
+    try{if(isMission(id))await mstore.remove(id); // v14: a mission record holds no ticket, so game.used stays as it is
+      else{await store.remove(b.dataset.delyes);
+        if(gameReady&&(game.used||0)>entries.length){game.used=entries.length;store.setGame().catch(()=>{});}} // a deleted note's used ticket should not cost the next note its ticket
     }catch(err){flash("けせませんでした。");}
     confirmDel=null;render();return;}
 });
 
 // "saving" and the form message live outside the DOM because a snapshot can re-render the form while a save is still on its way.
 function setSaving(v,msg){saving=v;const b=$("#saveBtn");if(b){b.disabled=v;b.textContent=v?"ほぞん中…":"ノートをつける!";}if(msg!==undefined)formMsg(msg);}
+// v14, in save() after the MAXPERDAY check: a count of JUGASK or more that is over twice the best is asked about once (true when it asked and stopped).
+// Pressing again with the same counts saves; a changed count is asked about again.
+function jugAskStop(d){const big=jugBig(d,lastG), c=jugOf(d), ask=JSON.stringify(c); if(!big.length||d.jugAsk===ask)return false;
+  d.jugAsk=ask; keepDraft(); setSaving(false);
+  formMsg(`すごい きろく! ${big.map(([k,t])=>`${t} ${c[k]}かい`).join("、 ")}。 これで よければ、 もう いちど 「ノートをつける!」\u2060を おしてね。`,true); return true;}
 async function save(){
   if(saving)return;
   if(!loaded()||!profReady){formMsg("データを よみこみ中です。すこし まってから もういちど おしてね。");return;}
@@ -2276,24 +2846,26 @@ async function save(){
   if(!d.date)return stop("日づけを えらんでね。");
   if(d.date>today())return stop("みらいの日は えらべないよ。きょうか、まえの日を えらんでね。");
   // A note has to say something, and a day holds two at most (say, practice and a match), so tickets cannot be farmed with empty notes.
-  if(!d.chips.length&&!focusOf(d).length&&!d.good.trim()&&!d.hard.trim()&&!d.coach.trim())return stop("「がんばったこと」を 1つ えらぶか、「うまくいったこと」を かいてね。");
+  if(!d.chips.length&&!focusOf(d).length&&!d.good.trim()&&!d.hard.trim()&&!d.coach.trim()&&!Object.keys(jugOf(d)).length)return stop("「がんばったこと」を 1つ えらぶか、「うまくいったこと」を かいてね。");
   if(entries.filter(x=>x.date===d.date&&x.id!==d.id).length>=MAXPERDAY)return stop(`この日の ノートは もう ${MAXPERDAY}さつ あるよ。ちがう日を えらんでね。`);
-  const before=compute(entries.filter(x=>x.id!==d.id));
+  if(jugAskStop(d))return; // v14
+  const before=compute(entries.filter(x=>x.id!==d.id),missions);
   // The draft keeps one id, so pressing the button again after a slow or failed save rewrites the same note instead of adding a copy.
-  const e=Object.assign({},d,{createdAt:d.createdAt||(d.createdAt=new Date().toISOString()),chips:d.chips.slice(0,MAXCHIPS),goal:d.goal.trim(),good:d.good.trim(),next:d.next.trim(),parent:d.parent.trim(),
-    place:d.place.trim(),hard:d.hard.trim(),coach:d.coach.trim(),focus:focusOf(d),nside:sideOf(d.npos,d.nside,d.nshape),nshape:isShape(d.nshape)?d.nshape:"",
-    menu:d.kind==="match"?[]:d.menu.slice(),games:d.kind==="match"?d.games.map(g=>({opp:g.opp.trim(),gf:g.gf,ga:g.ga})).filter(gameUsed):[]});
-  delete e.wxHand; delete e.wxFor; delete e.goalFrom; // only the form needs these
+  const e=noteOf(d,d.createdAt||(d.createdAt=new Date().toISOString())); // v14: the note exactly as the preview scored it
   const slow=setTimeout(()=>{if(draft===d)setSaving(false,"まだ ほぞんできていません。でんぱを たしかめて、もういちど おしてね。");},10000);
   try{await store.add(e);}catch(err){clearTimeout(slow);if(draft===d)setSaving(false,"ほぞんできませんでした。もういちど ためしてね。");return;}
   clearTimeout(slow);
   if(draft!==d)return; // another press already finished this note
   if(db){entries=entries.filter(x=>x.id!==e.id).concat([e]);} // optimistic until the snapshot lands
-  saving=false; formNote=""; draft=null; dropKept(); if(!e.parent)handSet(e.id); tab="home"; render(); window.scrollTo(0,0);
-  celebrate(before,lastG.per[e.id],lastG,true,e.parent?null:e.id);
+  saving=false; formNote=""; liftNote=""; draft=null; dropKept(); if(!e.parent)handSet(e.id); tab="home"; render(); window.scrollTo(0,0);
+  // v14: the reward's juggling banners show for a target cleared, a new best or a first count of 1 or more; closing it then goes to the ⚽ card.
+  const gain=lastG.per[e.id], J=gain.jug, jc=jugOf(e), banner=!!J&&(J.clr.length>0||J.pb.length>0||J.first.some(k=>jc[k]>=1));
+  celebrate(before,gain,lastG,true,e.parent?null:e.id,banner?{note:e,focus:"#ms-lift"}:{note:e});
 }
 
-function celebrate(before,gain,after,ticket,handoff){
+function celebrate(before,gain,after,ticket,handoff,opt){
+  // v14: a note without counts has jug:null, and the comment reward passes no opt. opt: {note} (with focus:"#ms-lift" for a juggling banner) or {mk, plan, focus}.
+  const J=gain.jug||{pb:[],first:[],clr:[],paid:false}, o=opt||{};
   const lvup=after.level>before.level;
   const sb=skillList(before), newSkills=skillList(after).filter((s,i)=>s.lv>sb[i].lv);
   const qb=squad(before), newMates=squad(after).filter((m,i)=>m.joined&&!qb[i].joined);
@@ -2302,37 +2874,53 @@ function celebrate(before,gain,after,ticket,handoff){
   // v13: the materials this note brought, and a piece it made possible to make.
   const gm=gain.mat, matGot=gm&&MATS.some(([k])=>gm[k])?`<div class="matgot"><b>そざい ゲット!</b>${MATS.filter(([k])=>gm[k]).map(([k,nm])=>`<span title="${nm}">${matIcon(k)}+${gm[k]}</span>`).join("")}</div>`:"";
   const newMake=gameReady&&!live&&before.mat?GEARIDS.filter(id=>canMake(after,id)&&!canMake(before,id)):[];
+  // v14 banners, right under the number because they say why it is there: a mission cleared, juggling targets, a best, first counts.
+  const jc=o.note?jugOf(o.note):{}, jn=k=>(JUGS.find(x=>x[0]===k)||["",""])[1], firsts=J.first.filter(k=>jc[k]>=1), bn=[];
+  if(o.mk)bn.push(["msclear",o.mk==="video"?"<b>🎬 ミッション クリア!</b><span>じぶんの プレーを よく みたね!</span>":o.mk==="pro"?"<b>🌟 ミッション クリア!</b><span>プロの プレーを よく みたね!</span>":"<b>🔍 ミッション クリア!</b><span>あたらしい ことを まなんだね!</span>"]);
+  if(J.clr.length)bn.push(["msclear","<b>⚽ ミッション クリア!</b>"+J.clr.map(([k,hit])=>{const nx=LADDER.find(x=>x>(jc[k]===undefined?Math.max.apply(null,hit):jc[k]));
+    return `<span>${jn(k)} ${hit.join("かい・")}かい クリア! ${nx===undefined?"ぜんぶ クリア!":`つぎは ${nx}かい`}</span>`;}).join("")]);
+  if(J.pb.length)bn.push(["pbest","<b>🏅 じこベスト!</b>"+J.pb.map(k=>`<span>${jn(k)} ${jc[k]}かい (まえは ${before.jug&&before.jug[k]?before.jug[k].n:0}かい)</span>`).join("")+firsts.map(k=>`<span>${jn(k)} ${jc[k]}かい (はじめての きろく)</span>`).join("")]);
+  else if(firsts.length)bn.push(["pbest","<b>⚽ はじめての きろく!</b>"+firsts.map(k=>`<span>${jn(k)} ${jc[k]}かい</span>`).join("")]);
+  const banners=bn.map(([c,h],i)=>`<div class="${c}"${i?"":' id="ovban"'}>${h}</div>`).join("");
+  // v14 the plan he wrote, with one tap to make it the goal on home
+  const pl=written(o.plan)?String(o.plan).trim():"", plan=pl?`<div class="trygoal" id="ovplan"><span class="label">${o.mk==="learn"?"やってみたい こと":o.mk==="pro"?"まねしたい こと":"つぎに やってみる こと"}</span><b>${esc(pl)}</b>${pl===curGoal()?`<span class="muted">いまの めあてと おなじだね!</span>`:`<button class="ghost" id="ovgoal" type="button">これを めあてに する</button>`}</div>`:"";
   const ov=document.createElement("div"); ov.className="overlay";
-  ov.innerHTML=`<div class="reward" role="dialog" aria-modal="true" aria-label="けっか">
-    <div class="big">+${gain.sum} XP</div>
+  ov.innerHTML=`<div class="reward" role="dialog" aria-modal="true" aria-label="けっか" aria-describedby="ovbig${bn.length?" ovban":""}">
+    <div class="big" id="ovbig">+${gain.sum} XP</div>${banners}
     ${lvup?`<div class="lvup">レベルアップ! Lv.${after.level}${after.level>=MAXLV?" MAX!":""}</div>${rankOf(after.level)!==rankOf(before.level)?`<div><b>「${rankOf(after.level)}」になった!</b></div>`:""}`:""}
     ${starUp?`<div class="lvup">★ ゲット! ★×${after.stars}</div>`:""}
     ${lvup||starUp?"":`<div class="muted">${after.level>=MAXLV?`MAX! つぎの ★まで あと ${toNext(after)} XP`:`つぎのレベルまで あと ${toNext(after)} XP`}</div>`}
-    <ul>${gain.parts.map(p=>`<li><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>${matGot}
+    <ul>${gain.parts.map(p=>`<li${p[2]==="msn"?' class="msn"':""}><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>${matGot}${plan}
     ${looks.length?`<div class="newmate"><div class="ava look">${pixSVG(Object.assign(heroOpts(after,equipNow()),{crop:lookCrop,label:heroName()}),"lk")}</div><div><b>あたらしい すがた!</b><br><span class="muted">${esc(looks.join("、"))}</span></div></div>`:""}
     ${newSkills.map(s=>`<div><span class="sk${s.lv===2?" gold":""}">${s.lv===2?"★ ":""}${esc(s.n)}</span> ${s.lv===2?"が ゴールドスキルに なった!":"を おぼえた!"}</div>`).join("")}
     ${newMates.map(m=>`<div class="newmate"><div class="ava">${pixSVG(mateOpts(m),"n"+m.id)}</div><div><b>${esc(m.n)}(${m.pos})が なかまに なった!</b><br><span class="muted">${esc(m.cat)}</span><br><button class="ghost mini" type="button" data-ovmname="${m.id}" style="margin:6px 0 0">なまえを かえる</button></div></div>`).join("")}
     ${ticket?`<div><b>しあいチケット +1</b> <span class="muted">(いま ${tickets(after)}まい)</span></div>`:""}
     ${newMake.length?`<div class="craft-ask"><b>🔨 ${esc(GEAR[newMake[0]].n)}${newMake.length>1?" など":""}が つくれるよ!</b><button class="ghost" type="button" id="ovcraft">こうぼうへ</button></div>`:""}
-    ${handoff?`<div class="handoff-ask"><b>👪 つぎは おうちの人の ばん!</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
+    ${handoff?`<div class="handoff-ask"><b>${o.mk==="learn"?"👪 おうちの人に おしえて あげよう!":o.mk==="pro"?"👪 みた プレーを おうちの人と はなそう!":"👪 つぎは おうちの人の ばん!"}</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
     <div class="row" style="justify-content:center">${ticket?`<button class="ghost" type="button" id="ovmatch">しあいに いく</button>`:""}<button class="primary" type="button" id="ovok" style="flex:1">やったね!</button></div></div>`;
   document.body.appendChild(ov);
   // The second tap of a double tap on the save button lands on the reward, so for half a second it ignores taps: it must not vanish before it has been seen.
-  const born=Date.now(), early=()=>Date.now()-born<500, close=()=>ov.remove();
-  ov.querySelector("#ovok").addEventListener("click",()=>{if(!early())close();});
+  // v14: やったね! (or a tap beside the reward) goes back to the card of what was cleared, when it is on screen
+  const born=Date.now(), early=()=>Date.now()-born<500, close=f=>{ov.remove(); const el=f&&o.focus&&document.querySelector(o.focus); if(el)el.focus();};
+  ov.querySelector("#ovok").addEventListener("click",()=>{if(!early())close(true);});
+  const gb=ov.querySelector("#ovgoal"); let gBusy=false;
+  if(gb)gb.addEventListener("click",async()=>{if(early()||gBusy||gb.getAttribute("aria-disabled")==="true")return; gBusy=true; const ok=await setChal(pl,true); gBusy=false;
+    if(ok){gb.textContent="✓ めあてに したよ"; gb.setAttribute("aria-disabled","true"); say("めあてに したよ! 「せんしゅ」で みられるよ");}
+    else{const n=document.createElement("span"); n.className="muted"; n.textContent="ほぞんできませんでした。"; gb.replaceWith(n); say("ほぞんできませんでした。"); const k=ov.querySelector("#ovok"); if(k)k.focus({preventScroll:true});}});
   const mb=ov.querySelector("#ovmatch"); if(mb)mb.addEventListener("click",()=>{if(early())return;close();go("match");});
   const pb=ov.querySelector("#ovpar"); if(pb)pb.addEventListener("click",()=>{if(early())return;close();openParent(handoff);});
   const cb=ov.querySelector("#ovcraft"); if(cb)cb.addEventListener("click",()=>{if(early())return;close();toCraft();});
   ov.querySelectorAll("[data-ovmname]").forEach(x=>x.addEventListener("click",()=>{if(early())return;close();go("team");mateEdit=x.dataset.ovmname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}}));
-  ov.addEventListener("click",ev=>{if(ev.target===ov&&!early())close()});
+  ov.addEventListener("click",ev=>{if(ev.target===ov&&!early())close(true)});
   // A reward that does not fit (a level up with new looks and teammates) leaves the parents' ask to the button on home.
   const rw=ov.querySelector(".reward"), ask=rw.querySelector(".handoff-ask"); if(ask&&rw.scrollHeight>rw.clientHeight+1)ask.remove();
   ov.querySelector("#ovok").focus({preventScroll:true}); rw.scrollTop=0;
 }
 
 /* ---------- boot ---------- */
+mdraft=keptMissions(); mdDay=today(); // v14: mission words kept on this device come back (for a week)
 render();
-function goLocal(){if(mode!=="loading")return;mode="local";lsLoad();profReady=gameReady=true;render();}
+function goLocal(){if(mode!=="loading")return;mode="local";lsLoad();msLoad();msReady=true;profReady=gameReady=true;render();}
 const use=window.claude&&window.claude.use?window.claude.use("db"):Promise.resolve(null);
 Promise.resolve(use).then(d=>{
   if(!d){goLocal();return;}
@@ -2340,6 +2928,7 @@ Promise.resolve(use).then(d=>{
   const timer=setTimeout(()=>{if(mode==="loading"){mode="slow";render();}},10000);
   db.collection("entries").onSnapshot(snap=>{clearTimeout(timer);mode="db";entries=snap.docs.map(x=>Object.assign({id:x.id},x.data()));render();},
     err=>{clearTimeout(timer);mode="error";render();});
+  msListen(); // v14: the mission records, apart from the notes (a failure there never sets mode)
   db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists){const d=s.data()||{};profile=cleanProfile(Object.assign({},profile,d,{mnames:d.mnames}));}if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
   // Skip echoes of our own writes while one is queued or a match is being played back: the local state is already ahead.
   db.doc("game/main").onSnapshot(s=>{if(gameBusy||(live&&!live.done))return;gameReady=true;if(s.exists){game=Object.assign(newGame(),s.data());game.made=cleanMade(game.made);}render();},()=>{});
