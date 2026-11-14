@@ -478,7 +478,7 @@ const CHIPS=[
   {id:"listen",t:"コーチの話をよくきいた",s:{pass:1,defense:1},team:1,skill:"せんじゅつがん",line:"コーチの さくせんどおりに うごけた!"}
 ];
 const CHIP={};CHIPS.forEach(c=>CHIP[c.id]=c);
-const MAXCHIPS=5, MAXGROUP=3, MAXPERDAY=2; // five chips a note, three at most from each group, so every note mixes "self" and "team"
+const MAXCHIPS=6, MAXGROUP=3, MAXPERDAY=2; // six chips a note (v13.2), three at most from each group, so a full note is three "self" and three "team"
 const GOALS=["ルーズボールを1回おいかける","パスを1回もらいにいく","こえを3回だす","シュートを1本うつ","あいてに1回ちかづく","「パスちょうだい」を1回いう","さいごまで走る"];
 const POS={
   FW:{n:"フォワード",d:"ゴールを きめる",w:{shoot:.3,dribble:.25,brave:.15,stamina:.1,pass:.1,defense:.1},
@@ -680,8 +680,9 @@ const MATENAME=8;
 const cleanMateName=v=>typeof v==="string"?Array.from(v.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2066-\u2069\ufeff]/g,"").replace(/\s+/g," ").trim()).slice(0,MATENAME).join("").trim():"";
 const mateName=m=>(profile.mnames&&Object.prototype.hasOwnProperty.call(profile.mnames,m.id)&&profile.mnames[m.id])||m.n;
 // Later cups have more rounds, so the road gets longer without the matches having to get unfair. The ratings were fitted with a simulation of
-// one match per note: a writer who mixes self and team chips wins about two matches in three and takes the last cup after roughly 35 notes;
-// one who never picks team chips (no teammates) needs about 50.
+// one match per note: a writer who mixes self and team chips (3+2 or 2+2 a note) wins about two matches in three and takes the last cup after
+// roughly 35 notes; a full 3+3 note (v13.2) about three in four and 31-32 notes, 2+1 about 43; one who never picks team chips (no teammates)
+// needs about 56 (sim132.js, with the workshop gear).
 const roundNames=n=>n===3?["1かいせん","じゅんけっしょう","けっしょう"]:n===4?["1かいせん","2かいせん","じゅんけっしょう","けっしょう"]:["1かいせん","2かいせん","3かいせん","じゅんけっしょう","けっしょう"];
 const CUPS=[
   {n:"ちびっこカップ",teams:[["ひまわりFC",12],["みどりキッカーズ",16],["あおぞらSC",20]],sf:"w_white",f:"h_red"},
@@ -1653,8 +1654,9 @@ const chipFull=(d,team)=>d.chips.length>=MAXCHIPS||d.chips.filter(id=>CHIP[id]&&
 const grpN=(d,team)=>d.chips.filter(id=>CHIP[id]&&!!CHIP[id].team===team).length;
 function grpLeft(d,team){const n=grpN(d,team), left=Math.min(MAXGROUP-n,MAXCHIPS-d.chips.length);
   return left>0?`あと ${left}つ`:n>=MAXGROUP?`${MAXGROUP}つで いっぱい`:`ぜんぶで ${MAXCHIPS}つで いっぱい`;}
-// The hint shows when the whole note is full while a group still has room, the case that looked like a group allowing fewer than three.
-const chipHintOn=d=>d.chips.length>=MAXCHIPS&&[false,true].some(t=>grpN(d,t)<MAXGROUP);
+// The hint shows when the whole note is full: every other chip then waits, so it says how to swap one. (With six a note and three a group,
+// a full note is always three and three, so grpLeft's "ぜんぶで" words only matter if the limits change again.)
+const chipHintOn=d=>d.chips.length>=MAXCHIPS;
 function chipCounts(d){const a=$("#gl-self"), b=$("#gl-team"), h=$("#chipHint"); if(a)a.textContent=grpLeft(d,false); if(b)b.textContent=grpLeft(d,true); if(h)h.hidden=!chipHintOn(d);}
 function chipBtns(team,d){const full=chipFull(d,team);
   return CHIPS.filter(c=>!!c.team===team).map(c=>{const on=d.chips.includes(c.id);return `<button type="button" data-chip="${c.id}" aria-pressed="${on}"${!on&&full?" disabled":""}>${c.t}</button>`}).join("");}
@@ -1725,7 +1727,7 @@ function viewWrite(){
   <div class="field" id="chipField"><span class="q">がんばったこと<small>${MAXCHIPS}つまで えらべるよ(<span id="chipN">${d.chips.length}</span>/${MAXCHIPS})</small></span>
     <span class="grp"><i></i><span>じぶんを きたえる(<span id="gl-self">${grpLeft(d,false)}</span>)→ のうりょくアップ</span></span><div class="chips" data-chips="self">${chipBtns(false,d)}</div>
     <span class="grp team"><i></i><span>なかまと つながる(<span id="gl-team">${grpLeft(d,true)}</span>)→ キズナが たまって なかまが ふえる</span></span><div class="chips team" data-chips="team">${chipBtns(true,d)}</div>
-    <p class="muted chiphint" id="chipHint"${chipHintOn(d)?"":" hidden"}>ぜんぶで ${MAXCHIPS}つまで だよ。 かえる ときは、えらんだ ものを もう1かい おして はずしてね。</p></div>
+    <p class="muted chiphint" id="chipHint"${chipHintOn(d)?"":" hidden"}>${MAXCHIPS}つ えらんだよ。 かえる ときは、えらんだ ものを もう1かい おして はずしてね。</p></div>
   <div class="field"><label class="q" for="f-good">うまくいったこと</label><p class="muted hint" id="askHint"${ask?"":" hidden"}>${ask?"かんがえて みよう:"+esc(ask):""}</p><div class="voice"><textarea id="f-good" maxlength="300" placeholder="れい:〇〇くんに パスがとおった">${esc(d.good)}</textarea>${micBtn("f-good")}</div></div>
   <div class="field"><label class="q" for="f-hard">むずかしかったこと<small>かけたら +5 XP</small></label><div class="voice"><textarea id="f-hard" maxlength="200" placeholder="れい:トラップが はねた。つぎは よく みて とめる">${esc(d.hard)}</textarea>${micBtn("f-hard")}</div></div>
   <div class="field"><label class="q" for="f-coach">コーチに いわれたこと・ほめられたこと<small>かけたら +5 XP</small></label><div class="voice"><textarea id="f-coach" maxlength="200" placeholder="れい:まえを むいて もらえたね!">${esc(d.coach)}</textarea>${micBtn("f-coach")}</div></div>
