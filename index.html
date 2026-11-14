@@ -85,10 +85,12 @@ p{margin:0}
 .gear{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:999px;padding:4px 10px;font-size:.8rem}
 .zoom{grid-column:2;justify-self:start;align-self:start;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:999px;padding:7px 14px;font-size:.82rem;font-weight:800}
 .card .fig{grid-row:1/span 2;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-@media (max-width:400px){.lv{font-size:2rem}.pname{font-size:1.2rem}}
+@media (max-width:400px){.lv{font-size:2rem}.pname{font-size:1.2rem}.rank{padding:2px 8px}}
+.rank{white-space:nowrap} /* v13: a five-letter title (たまご選手, レジェンド) stays on one line on a 320px phone */
 @media (prefers-reduced-motion:no-preference){
-  .pxf1,.pxf2{animation:pxa .6s steps(1,end) infinite}.pxf2{animation-delay:-.3s}@keyframes pxa{0%{opacity:1}50%,100%{opacity:0}}}
+  .pxf1,.pxf2,.pxf2s{animation:pxa .6s steps(1,end) infinite}.pxf2,.pxf2s{animation-delay:-.3s}@keyframes pxa{0%{opacity:1}50%,100%{opacity:0}}}
 .pxf2{opacity:0} /* pixel pictures: aura tips and lightning switch between two frames; with reduced motion the first frame stays */
+/* .pxf2s is a second frame that stays visible with reduced motion (the Lv.35 bolts): it has no hide rule */
 @media (min-width:760px){
   /* The room kept free under the page for the tab bar is split in two: 76px under the grid, so the pinned card can stay put down to the end of the page, and the rest under the panels. */
   .wrap{max-width:1040px;display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);align-items:start;gap:20px;padding-bottom:76px}
@@ -130,6 +132,7 @@ p{margin:0}
 .sidetip{margin:12px 0 0;background:var(--soft);border-radius:12px;padding:8px 12px;line-height:1.5}
 .sidetip b{display:block;font-size:.85rem;color:var(--good)}
 .eyedot{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:6px;box-shadow:0 0 0 2px var(--paper),0 0 0 3px var(--rule)}
+.eyedot.two{box-shadow:inset .4em 0 0 var(--eye1),0 0 0 2px var(--paper),0 0 0 3px var(--rule)} /* Lv.40: red and gold, split down the middle */
 
 /* form */
 .field{display:flex;flex-direction:column;gap:8px}
@@ -248,7 +251,7 @@ textarea{min-height:76px;resize:vertical}
 .sidef .q2 small{font-weight:400;color:var(--muted);margin-left:6px;font-size:.78rem}
 .sidef .muted{margin:0}
 /* the position badge keeps its words whole; on a phone it gets its own row, which can use the room kept free for the せってい button above it */
-.posb,#posPanel,#focusBox,#kindBox .muted,#askHint,#s-role,.sidef .q2,.pitch+.muted,#goalPresets,#gcPresets,#nextPresets,.goalcard .gc-t,.kw{word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+.posb,#posPanel,#focusBox,#kindBox .muted,#askHint,#s-role,.sidef .q2,.pitch+.muted,#goalPresets,#gcPresets,#nextPresets,.goalcard .gc-t,.kw{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 @media (max-width:560px){.tags{flex-direction:column;align-items:flex-start}.tags .posb{margin-right:-64px;max-width:calc(100% + 64px)}}
 .fcell{display:flex;flex-direction:column;align-items:center;gap:2px;color:#fff;font-size:.75rem;font-weight:800;width:72px;text-align:center;line-height:1.2;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .ava{border-radius:10px;overflow:hidden;background:linear-gradient(170deg,#5a688f,#2b3458);flex:none}
@@ -263,6 +266,14 @@ textarea{min-height:76px;resize:vertical}
 .mate small{display:block;color:var(--muted);line-height:1.4}
 .mate.locked{border-style:dashed}
 .mate.locked .ava{display:grid;place-items:center;color:#a9b2c8;font-family:var(--display);font-size:1.4rem;background:#2a3147}
+.mate b{overflow-wrap:break-word;overflow-wrap:anywhere}
+.mate .mrename{margin:6px 0 0;align-self:flex-start}
+.mname #mnReset{margin-left:0;align-self:flex-start}
+.mate.edit{align-items:start}
+.mname{display:flex;flex-direction:column;gap:6px;min-width:0}
+.mname input{min-width:0;box-sizing:border-box}
+.mname .row{display:flex;gap:8px;flex-wrap:wrap}
+.fcell span{overflow-wrap:break-word;overflow-wrap:anywhere;max-width:100%}
 .powers{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.92rem}
 .powers em{font-style:normal;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
 .powers .tot{font-family:var(--display);font-size:1.2rem;border-top:2px solid var(--rule);padding-top:4px}
@@ -270,7 +281,7 @@ textarea{min-height:76px;resize:vertical}
 
 /* match */
 .score{background:linear-gradient(135deg,#070b18,#141d3d);color:#fff;border-radius:14px;padding:12px;display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center}
-.score .tn{font-weight:800;font-size:.9rem;overflow-wrap:anywhere}
+.score .tn{font-weight:800;font-size:.9rem;overflow-wrap:break-word;overflow-wrap:anywhere}
 .score .sc{font-family:var(--display);font-size:2.3rem;line-height:1;font-variant-numeric:tabular-nums}
 .score .min{grid-column:1/-1;font-size:.8rem;opacity:.85}
 .feed{display:flex;flex-direction:column;gap:6px}
@@ -302,6 +313,57 @@ textarea{min-height:76px;resize:vertical}
 .item svg{width:28px;height:20px}
 .item[aria-pressed="true"]{border-color:var(--good);background:var(--soft)}
 .result{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+/* v13 workshop */
+.mats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mat{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--chip);border:1px solid var(--rule);border-radius:12px;padding:8px 4px;text-align:center;font-size:.78rem;font-weight:700;line-height:1.3;min-width:0}
+.mat b{font-family:var(--display);font-size:1.5rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.mi{width:24px;height:24px;flex:none;display:inline-block;vertical-align:middle}
+.howlist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:.85rem;line-height:1.6}
+.howlist li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:start}
+.mtag{display:inline-block;background:var(--chip);border:1px solid var(--rule);border-radius:8px;padding:0 6px;margin:2px 2px 0 0;font-size:.8rem;line-height:1.5}
+.lines{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:12px}
+.gline{border:1px solid var(--rule);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--chip);min-width:0}
+.gline.open{grid-column:1/-1}
+.shelf{display:flex;gap:8px;flex-wrap:wrap}
+.shelfbox{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;border:2px solid var(--rule);background:var(--paper);padding:0;font-weight:800;color:var(--muted);flex:none}
+.shelfbox svg{width:42px;height:30px}
+.shelfbox.next{border-style:dashed;border-color:var(--kick);color:var(--kick);font-size:.8rem}
+.shelfbox.later{background:#2a3147;border-color:#2a3147;color:#a9b2c8;font-family:var(--display);font-size:1.3rem}
+.shelfbox.made.on{border-color:var(--good)}
+.shelfbox.made[aria-expanded="true"]{box-shadow:0 0 0 3px var(--accent)}
+.shelfbox i{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:var(--good);color:var(--on);font-style:normal;font-size:.72rem;line-height:20px;text-align:center}
+.gmenu,.gnext,.sheet{display:flex;flex-direction:column;gap:8px}
+.gmenu .ghost,.sheet .ghost{min-height:44px}
+.cost{display:flex;flex-direction:column;gap:4px;font-size:.9rem}
+.cost div{display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+.cost b{margin-left:auto}
+.cost .ok b{color:var(--good)}
+.cost small{font-weight:700;color:var(--kick);font-size:.85rem}
+.gwait{min-height:48px;opacity:.75}
+.gdone{font-family:var(--display);color:var(--accent-text)}
+.sprev{display:flex;align-items:center;gap:12px}
+.legs,.legsbig{border-radius:12px;overflow:hidden;background:linear-gradient(170deg,#5a688f,#2b3458);flex:none}
+.legs{width:160px;max-width:48%}
+.legsbig{width:200px;max-width:100%;margin:0 auto}
+.legs svg,.legsbig svg{width:100%;height:auto;display:block}
+.pname2{font-size:1.1rem}
+.paints{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:8px 6px;max-width:330px}
+.pswatch{width:44px;height:44px;padding:0;border-radius:50%;border:3px solid var(--rule);justify-self:center}
+.pswatch[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--ink)}
+.pswatch:disabled{opacity:.3}
+.shopnews{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:2px dashed var(--accent-text);border-radius:18px;padding:12px 16px}
+.shopnews span{color:var(--muted);font-weight:600;font-size:.9rem}
+.stampnews.shopgo{border-color:var(--accent-text)}
+.matgot{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 14px;background:var(--soft);border-radius:12px;padding:6px 10px;font-weight:800}
+.matgot span{display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.craft-ask{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;justify-content:center;border:2px dashed var(--accent-text);border-radius:16px;padding:6px 10px}
+.craft-ask .ghost{min-height:44px}
+/* the workshop's words (and the prizes of a match) break only at the spaces between them, as the goal texts do (.kw above) */
+.craft,.shopnews,.craft-ask,.unlock,.made-rw,.keepmsg,.result .got{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+.craftmsg{margin:0;font-weight:800}
+/* words for screen readers only */
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:360px){.shelf{gap:6px}.shelfbox{width:50px;height:50px}.shelfbox svg{width:38px;height:27px}}
 .result .big{font-family:var(--display);font-size:2rem;line-height:1.2}
 .result .win{color:var(--kick)}
 .got{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);font-weight:800;border-radius:12px;padding:8px 14px}
@@ -324,7 +386,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-t
 .mic svg{width:24px;height:24px}
 .mic[aria-pressed="true"]{background:var(--kick);border-color:var(--kick);color:var(--on)}
 .voicebar{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--soft);border-bottom:1px solid var(--rule);font-weight:700;font-size:.92rem}
-.voicebar #vtext{flex:1;min-width:0;overflow-wrap:anywhere}
+.voicebar #vtext{flex:1;min-width:0;overflow-wrap:break-word;overflow-wrap:anywhere}
 .voicebar .vdot{width:12px;height:12px;border-radius:50%;background:var(--muted);flex:none}
 .voicebar.live .vdot{background:var(--kick)}
 .voicebar button{border:0;background:var(--kick);color:var(--on);font-weight:800;border-radius:999px;padding:6px 14px;flex:none}
@@ -362,6 +424,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-t
   </section>
   <div class="col">
     <div class="banner" id="status">よみこみ中…</div>
+    <p class="sr" id="say" role="status"></p>
     <main id="view"></main>
   </div>
 </div>
@@ -581,10 +644,17 @@ const MAXSTAMPS=3;
 const isStamp=id=>typeof id==="string"&&Object.prototype.hasOwnProperty.call(STAMP,id);
 const stampsOf=e=>(e&&Array.isArray(e.stamps)?e.stamps:[]).filter((id,i,a)=>isStamp(id)&&a.indexOf(id)===i).slice(0,MAXSTAMPS);
 const isoOr=(v,d)=>typeof v==="string"&&Number.isFinite(Date.parse(v))?new Date(Date.parse(v)).toISOString():d;
-const RANKS=[[1,"たまご選手"],[3,"ルーキー"],[6,"レギュラー"],[10,"エース"],[15,"キャプテン"],[20,"スター"],[30,"レジェンド"]];
+// v13: a title every 5 levels up to the cap (5 characters at most, so the tag never wraps on a phone); レジェンド moved from Lv.30 to the cap.
+const RANKS=[[1,"たまご選手"],[3,"ルーキー"],[6,"レギュラー"],[10,"エース"],[15,"キャプテン"],[20,"スター"],[25,"ヒーロー"],[30,"ミラクル"],[35,"マスター"],[40,"たいよう"],[45,"ぎんが"],[50,"レジェンド"]];
 const TEAMCOLORS=["#2f7bff","#ff3b4a","#ff9a1f","#a45bff","#19c9b6","#b6f000"];
-const UNLOCKS=[[2,"プロの スーツ"],[3,"あおい目"],[4,"せばんごう"],[6,"ひかる目と ひかるライン"],[10,"むらさきの目"],[12,"キャプテンマーク"],[15,"あかい目と オーラ"],[20,"ゴールドオーラと いなずま"]];
-const need=l=>40+10*(l-1); // XP from level l to l+1
+// A third element "full" shows that look in the full figure on the reward (it is outside the up-to-the-knees frame).
+const UNLOCKS=[[2,"プロの スーツ"],[3,"あおい目"],[4,"せばんごう"],[6,"ひかる目と ひかるライン"],[10,"むらさきの目"],[12,"キャプテンマーク"],[15,"あかい目と オーラ"],[20,"ゴールドオーラと いなずま"],
+  [25,"かがやく ライン"],[30,"りょうめの ひかり"],[35,"ダブル いなずま","full"],[40,"あかと きんの 目"],[45,"にじいろ オーラ"],[50,"レジェンドの かんむり"]];
+// XP from level l to l+1: v12's steps up to Lv.27, then 300 a level, never more than v12 asked, so nobody loses a level. Lv.50 is the cap;
+// after it every 300 XP adds a ★ (a ★ is only for show: no power, nothing to spend).
+const MAXLV=50, STARXP=300;
+const need=l=>Math.min(40+10*(l-1),300);
+const toNext=g=>g.level<MAXLV?need(g.level)-g.rest:STARXP-g.rest%STARXP;
 
 // Teammates join as キズナ grows (thresholds in KIZUNA), then keep getting stronger.
 const KIZUNA=[2,5,9,14,20,27,35,44,54,65];
@@ -601,6 +671,11 @@ const MATES=[
   {id:"takuma",n:"タクマ",pos:"DF",cat:"カバーの たつじん",skill:"スライディング",line:"ぎりぎりで ボールを かきだした!",base:31,num:3,hair:2,hc:5,skin:1,iris:"#3a3a4a",mood:"calm"},
   {id:"kento",n:"ケント",pos:"FW",cat:"ここいちばんの エース",skill:"ミドルシュート",line:"とおくから ゴールを ねらう!",base:33,num:18,hair:3,hc:3,skin:2,iris:"#8a5230",mood:"grin"}
 ];
+// v13: the player may rename teammates (kept in profile.mnames by teammate id). A name is one line of up to 8 characters;
+// an empty name, or the teammate's own name, means no change.
+const MATENAME=8;
+const cleanMateName=v=>typeof v==="string"?Array.from(v.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2066-\u2069\ufeff]/g,"").replace(/\s+/g," ").trim()).slice(0,MATENAME).join("").trim():"";
+const mateName=m=>(profile.mnames&&Object.prototype.hasOwnProperty.call(profile.mnames,m.id)&&profile.mnames[m.id])||m.n;
 // Later cups have more rounds, so the road gets longer without the matches having to get unfair. The ratings were fitted with a simulation of
 // one match per note: a writer who mixes self and team chips wins about two matches in three and takes the last cup after roughly 35 notes;
 // one who never picks team chips (no teammates) needs about 50.
@@ -627,7 +702,39 @@ const ITEMS={
   h_gold:{n:"チャンピオン ヘアバンド",slot:"head",c:"#f3c531"},
   b_legend:{n:"レジェンドスパイク",slot:"boots",c:"#b26bff",dk:"#3a0e7a"}
 };
-const SLOTS=[["head","ヘアバンド"],["boots","スパイク"],["wrist","リストバンド"]];
+const SLOTS=[["head","ヘアバンド"],["boots","スパイク"],["shin","すねあて"],["wrist","リストバンド"]];
+// v13 the workshop (こうぼう): spikes and shin guards made from materials. The materials are worked out from the notes every time and never stored,
+// so deleting a note takes its materials back and restoring it returns them. game.made keeps each made piece as {c: a PAINTS index}.
+const MATS=[["hane","かぜの はね"],["ishi","ゆうきの いし"],["ito","なかまの いと"]];
+// One material for each "がんばったこと" (the first MAXCHIPS of a note), by what the play takes: running (はね), courage (いし) or the team (いと).
+const MAT={chase:"hane",run:"hane",back:"hane",getpass:"hane",dribble:"hane",contact:"ishi",steal:"ishi",retry:"ishi",call:"ishi",shoot:"ishi",
+  pass:"ito",voice:"ito",cheer:"ito",cover:"ito",listen:"ito"};
+const COST=[[3,0,2],[15,5,8],[40,15,16],[80,30,32]]; // tiers 1-4: the line's main material, the other one, いと. Costs may go down later, never up.
+const LINES=[
+  {k:"sp",n:"スパイク",slot:"boots",main:"hane",other:"ishi",on:"はく",off:"ぬぐ",names:["そよかぜ スパイク","ダッシュ スパイク","つむじかぜ スパイク","ハリケーン スパイク"],
+    about:"はやく はしれる くつ。こぼれだまに いちばんのり!",done:"これで こぼれだまに いちばんのり!",say:"{h}の {n}が かぜを きる! こぼれだまに いちばんのり!"},
+  {k:"sg",n:"すねあて",slot:"shin",main:"ishi",other:"hane",on:"つける",off:"はずす",names:["はじめての すねあて","ガッツ すねあて","はがねの すねあて","ガーディアン すねあて"],
+    about:"あしを まもる どうぐ。まもって くれるから、あいてに ちかづいても だいじょうぶ!",done:"これで あいてに ちかづいても こわくない!",say:"{n}が まもって くれる! {h}は こわがらずに ちかづいて ボールを とった!"}];
+const GEAR={}; LINES.forEach(L=>L.names.forEach((n,i)=>{const c=COST[i]; GEAR[L.k+(i+1)]={n,L,slot:L.slot,t:i+1,cost:{[L.main]:c[0],[L.other]:c[1],ito:c[2]}};}));
+const GEARIDS=Object.keys(GEAR);
+// Colours for made pieces: name, colour, stripe, gold mark. A saved piece keeps the list position, so new colours go at the end. ゴールド is for tier 4 only.
+const PAINTS=[["あお","#2f7bff","#fcfcfc","#ffd34f"],["あか","#ff3b4a","#fcfcfc","#ffd34f"],["オレンジ","#ff9a1f","#232a3e","#fff2a8"],["むらさき","#a45bff","#fcfcfc","#ffd34f"],
+  ["あおみどり","#19c9b6","#fcfcfc","#ffd34f"],["きみどり","#b6f000","#232a3e","#c99a1a"],["しろ","#f2f4f8","#232a3e","#c99a1a"],["くろ","#232a3e","#fcfcfc","#ffd34f"],
+  ["ピンク","#ff6fb5","#232a3e","#ffd34f"],["きいろ","#ffe033","#232a3e","#c99a1a"],["みずいろ","#5fe1ff","#232a3e","#c99a1a"],["ゴールド","#f3c531","#232a3e","#fcfcfc"]];
+const GOLD=11, paintOk=(ci,t)=>Number.isInteger(ci)&&ci>=0&&ci<PAINTS.length&&(ci!==GOLD||t>=4);
+// A made piece as the picture and the icons draw it. A colour it may not have (ゴールド below tier 4, or one this version lacks) draws as あお.
+function gearLook(id,ci){const G=GEAR[id], p=PAINTS[paintOk(ci,G.t)?ci:0], c=p[1];
+  return {n:G.n,slot:G.slot,t:G.t,c,ln:p[2],g:p[3],dk:c==="#232a3e"?"#7f8798":cmix(c,"#000000",.55),sh:cmix(c,"#000000",.25),hi:cmix(c,"#ffffff",.45),made:true};}
+// The one reader of an equipped id: a prize (ITEMS), a made piece, or null.
+function gearOf(id){if(typeof id!=="string")return null; if(own(ITEMS,id))return ITEMS[id];
+  const m=own(GEAR,id)&&game.made&&own(game.made,id)?game.made[id]:null; return m&&typeof m==="object"?gearLook(id,m.c):null;}
+const slotOf=id=>typeof id!=="string"?"":own(ITEMS,id)?ITEMS[id].slot:own(GEAR,id)?GEAR[id].slot:"";
+const madeCount=gm=>Object.keys(gm||{}).filter(id=>own(GEAR,id)).length;
+// The lowest tier of a line not made yet (the one the workshop offers), or null when all four are made.
+const nextOf=L=>{for(let t=1;t<=4;t++)if(!own(game.made||{},L.k+t))return L.k+t; return null;};
+// Materials left: what the notes earned minus what the made pieces cost. Deleting notes can take it below 0 (the screen shows 0 then).
+function matLeft(g){const r={}; MATS.forEach(([k])=>r[k]=g.mat[k]); Object.keys(game.made||{}).forEach(id=>{if(own(GEAR,id)){const c=GEAR[id].cost;for(const k in c)r[k]-=c[k];}}); return r;}
+const canMake=(g,id)=>{const G=own(GEAR,id)?GEAR[id]:null; if(!G||nextOf(G.L)!==id)return false; const r=matLeft(g); return MATS.every(([k])=>r[k]>=(G.cost[k]||0));};
 const EXBASE=CUPS[CUPS.length-1].teams.slice(-1)[0][1]+3; // after the last cup: an endless challenge that gets a little harder with every win
 
 function entryXP(e,prev){
@@ -649,18 +756,27 @@ const focusOf=e=>{const ok=pointsOf(e.npos,e.nside,e.nshape).map(p=>p[0]); retur
 function daysBetween(a,b){return Math.round((new Date(b+"T00:00")-new Date(a+"T00:00"))/864e5)}
 function sortEntries(list){return list.slice().sort((a,b)=>(a.date+(a.createdAt||"")).localeCompare(b.date+(b.createdAt||"")))}
 
+// v13 materials from one note: one for each "がんばったこと", a はね for position points or a next goal, an いし for a goal that was tried, an いと for
+// "うまくいったこと". Parent comments, stamps, wins, streaks and length give none, and nothing is random.
+function noteMat(e){const m={hane:0,ishi:0,ito:0};
+  (Array.isArray(e.chips)?e.chips:[]).slice(0,MAXCHIPS).forEach(id=>{if(typeof id==="string"&&own(MAT,id))m[MAT[id]]++;});
+  if(focusOf(e).length||String(e.next||"").trim())m.hane++;
+  if(String(e.goal||"").trim()&&(e.goalResult==="done"||e.goalResult==="half"))m.ishi++;
+  if(String(e.good||"").trim())m.ito++;
+  return m;}
 function compute(list){
   const es=sortEntries(list); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
-  const per={}, chipCount={}; let kizuna=0, done=0, parentN=0;
+  const per={}, chipCount={}, mat={hane:0,ishi:0,ito:0}; let kizuna=0, done=0, parentN=0;
   es.forEach((e,i)=>{
     const parts=entryXP(e,es[i-1]); const sum=parts.reduce((a,p)=>a+p[1],0);
-    per[e.id]={parts,sum}; xp+=sum;
+    const nm=noteMat(e); per[e.id]={parts,sum,mat:nm}; xp+=sum; for(const k in nm)mat[k]+=nm[k];
     (e.chips||[]).slice(0,MAXCHIPS).forEach(id=>{const c=CHIP[id]; if(!c)return; chipCount[id]=(chipCount[id]||0)+1; for(const k in c.s)stats[k]+=c.s[k]; if(c.team)kizuna++;});
     if(e.goalResult==="done")done++;
     if((e.parent||"").trim())parentN++;
   });
-  let level=1,rest=xp; while(rest>=need(level)){rest-=need(level);level++;}
-  return {xp,level,rest,stats,per,es,chipCount,kizuna,done,parentN};
+  let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
+  const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
+  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat};
 }
 const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
 
@@ -675,7 +791,7 @@ function skillList(g){
 }
 function squad(g){
   return MATES.map((m,i)=>{const th=KIZUNA[i], joined=g.kizuna>=th;
-    return Object.assign({},m,{th,joined,power:joined?m.base+Math.min(40,Math.round(4*Math.sqrt(g.kizuna-th))):0});});
+    return Object.assign({},m,{n:mateName(m),th,joined,power:joined?m.base+Math.min(40,Math.round(4*Math.sqrt(g.kizuna-th))):0});});
 }
 function heroPower(g){const w=POS[profile.pos||"MF"].w; let s=0; for(const k in w)s+=w[k]*(g.stats[k]||0); return 12+1.8*g.level+0.6*s;}
 // 8-a-side in the team's 2-3-2.
@@ -696,7 +812,8 @@ function teamPower(g){
   const sk=skillList(g).reduce((a,s)=>a+(s.lv===2?1.5:s.lv===1?.7:0),0);
   // While a match is being played back the bonuses stay as they were at kick-off, so the team page does not give the result away.
   const held=live&&!live.done, it=(held?live.prevItems:(game.items||[]).length)*.5, fire=Math.min(9,((held?live.prevLoss:game.lossStreak)||0)*3);
-  return {lu,hero,avg,sk,it,fire,total:0.3*hero+0.7*avg+sk+it+fire};
+  const mk=(held?live.prevMade||0:madeCount(game.made))*.5; // v13: each made piece, worn or not
+  return {lu,hero,avg,sk,it,mk,fire,total:0.3*hero+0.7*avg+sk+it+mk+fire};
 }
 const tickets=g=>Math.max(0,g.es.length-(game.used||0));
 
@@ -715,6 +832,8 @@ function simulate(g,opp){
   for(let i=0;i<go;i++)add(minute(),rnd(["あいての シュートが きまってしまった…","カウンターから しってん…","コーナーキックから きめられた…"]),{side:"opp",goal:1});
   const sk=skillList(g).filter(s=>s.lv>0&&s.line);
   shuffle(sk).slice(0,3).forEach(s=>add(minute(),`【${s.n}】${s.line.replace(/\{h\}/g,hero)}`,{skill:1}));
+  // v13: each made piece being worn has its own line.
+  ["boots","shin"].forEach(k=>{const id=(game.equip||{})[k], x=own(GEAR,id)?gearOf(id):null; if(x&&x.slot===k)add(minute(),GEAR[id].L.say.replace(/\{h\}/g,hero).replace(/\{n\}/g,x.n),{skill:1});});
   shuffle(players.filter(p=>p.mate)).slice(0,2).forEach(p=>add(minute(),`${p.n}の【${p.mate.skill}】 ${p.mate.line}`,{mate:1}));
   if(ev.length<3)add(minute(),`${hero}も ボールを おいかける!`),add(minute(),"みんなで こえを かけあって まもる!");
   ev.sort((a,b)=>a.m-b.m);
@@ -760,13 +879,15 @@ const EYES=[
   {lv:6,c:"#1ea0ff",hi:"#c6f4ff",dk:"#0a3a9a",glow:1,flare:true},
   {lv:10,c:"#a45bff",hi:"#ecd2ff",dk:"#3d1a8a",glow:1,flare:true},
   {lv:15,c:"#ff2f3f",hi:"#ffc2a6",dk:"#7a0a18",glow:1,flare:true},
-  {lv:20,c:"#ff2f3f",hi:"#ffe27a",dk:"#7a0a18",glow:1,flare:true}
+  {lv:20,c:"#ff2f3f",hi:"#ffe27a",dk:"#7a0a18",glow:1,flare:true},
+  {lv:40,c:"#ff2f3f",c2:"#ffc928",hi:"#fff6c8",dk:"#ffc928",glow:1,flare:true} // v13: red on top, gold below
 ];
 const eyeOf=l=>EYES.filter(e=>l>=e.lv).pop();
 const cmix=(a,b,t)=>"#"+[1,3,5].map(i=>{const x=parseInt(a.slice(i,i+2),16),y=parseInt(b.slice(i,i+2),16);return Math.round(x+(y-x)*t).toString(16).padStart(2,"0")}).join("");
 const eyeFrom=c=>({c,hi:cmix(c,"#ffffff",.55),dk:cmix(c,"#000000",.6),glow:0,flare:false}); // teammates keep one eye colour
 // pixSVG(o): o.level, color (team), number, hair, hairColor, skin, mood (fierce | grin | calm), gk, hero (captain band from Lv.12), fx (effects),
-// sweat (after a loss), head / wrist (item colours), boots (item), iris (a teammate's eye colour), label, crop: "" full figure, "up" to the knees, "bust" avatar.
+// sweat (after a loss), head / wrist (item colours), boots (item, or a made pair {t, c, ln, g, dk, sh, hi}), shin (a made pair of shin guards),
+// iris (a teammate's eye colour), label, crop: "" full figure, "up" to the knees, "bust" avatar, "legs" the feet and shins (no ball, shadow or effects).
 const pixSVG=(()=>{
   const OL="#0c0c14", W=24, H=40, HX=4, HY=2, BY=18; // outline colour; grid size; where the 16 x 16 head and the body rows start
   const hex=c=>/^#[0-9a-f]{6}$/i.test(c), mix=(a,b,t)=>hex(a)?cmix(a,b,t):a;
@@ -791,7 +912,7 @@ const pixSVG=(()=>{
       return `<path fill="${c}" d="${d}"/>`;}).join("");};
   return function pixSVG(o){
     const level=Math.max(1,+o.level||1), team=hex(o.color)?o.color:TEAMCOLORS[0], pro=level>=2, gk=!!o.gk&&pro;
-    const crop=o.crop==="bust"||o.crop==="up"?o.crop:"", fx=o.fx!==false&&crop!=="bust";
+    const crop=o.crop==="bust"||o.crop==="up"||o.crop==="legs"?o.crop:"", fx=o.fx!==false&&crop!=="bust"&&crop!=="legs";
     const hc=HAIRCOLORS[o.hairColor||0]||HAIRCOLORS[0], sk=SKINS[o.skin||0]||SKINS[0], eye=o.iris?eyeFrom(o.iris):eyeOf(level);
     const jer=!pro?"#aab0c0":gk?"#22a046":team, dark=mix(jer,"#000000",.38);
     const pal={o:OL,s:sk.c,S:sk.sh,h:hc.c,H:hc.dk,i:hc.hi,j:jer,J:dark,w:gk?"#ffd34f":"#fcfcfc",
@@ -812,7 +933,7 @@ const pixSVG=(()=>{
     if(mood==="fierce")[[3,7],[4,7],[5,8],[12,7],[11,7],[10,8]].forEach(([x,y])=>F(x,y,brow));
     else if(mood==="grin")[[3,7],[4,6],[5,6],[12,7],[11,6],[10,6]].forEach(([x,y])=>F(x,y,brow));
     else [[4,7],[5,7],[10,7],[11,7]].forEach(([x,y])=>F(x,y,brow));
-    for(const ex of [4,10]){F(ex,9,OL);F(ex+1,9,OL);F(ex,10,eye.c);F(ex+1,10,"#ffffff");F(ex,11,eye.dk);F(ex+1,11,eye.c);}
+    for(const ex of [4,10]){F(ex,9,OL);F(ex+1,9,OL);F(ex,10,eye.c);F(ex+1,10,"#ffffff");F(ex,11,eye.dk);F(ex+1,11,eye.c2||eye.c);}
     const lip="#5a2014";
     if(mood==="grin"){F(6,12,lip);F(7,13,lip);F(8,13,"#ffffff");F(9,13,lip);F(10,12,lip);}
     else if(mood==="calm"){F(7,13,sk.dk);F(8,13,sk.dk);}
@@ -821,37 +942,69 @@ const pixSVG=(()=>{
     const num=level>=4&&crop!=="bust"?String(o.number||"10").replace(/\D/g,"").slice(0,2):"";
     if(num){const ds=[...num],x0=12-Math.ceil((ds.length*4-1)/2);ds.forEach((d,i)=>DIG[d].forEach((r,y)=>[...r].forEach((b,x)=>{if(b==="1")put(x0+i*4+x,BY+1+y,gk?"#ffd34f":"#ffffff");})));}
     if(fx&&pro&&eye.glow>0){const gl=mix(gk?"#ffd34f":jer,"#ffffff",.42);for(let y=BY+2;y<=BY+7;y++){put(7,y,gl);put(16,y,mix(jer,"#ffffff",.18));}
+      if(level>=25)for(let y=BY+2;y<=BY+10;y++){put(7,y,gk?"#ffffff":"#ffd34f");put(16,y,gk?"#d8dce8":"#e0b020");} // Lv.25: the lines turn gold and run down to the shorts
       [4,5,18,19].forEach(x=>put(x,BY+4,eye.hi));[8,9,14,15].forEach(x=>put(x,BY+12,eye.hi));}
     if(o.wrist)[4,5,18,19].forEach(x=>put(x,BY+5,o.wrist));
+    // v13 made gear. Spikes: the boot in the chosen colour (pal b/B above), a stripe from tier 2 that turns gold at 3, gold studs at 4.
+    // Shin guards: a plate on each shin (rows 31-33, to 34 at tier 4) with a band from tier 2. Every tier keeps the cells of the one before;
+    // no cell sits under the ball. Twinkles (tier 4) flicker in frame 1 and only where the legs show.
+    const tw=[];
+    if(o.boots&&o.boots.t){const sp=o.boots,t=sp.t;
+      if(t>=2)[[7,36],[8,36],[15,36],[16,36]].forEach(([x,y])=>put(x,y,t>=3?sp.g:sp.ln));
+      if(t>=4){[[7,37],[9,37],[14,37],[16,37]].forEach(([x,y])=>put(x,y,"#ffd34f"));tw.push([9,35,"#ffffff"],[14,35,"#ffffff"]);}}
+    if(o.shin&&o.shin.t){const sg=o.shin,t=sg.t;for(const lx of [8,14]){
+      put(lx,31,sg.hi);put(lx+1,31,sg.c);for(let y=32;y<=(t>=4?34:33);y++){put(lx,y,sg.c);put(lx+1,y,sg.sh);}
+      if(t>=2){put(lx,32,t>=3?sg.g:sg.ln);put(lx+1,32,t>=3?sg.g:sg.ln);}
+      if(t>=4)tw.push([lx,31,"#ffffff"]);}}
+    const gtw=tw.length&&(crop===""||crop==="legs")?`<g class="pxf1 gtw">${runs(tw)}</g>`:"";
     if(o.hero&&level>=12){put(4,BY+3,"#ffd34f");put(5,BY+3,"#ffd34f");}
     if(o.head){const hb=o.head,hd=mix(hb,"#000000",.35);for(let x=1;x<=14;x++){F(x,5,hb);F(x,6,x>=13?hd:hb);}F(0,6,hb);F(0,7,hb);F(-1,8,hb);F(0,8,hd);F(-1,9,hd);}
     if(o.sweat){[[15,3],[14,4],[16,4],[13,5],[16,5],[13,6],[16,6],[14,7],[15,7]].forEach(([x,y])=>F(x,y,OL));F(15,4,"#bfe9ff");F(14,5,"#ffffff");F(15,5,"#5fc2ff");F(14,6,"#5fc2ff");F(15,6,"#2f8fe0");}
     const cells=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(g[y][x])cells.push([x,y,g[y][x]]);
     // effects drawn outside the figure: the streak of light from one eye, the aura (Lv.15, gold from Lv.20) with tips that flicker between two frames, lightning (Lv.20)
     const flare=fx&&eye.flare?[[12,10,"#ffffff"],[13,10,eye.hi],[13,9,eye.hi],[14,9,eye.c],[15,8,eye.c],[16,8,eye.hi],[17,7,eye.hi]].map(([x,y,c])=>[HX+x,HY+y,c]):[];
+    if(flare.length&&level>=30)flare.slice(0,7).forEach(([x,y,c])=>flare.push([23-x,y,c])); // Lv.30: light from both eyes
     let aura="", bolts="";
-    if(fx&&level>=15){const gold=level>=20, c1=gold?"#ffd34f":team, c2=gold?"#fff2a8":mix(team,"#ffffff",.5), a1=[], a2=[], a3=[];
-      for(let y=0;y<38;y++)for(let x=0;x<W;x++)if(!g[y][x]&&!(y>=BY+11&&x>=11&&x<=12)){let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(filled(x+dx,y+dy))n++;if(n)a1.push([x,y,c1]);}
+    if(fx&&level>=15){const gold=level>=20, RB=["#ff4a5a","#ff9a1f","#ffe033","#3ce06a","#3a9bff","#b36bff"], c1=gold?"#ffd34f":team, c2=gold?"#fff2a8":mix(team,"#ffffff",.5), a1=[], a2=[], a3=[];
+      for(let y=0;y<38;y++)for(let x=0;x<W;x++)if(!g[y][x]&&!(y>=BY+11&&x>=11&&x<=12)){let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(filled(x+dx,y+dy))n++;if(n)a1.push([x,y,level>=45?RB[Math.floor((y+1)/7)%6]:c1]);} // Lv.45: a rainbow ring
       [[5,1],[9,0],[13,1],[17,2],[3,9],[20,6],[2,15],[21,14]].forEach(([x,y])=>{if(!g[y][x])a2.push([x,y,c2]);});
       [[7,0],[11,1],[15,0],[19,4],[2,11],[21,10],[3,18],[20,17]].forEach(([x,y])=>{if(!g[y][x])a3.push([x,y,c2]);});
       aura=`<g opacity=".9">${runs(a1)}</g><g class="pxf1">${runs(a2)}</g><g class="pxf2">${runs(a3)}</g>`;}
-    if(fx&&level>=20){const b=[], bolt=(x,y)=>[[2,0],[1,1],[2,1],[0,2],[1,2],[1,3],[2,3],[0,4],[1,4],[0,5]].forEach(([dx,dy])=>b.push([x+dx,y+dy,"#ffe27a"]));bolt(0,9);bolt(21,15);bolts=`<g class="pxf1">${runs(b)}</g>`;}
+    if(fx&&level>=20){const b=[], bolt=(x,y)=>[[2,0],[1,1],[2,1],[0,2],[1,2],[1,3],[2,3],[0,4],[1,4],[0,5]].forEach(([dx,dy])=>b.push([x+dx,y+dy,"#ffe27a"]));bolt(0,9);bolt(21,15);bolts=`<g class="pxf1">${runs(b)}</g>`;
+      if(level>=35){b.length=0;bolt(0,15);bolt(21,9);bolts+=`<g class="pxf2s">${runs(b)}</g>`;}} // Lv.35: a second pair in the other frame, kept with reduced motion
+    // Lv.50: a crown on the hair (row r is the first row under the top of the head at x=10-14), outlined, with a glint in frame 1.
+    let crown="";
+    if(fx&&level>=50){let r=99;for(let x=10;x<=14;x++)for(let y=0;y<H;y++)if(g[y][x]){r=Math.min(r,y+1);break;}
+      const cc=[[10,r-2,"#ffd34f"],[12,r-2,"#ffd34f"],[14,r-2,"#ffd34f"]];for(let x=10;x<=14;x++){cc.push([x,r-1,x===12?"#ff3b4a":"#ffd34f"]);cc.push([x,r,"#c99a1a"]);}
+      const isC=(x,y)=>cc.some(q=>q[0]===x&&q[1]===y), ol=[];
+      cc.forEach(([x,y])=>[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const X=x+dx,Y=y+dy;if(!isC(X,Y)&&!(Y>=0&&filled(X,Y))&&!ol.some(q=>q[0]===X&&q[1]===Y))ol.push([X,Y,OL]);}));
+      crown=`<g class="crown">${runs(ol.concat(cc))}<g class="pxf1">${runs([[12,r-2,"#ffffff"]])}</g></g>`;}
     const ball=[];if(!crop)BALL.forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch!==".")ball.push([16+x,30+y,ch==="w"?"#f4f6fa":ch==="k"?"#141829":OL]);}));
     const shadow=crop?"":`<path fill="#000000" fill-opacity=".32" d="M6 38h17v1h-17z"/>`;
     // Frames: the avatar is 8:9 and fills its box; the others are 3:5. Room above the head keeps the hair clear of the card's zoom button on wide screens.
-    const vb=crop==="bust"?"4 2 16 18":crop==="up"?"2 -3.333 20 33.333":"-1.5 -4 27 45";
+    const vb=crop==="bust"?"4 2 16 18":crop==="up"?"2 -3.333 20 33.333":crop==="legs"?"4 28 16 11":"-1.5 -4 27 45";
     const label=esc(o.label||(crop==="bust"?"せんしゅ":"レベル"+level+"のせんしゅ"));
-    return `<svg class="pix" viewBox="${vb}" role="img" aria-label="${label}" shape-rendering="crispEdges"${crop==="bust"?` preserveAspectRatio="xMidYMin slice"`:""}>${aura}${shadow}<g class="pxfig">${runs(cells)}</g>${runs(ball)}${runs(flare)}${bolts}</svg>`;
+    return `<svg class="pix" viewBox="${vb}" role="img" aria-label="${label}" shape-rendering="crispEdges"${crop==="bust"?` preserveAspectRatio="xMidYMin slice"`:""}>${aura}${shadow}<g class="pxfig">${runs(cells)}</g>${crown}${runs(ball)}${runs(flare)}${bolts}${gtw}</svg>`;
   };
 })();
-function itemIcon(it){const c=it.c;
+function itemIcon(it){const c=it.c, SPARK=it.t>=4?'<path d="M23 1l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#ffffff" stroke="#070914" stroke-width=".6"/>':"";
+  // v13 made pieces: a shield for the shin guards; the spikes get a stripe from tier 2 (gold from 3), and studs and a spark at tier 4.
+  if(it.slot==="shin")return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M9 2H19V12Q19 17 14 18.5Q9 17 9 12Z" fill="${c}" stroke="#070914"/><path d="M9.5 2.5H18.5V5H9.5Z" fill="${it.hi}"/>${it.t>=2?`<path d="M9.5 9.5H18.5V11.5H9.5Z" fill="${it.t>=3?it.g:it.ln}"/>`:""}${SPARK}</svg>`;
+  if(it.slot==="boots"&&it.made)return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M5 3H12L14 9 24 12Q26 13 26 16H4Q3 9 5 3Z" fill="${c}" stroke="#070914"/><path d="M4 16H26V18.5H4Z" fill="${it.dk}"/>${it.t>=2?`<path d="M8.5 12.8H21.5" stroke="${it.t>=3?it.g:it.ln}" stroke-width="1.6"/>`:""}${it.t>=4?'<path d="M7 18.5h2v1.5h-2zM14 18.5h2v1.5h-2zM21 18.5h2v1.5h-2z" fill="#ffd34f"/>':""}${SPARK}</svg>`;
   if(it.slot==="head")return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M5 9L1 15 4 17 7 12Z" fill="${c}" stroke="#070914"/><path d="M4 8Q14 2 25 8V13Q14 7 4 13Z" fill="${c}" stroke="#070914"/></svg>`;
   if(it.slot==="boots")return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M5 3H12L14 9 24 12Q26 13 26 16H4Q3 9 5 3Z" fill="${c}" stroke="#070914"/><path d="M4 16H26V18.5H4Z" fill="${it.dk||"#070914"}"/></svg>`;
   return `<svg viewBox="0 0 28 20" aria-hidden="true"><rect x="7" y="4" width="14" height="12" rx="3" fill="${c}" stroke="#070914"/><path d="M7 8H21M7 12H21" stroke="#070914" stroke-opacity=".3"/></svg>`;}
+// v13 material icons, 8 x 8 pixels: a feather, a gem, a spool of thread.
+const MATART={hane:["....oooo","...owwqo","..owwqso",".owwqso.",".owqsso.","owqsso..","oqoo....","q......."],
+  ishi:["........","..oooo..",".ohhrro.","ohrrrrdo","orrrrddo",".orrddo.","..oddo..","...oo..."],
+  ito:["oooooooo","obbbbbBo",".oppppo.",".oPPPPo.",".oppppo.",".oPPPPo.","obbbbbBo","oooooooo"]};
+const MATPAL={o:"#0c0c14",w:"#9af0b0",s:"#3ccf5a",q:"#f4f6fa",r:"#ff3b4a",h:"#ffc2c8",d:"#a01828",b:"#c47c3a",B:"#8a5a2e",p:"#ff7aa8",P:"#d94a82"};
+function matIcon(k){const by={}; (MATART[k]||[]).forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch!==".")(by[ch]=by[ch]||[]).push(`M${x} ${y}h1v1h-1z`);}));
+  return `<svg class="mi" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges">${Object.keys(by).map(ch=>`<path fill="${MATPAL[ch]}" d="${by[ch].join("")}"/>`).join("")}</svg>`;}
 const TROPHY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v5a5 5 0 0 1-10 0zM7 4H3v1.5A3.5 3.5 0 0 0 6.5 9H7M17 4h4v1.5A3.5 3.5 0 0 1 17.500 9H17M11 13h2v4h-2zM8 17h8v3.500H8z" fill="#ffd34f" stroke="#8a6800" stroke-width="1.1" stroke-linejoin="round"/></svg>';
 
 /* ---------- storage ---------- */
-const newGame=()=>({cup:0,round:0,used:0,lossStreak:0,exWins:0,items:[],equip:{},trophies:[],log:[]});
+const newGame=()=>({cup:0,round:0,used:0,lossStreak:0,exWins:0,items:[],equip:{},trophies:[],log:[],made:{}});
 let entries=[], profile={name:"",number:"10",team:"",color:TEAMCOLORS[0],pos:"",side:"",hair:0,hairColor:0,skin:0}, game=newGame(), mode="loading", db=null, profReady=false, gameReady=false;
 // mode: "loading" | "slow" (store not answering yet) | "db" | "local" (this browser only) | "error" (store listener died)
 const loaded=()=>mode==="db"||mode==="local";
@@ -871,8 +1024,12 @@ function cleanProfile(p){const pick=(v,n)=>Number.isInteger(v)&&v>=0&&v<n?v:0;
   // The goal picked on home for the next practice or match (a newer note's next goal takes over from it).
   const c=p.chal; if(c&&typeof c==="object"&&typeof c.t==="string"&&c.t.trim()&&isoOr(c.at,""))p.chal={t:c.t.trim().slice(0,40),at:isoOr(c.at,"")};
   else delete p.chal;
+  // v13: the names given to teammates, known teammates only.
+  const mn=p.mnames, names={};
+  if(mn&&typeof mn==="object")MATES.forEach(m=>{const v=Object.prototype.hasOwnProperty.call(mn,m.id)?cleanMateName(mn[m.id]):""; if(v&&v!==m.n)names[m.id]=v;});
+  if(Object.keys(names).length)p.mnames=names; else delete p.mnames;
   return p;}
-function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");entries=d.entries||[];if(d.profile)profile=cleanProfile(Object.assign(profile,d.profile));if(d.game)game=Object.assign(newGame(),d.game);}catch(e){}}
+function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");entries=d.entries||[];if(d.profile)profile=cleanProfile(Object.assign(profile,d.profile));if(d.game){game=Object.assign(newGame(),d.game);game.made=cleanMade(game.made);}}catch(e){}}
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify({entries,profile,game}));return true;}catch(e){return false;}}
 const lsOK=(()=>{try{localStorage.setItem(LS+"-t","1");localStorage.removeItem(LS+"-t");return true;}catch(e){return false;}})();
 
@@ -921,19 +1078,26 @@ function cleanEntry(x){
   if(typeof x.createdAt==="string"&&x.createdAt.length<=40&&!isNaN(Date.parse(x.createdAt)))e.createdAt=x.createdAt;
   return e;
 }
+// v13 made pieces: {id: {c}}. Ids of the right shape that this version does not know are kept (not drawn or counted), so a later version's pieces survive.
+function cleanMade(x){const out={}; if(!x||typeof x!=="object"||Array.isArray(x))return out;
+  Object.keys(x).filter(k=>/^[a-z]{2}[1-9]$/.test(k)&&x[k]&&typeof x[k]==="object"&&!Array.isArray(x[k])).slice(0,64).forEach(k=>{const v=x[k], o={};
+    Object.keys(v).forEach(f=>{if(/^[a-z]$/.test(f)&&Number.isInteger(v[f])&&v[f]>=0&&v[f]<=31)o[f]=v[f];});
+    if(!own(o,"c"))o.c=0; out[k]=o;});
+  return out;}
 function cleanGame(x){
   const n=(v,hi)=>Number.isInteger(v)&&v>=0&&v<=hi?v:0, g=newGame();
   g.cup=n(x.cup,CUPS.length); g.round=g.cup<CUPS.length?n(x.round,CUPS[g.cup].teams.length-1):0;
   g.used=n(x.used,1e6); g.lossStreak=n(x.lossStreak,1e6); g.exWins=n(x.exWins,1e6);
   g.items=(Array.isArray(x.items)?x.items:[]).filter((id,i,a)=>typeof id==="string"&&own(ITEMS,id)&&a.indexOf(id)===i);
-  if(x.equip&&typeof x.equip==="object")Object.keys(x.equip).forEach(k=>{const id=x.equip[k];if(g.items.includes(id))g.equip[ITEMS[id].slot]=id;});
+  g.made=cleanMade(x.made);
+  if(x.equip&&typeof x.equip==="object")Object.keys(x.equip).forEach(k=>{const id=x.equip[k];if(g.items.includes(id)||(typeof id==="string"&&own(GEAR,id)&&own(g.made,id)))g.equip[slotOf(id)]=id;});
   g.trophies=(Array.isArray(x.trophies)?x.trophies:[]).filter((t,i,a)=>Number.isInteger(t)&&t>=0&&t<CUPS.length&&a.indexOf(t)===i);
   g.log=(Array.isArray(x.log)?x.log:[]).filter(l=>l&&typeof l==="object").slice(0,12).map(l=>{const k=v=>Number.isInteger(v)&&v>=0&&v<100?v:0;
     return {t:Number.isFinite(l.t)?l.t:0,opp:typeof l.opp==="string"?l.opp.slice(0,30):"",gm:k(l.gm),go:k(l.go),pk:Array.isArray(l.pk)&&l.pk.length===2?[k(l.pk[0]),k(l.pk[1])]:null,win:l.win===true};});
   return g;
 }
 function cleanBackupProfile(x){const s=(v,n)=>typeof v==="string"?v.trim().slice(0,n):"";
-  return cleanProfile({name:s(x.name,12),number:x.number,team:s(x.team,12),color:x.color,pos:x.pos,side:x.side,hair:x.hair,hairColor:x.hairColor,skin:x.skin,wx:x.wx,chal:x.chal});}
+  return cleanProfile({name:s(x.name,12),number:x.number,team:s(x.team,12),color:x.color,pos:x.pos,side:x.side,hair:x.hair,hairColor:x.hairColor,skin:x.skin,wx:x.wx,chal:x.chal,mnames:x.mnames});}
 function bkParse(text){
   let d; try{d=JSON.parse(String(text||"").trim());}catch(e){return null;}
   if(!d||typeof d!=="object"||d.app!=="soccer-note"||!Array.isArray(d.entries))return null;
@@ -947,7 +1111,18 @@ function bkPlan(d){
   const have=new Set(entries.map(e=>e.id)), add=d.entries.filter(e=>!have.has(e.id));
   const key=g=>[g.cup,g.round,(g.trophies||[]).length,g.exWins||0,(g.items||[]).length,g.used||0];
   const ahead=(a,b)=>{const x=key(a),y=key(b);for(let i=0;i<x.length;i++)if(x[i]!==y[i])return x[i]>y[i];return false;};
-  return {add,useGame:!!d.game&&ahead(d.game,game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+  // v13: made pieces are never taken away. The backup's pieces this device lacks are added (the key above stays as it was, so more pieces cannot win).
+  const addMade=d.game?Object.keys(d.game.made||{}).filter(id=>own(GEAR,id)&&!own(game.made||{},id)):[];
+  // v13: teammates' names from the backup come back where this device has not changed them (a name changed here stays).
+  const bn=d.profile&&d.profile.mnames||{}, mn=profile.mnames||{}, addNames=Object.keys(bn).filter(id=>!own(mn,id));
+  return {add,addMade,addNames,names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+}
+// The game after a restore: the backup's when it got further, with this device's made pieces copied over it (its colours win), else this one with the backup's missing pieces.
+function bkGame(p,d){
+  const g=JSON.parse(JSON.stringify(p.useGame?d.game:game)), mine=JSON.parse(JSON.stringify(game.made||{}));
+  if(p.useGame){g.used=Math.min(g.used,entries.length); g.made=Object.assign({},g.made,mine);}
+  else{g.made=Object.assign({},g.made); p.addMade.forEach(id=>{if(!own(g.made,id))g.made[id]=Object.assign({},d.game.made[id]);});}
+  return g;
 }
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 let gameQ=Promise.resolve(), gameBusy=0;
@@ -1137,6 +1312,10 @@ async function wxPick(i){
 async function wxOff(){try{await store.setProfile({wx:null}); wx={key:"",st:""}; wxMsg="てんきの じどう入力を やめました。";}catch(e){wxMsg="ほぞんできませんでした。";} wxHits=null; render();}
 
 /* ---------- UI ---------- */
+// v13 workshop: shopSheet {id, c, re} is the colour sheet open for making a piece (re false) or changing its colour (re true), and shopTry shows that
+// choice on the player card; gearMenu is the made piece whose buttons are open. crafting {id, k, re} is the piece being saved, until its save ends
+// however long that takes: meanwhile nothing else is made, played or restored. craftNote {k, t} is the message shown in the workshop's line k.
+let shopSheet=null, shopTry=null, gearMenu=null, crafting=null, craftNote=null, craftNoteT=null, matHowOpen=false, introClosed=false;
 let tab="home", figUp=false, draft=null, settingsOpen=false, sdraft=null, confirmDel=null, editingParent=null, lastG=null, live=null, cardKey="", skOpen=false, saving=false, formNote="";
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 // A new note starts from the last one: its next goal becomes today's goal, its place today's place, and the position is the player's own.
@@ -1183,15 +1362,15 @@ const look=()=>settingsOpen&&sdraft?Object.assign({},profile,sdraft):profile;
 // While a match is being played back the player keeps the look from before kick-off (items and sweat), so it does not give the result away.
 const lossNow=()=>((live&&!live.done?live.prevLoss:game.lossStreak)||0)>0;
 const equipNow=()=>live&&!live.done?live.prevEquip:(game.equip||{});
-function heroOpts(g,eq){eq=eq||{};const it=k=>eq[k]&&ITEMS[eq[k]]?ITEMS[eq[k]]:null, L=look();
+function heroOpts(g,eq){eq=eq||{};const L=look(), tr=shopTry&&own(GEAR,shopTry.id)?shopTry:null, it=k=>{if(tr&&GEAR[tr.id].slot===k)return gearLook(tr.id,tr.c);const x=gearOf(eq[k]);return x&&x.slot===k?x:null;};
   return {level:g.level,color:L.color,number:profile.number,hair:L.hair||0,hairColor:L.hairColor||0,skin:L.skin||0,mood:"fierce",gk:L.pos==="GK",hero:true,fx:true,sweat:lossNow(),
-    head:it("head")?it("head").c:null,wrist:it("wrist")?it("wrist").c:null,boots:it("boots")};}
+    head:it("head")?it("head").c:null,wrist:it("wrist")?it("wrist").c:null,boots:it("boots"),shin:it("shin")};}
 const mateOpts=m=>({level:4,color:profile.color,number:m.num,hair:m.hair,hairColor:m.hc,skin:m.skin,iris:m.iris,mood:m.mood,gk:m.pos==="GK",crop:"bust",label:m.n});
 const heroBust=(g,id)=>pixSVG(Object.assign(heroOpts(g,equipNow()),{crop:"bust",label:heroName()}),id);
 
 function renderCard(g){
   const eq=equipNow();
-  const L=look(), key=JSON.stringify([g.level,profile,eq,settingsOpen&&sdraft,figUp,lossNow()]);
+  const L=look(), key=JSON.stringify([g.level,profile,eq,settingsOpen&&sdraft,figUp,lossNow(),[eq.boots,eq.shin].map(id=>{const x=gearOf(id);return x&&x.made?x.c:0;}),shopTry]);
   if(key!==cardKey){cardKey=key;$("#fig").innerHTML=pixSVG(Object.assign(heroOpts(g,eq),{crop:figUp?"up":""}),"hero");
     const lp=$("#lookPrev"); if(lp)lp.innerHTML=heroBust(g,"lp");} // the small preview in the settings panel follows the choices too
   const zb=$("#zoomBtn"); zb.textContent=figUp?"ぜんしんを みる":"アップで みる";
@@ -1199,10 +1378,11 @@ function renderCard(g){
   $("#rank").textContent=rankOf(g.level);
   const lside=sideOf(L.pos,L.side,TEAMSHAPE), pb=$("#posb"), lr=roleOf(L.pos,L.side,TEAMSHAPE); pb.hidden=!L.pos; if(L.pos)pb.textContent=L.pos+" "+(lr?lr.n+(lside==="C"?"":"("+sideName(lside)+")"):POS[L.pos].n);
   $("#lv").textContent=g.level;
-  $("#xpfill").style.width=Math.round(g.rest/need(g.level)*100)+"%";
-  $("#xptext").textContent=`つぎのレベルまで あと ${need(g.level)-g.rest} XP`;
+  const max=g.level>=MAXLV;
+  $("#xpfill").style.width=Math.round((max?g.rest%STARXP/STARXP:g.rest/need(g.level))*100)+"%";
+  $("#xptext").textContent=max?`MAX! つぎの ★まで あと ${toNext(g)} XP`:`つぎのレベルまで あと ${toNext(g)} XP`;
   document.querySelector(".card").style.setProperty("--team",L.color||TEAMCOLORS[0]);
-  const nx=UNLOCKS.find(u=>u[0]>g.level); $("#unlock").innerHTML=nx?`Lv.${nx[0]} で <b>${esc(nx[1])}</b>`:"ぜんぶ かいほう ずみ!";
+  const nx=UNLOCKS.find(u=>u[0]>g.level); $("#unlock").innerHTML=nx?`Lv.${nx[0]} で <b>${esc(nx[1])}</b>`:`ぜんぶ かいほう ずみ!${g.stars?" ★×"+g.stars:""}`;
   const tk=gameReady?tickets(g):0, dot=$("#tkdot"); dot.hidden=!tk; dot.textContent=tk;
   fitCard();
 }
@@ -1233,7 +1413,8 @@ function skillsPanel(g){
 function looksPanel(g){
   return `<section class="panel"><h2>すがたの へんか</h2><p class="muted">レベルが あがると、目の いろや スーツが かわるよ。</p>
   <div class="sklist">${UNLOCKS.map(([lv,n])=>{const e=n.includes("目")&&EYES.find(x=>x.lv===lv), on=g.level>=lv;
-    return `<div class="${on?"on":""}"><b>${e?`<i class="eyedot" style="background:${e.c}"></i>`:""}${on?"✓ ":""}${esc(n)}</b><span class="muted">Lv.${lv}${on?"":" で かわる"}</span></div>`}).join("")}</div></section>`;
+    return `<div class="${on?"on":""}"><b>${e?`<i class="eyedot${e.c2?" two":""}" style="background:${e.c2||e.c}${e.c2?";--eye1:"+e.c:""}"></i>`:""}${on?"✓ ":""}${esc(n)}</b><span class="muted">Lv.${lv}${on?"":" で かわる"}</span></div>`}).join("")}</div>
+  ${g.level>=MAXLV?`<p class="muted"><b>ぜんぶの すがたに なった! これからは ★を あつめよう${g.stars?" (いま ★×"+g.stars+")":""}</b></p>`:""}</section>`;
 }
 function viewHome(g){
   const tk=gameReady?tickets(g):0;
@@ -1247,14 +1428,24 @@ function viewHome(g){
   const max=Math.max(10,...Object.values(g.stats));
   const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
   const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに だいじ。</p>`:"";
-  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${tkb}
+  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${tkb}${shopNews(g)}
   <section class="panel"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   <p class="muted">「がんばったこと」を えらぶと のうりょくが のびるよ。</p>${pw}</section>
   ${posPanel(g)}${skillsPanel(g)}${looksPanel(g)}`;
 }
 
+// v13 ways into the workshop from home: a one-time NEW note on each device, then a reminder while a piece can be made.
+const SHOPINTRO="soccer-note-shop-intro";
+function introSeen(){if(introClosed)return true;try{return localStorage.getItem(SHOPINTRO)==="1";}catch(e){return false;}}
+function introDone(){introClosed=true;try{localStorage.setItem(SHOPINTRO,"1");}catch(e){}}
+function shopNews(g){
+  if(!loaded()||!gameReady||live||!g.es.length)return "";
+  if(!introSeen())return `<div class="shopnews" id="shopIntro"><b>🔨 NEW! こうぼうが できたよ。</b><span>いままでの ノートで そざいが たまって いるよ!</span>
+    <div class="row"><button class="primary" id="shopIntroGo" type="button">みに いく</button><button class="ghost" id="shopIntroNo" type="button">とじる</button></div></div>`;
+  return GEARIDS.some(id=>canMake(g,id))?`<button class="stampnews shopgo" id="shopGo" type="button">🔨 つくれる ものが あるよ!<small>タップで こうぼうへ</small></button>`:"";
+}
 // Home: the goal for the next practice or match, so it can be seen before playing and changed there.
-let chalOpen=false;
+let chalOpen=false, mateEdit=null; // mateEdit: the teammate whose name is being changed on the team page
 function goalCard(g){
   if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
   // Once today's note is written, the goal shown is the one for next time.
@@ -1373,7 +1564,9 @@ function bkConfirm(){
   return `<div class="bkbox" id="bkbox"><b>${d.at?`${esc(fmtDate(localDay(d.at)))}の バックアップ`:"この バックアップ"}から もどします。</b><ul>
   <li>ノート:${p.add.length?`${p.add.length}さつ ふえます`:"ふえる ノートは ありません"}${dup?`(もう ある ${dup}さつは そのまま)`:""}</li>
   <li>しあいの きろく:${p.useGame?"バックアップの ほうが すすんでいるので、そちらに します":"いまの まま"}</li>
-  <li>せんしゅの なまえと みため:${p.useProfile?"バックアップの ものに します":"いまの まま"}</li></ul>
+  <li>せんしゅの なまえと みため:${p.useProfile?"バックアップの ものに します":"いまの まま"}</li>
+  ${p.addMade.length?`<li>つくった そうび:${p.addMade.length}こ もどります</li>`:""}
+  ${p.addNames.length?`<li>なかまの なまえ:${p.addNames.length}にん もどります</li>`:""}</ul>
   <p class="muted">いまの ノートは けしません。</p>
   <div class="row"><button class="primary" id="bk-go" type="button" style="flex:1"${bkBusy?" disabled":""}>もどす</button><button class="ghost" id="bk-cancel" type="button"${bkBusy?" disabled":""}>やめる</button></div></div>`;
 }
@@ -1407,7 +1600,7 @@ function bkPrepare(text){
   if(!d)bkMsg="バックアップの コードでは ないようです。もういちど たしかめてください。";
   else if(!d.entries.length&&d.given)bkMsg="ノートを よみとれませんでした。";
   else{const p=bkPlan(d);
-    if(!p.add.length&&!p.useGame&&!p.useProfile)bkMsg=d.entries.length?"この バックアップの ノートは、もう ぜんぶ はいっています。":"この バックアップには ノートが ありません。";
+    if(!p.add.length&&!p.useGame&&!p.useProfile&&!p.addMade.length&&!p.addNames.length)bkMsg=d.entries.length?"この バックアップの ノートは、もう ぜんぶ はいっています。":"この バックアップには ノートが ありません。";
     else{bkMsg="";bkData=d;bkPaste=false;}}
   render();
   const el=$(bkData?"#bkbox":"#bkmsg"); if(el&&el.scrollIntoView)el.scrollIntoView({block:"nearest"});
@@ -1421,28 +1614,33 @@ async function bkApply(){
   const d=bkData; if(!d||bkBusy)return;
   if(live&&!live.done){bkMsg="しあいの さいせいが おわってから もどしてね。";render();return;}
   if(saving||!bkReady())return;
-  const p=bkPlan(d); bkBusy=true; bkMsg="もどしています…"; render();
+  if(crafting){bkMsg="そうびを ほぞんして いるよ。 すこし まってから もどしてね。";render();return;}
+  let p=bkPlan(d); bkBusy=true; bkMsg="もどしています…"; render();
   try{
     if(db){
       for(let i=0;i<p.add.length;i++){await db.collection("entries").doc(p.add[i].id).set(p.add[i]);const m=$("#bkmsg");if(m)m.textContent=`もどしています… ${i+1} / ${p.add.length}`;}
       entries=entries.filter(e=>!p.add.some(a=>a.id===e.id)).concat(p.add); // until the snapshot lands
-      if(p.useProfile)await store.setProfile(d.profile);
-      if(p.useGame){game=JSON.parse(JSON.stringify(d.game));game.used=Math.min(game.used,entries.length);await store.setGame();}
+      {const add=p.add; p=bkPlan(d); p.add=add;} // a name changed or a match record that came in meanwhile is not overwritten
+      if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names}));
+      else if(p.addNames.length)await store.setProfile({mnames:p.names});
+      {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade;} // and the match record as it is after that write
+      if(p.useGame||p.addMade.length){game=bkGame(p,d);await store.setGame();}
     }else{
       const before=[entries,game,profile];
       entries=entries.concat(p.add);
-      if(p.useGame){game=JSON.parse(JSON.stringify(d.game));game.used=Math.min(game.used,entries.length);}
-      if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile));
+      if(p.useGame||p.addMade.length)game=bkGame(p,d);
+      if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names}));
+      else if(p.addNames.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names}));
       if(!lsSave()){[entries,game,profile]=before;throw new Error("local");}
     }
     if(d.at)bkMark(d.at);
     stampSeen(p.add); // old stamps and comments brought back are not news
     // The open settings show the player brought back, not the choices made or the words typed before it (render keeps typed words).
     if(p.useProfile){sdraft=null; [["#s-name",profile.name],["#s-num",profile.number],["#s-team",profile.team||""]].forEach(([k,v])=>{const el=$(k); if(el)el.value=v;});}
-    bkData=null; bkMsg=`ノートを ${p.add.length}さつ もどしました。`+(p.useGame?"しあいの きろくも もどしました。":"");
+    bkData=null; bkMsg=`ノートを ${p.add.length}さつ もどしました。`+(p.useGame?"しあいの きろくも もどしました。":"")+(p.addMade.length?"つくった そうびも もどしました。":"")+(p.addNames.length?"なかまの なまえも もどしました。":"");
     flash(bkMsg);
   }catch(err){bkMsg="とちゅうで うまく いきませんでした。もういちど ためしてください。(もどせた ノートは そのまま のこります)";}
-  bkBusy=false; render();
+  bkBusy=false; waitOver("bk",bkMsg); render();
 }
 
 function seg(name,opts,val){return `<div class="seg" data-seg="${name}">${opts.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${val===v}">${t}</button>`).join("")}</div>`}
@@ -1536,8 +1734,15 @@ function viewTeam(g){
     const av=w.hero?heroBust(g,"fh"):w.mate?pixSVG(mateOpts(w.mate),"f"+w.mate.id):`<div class="helper">?</div>`;
     return `<div class="fcell${w.hero?" me":""}"><div class="ava">${av}</div><span>${esc(w.hero?heroName():w.mate?w.mate.n:"すけっと")}</span></div>`;};
   const rows=POSKEYS.map(p=>`<div class="frow">${tp.lu.filter(s=>s.pos===p).map(cell).join("")}</div>`).join("");
-  const mates=sq.map(m=>m.joined
-    ?`<div class="mate"><div class="ava">${pixSVG(mateOpts(m),"m"+m.id)}</div><div><b>${esc(m.n)} <span class="tag">${m.pos}</span></b><small>${esc(m.cat)}</small><small>スキル【${esc(m.skill)}】 つよさ ${m.power}</small></div></div>`
+  const mates=sq.map(m=>m.joined&&mateEdit===m.id
+    ?`<div class="mate edit"><div class="ava">${pixSVG(mateOpts(m),"m"+m.id)}</div><form class="mname" id="mnForm" data-mate="${m.id}" autocomplete="off">
+      <label for="mn-in">なまえ <span class="muted">(${MATENAME}もじ まで)</span></label>
+      <input id="mn-in" type="text" maxlength="${MATENAME}" value="${esc(m.n)}" enterkeyhint="done" spellcheck="false">
+      <div class="row"><button class="primary" type="submit">OK</button><button class="ghost" type="button" id="mnCancel">やめる</button></div>
+      ${MATES.find(x=>x.id===m.id).n!==m.n?`<button class="ghost mini" type="button" id="mnReset">もとの なまえ(${esc(MATES.find(x=>x.id===m.id).n)})に もどす</button>`:""}</form></div>`
+    :m.joined
+    ?`<div class="mate"><div class="ava">${pixSVG(mateOpts(m),"m"+m.id)}</div><div><b>${esc(m.n)} <span class="tag">${m.pos}</span></b><small>${esc(m.cat)}</small><small>スキル【${esc(m.skill)}】 つよさ ${m.power}</small>
+      ${profReady?`<button class="ghost mini mrename" type="button" data-mname="${m.id}" aria-label="${esc(m.n)}の なまえを かえる">なまえを かえる</button>`:""}</div></div>`
     :`<div class="mate locked"><div class="ava">?</div><div><b>??? <span class="tag">${m.pos}</span></b><small>キズナ ${m.th} で なかまに</small></div></div>`).join("");
   const r1=v=>Math.round(v*10)/10;
   return `<section class="panel"><h2>キズナ<span class="bondnum">${g.kizuna}</span></h2>
@@ -1551,6 +1756,7 @@ function viewTeam(g){
     <span>なかまの へいきん</span><em>${r1(tp.avg)}</em>
     <span>スキル ボーナス</span><em>+${r1(tp.sk)}</em>
     <span>アイテム ボーナス</span><em>+${tp.it}</em>
+    ${tp.mk?`<span>つくった そうび</span><em>+${r1(tp.mk)}</em>`:""}
     ${tp.fire?`<span>くやしさパワー</span><em>+${tp.fire}</em>`:""}
     <span class="tot">チームりょく</span><em class="tot">${Math.round(tp.total)}</em></div>
     <p class="muted">チームりょくは、きみ(3人ぶん)と なかま 7人を あわせた へいきんに、ボーナスを たした かず。じぶんも なかまも そだてると つよくなるよ。</p></section>`;
@@ -1568,7 +1774,8 @@ function viewLive(){
   const feed=evs.slice().reverse().map(e=>`<div class="ev${e.goal?" goal "+e.side:""}${e.skill?" skill":""}${e.mate?" mate":""}"><time>${minLabel(e.m)}</time><span>${esc(e.t)}</span></div>`).join("");
   let result="";
   if(L.done){
-    const got=L.rewards.map(id=>`<div class="got">${itemIcon(ITEMS[id])}${esc(ITEMS[id].n)}を てにいれた!</div>`).join("");
+    const got=L.rewards.map(id=>`<div class="got">${itemIcon(ITEMS[id])}${esc(ITEMS[id].n)}を てにいれた!</div>`).join("")
+      +(L.keep?`<p class="muted keepmsg">つくった スパイクを はいて いるので、そのままに したよ。もらった スパイクは「そうび」で はけるよ。</p>`:"");
     result=`<div class="result"><div class="big${L.res.win?" win":""}">${L.res.win?(L.cupWon?"ゆうしょう!!":"かった!"):"ナイスチャレンジ!"}</div>
       ${L.cupWon?`<div class="got">${TROPHY.replace("<svg",'<svg style="width:28px;height:28px"')}${esc(L.cupName)}の トロフィー</div>`:""}${got}
       <p class="muted">${L.res.win?(L.cupWon?"つぎの たいかいに すすめるよ。":"つぎの しあいに すすめるよ。"):"まけても だいじょうぶ。つぎは「くやしさパワー」で すこし つよくなるよ。"}</p>
@@ -1590,9 +1797,9 @@ function viewMatch(g){
   const steps=cup?`<div class="steps">${rn.map((r,i)=>{const st=i<game.round?"done":i===game.round?"now":"";const rw=i===nR-2?cup.sf:i===nR-1?cup.f:null;
       return `<div class="step ${st}"><b>${r}</b><span>${esc(cup.teams[i][0])}</span><span class="muted">${i===game.round?`<span class="here">▶ つぎの しあい</span>`:""}${i<game.round?"かち!":rw?"かつと ごほうび: "+esc(ITEMS[rw].n):"つよさ "+cup.teams[i][1]}</span></div>`}).join("")}</div>`:"";
   const cups=CUPS.map((c,i)=>{const won=(game.trophies||[]).includes(i);return `<div class="cup${won?" won":""}">${TROPHY}<b>${esc(c.n)}</b><span>${won?"ゆうしょう!":i===game.cup?"ちょうせん中":"これから"}</span></div>`}).join("");
-  const eq=game.equip||{}, owned=game.items||[];
-  const items=SLOTS.map(([k,label])=>{const mine=owned.filter(id=>ITEMS[id]&&ITEMS[id].slot===k);
-    return `<div><span class="label">${label}</span><div class="itemrow">${mine.length?mine.map(id=>`<button type="button" class="item" data-equip="${id}" aria-pressed="${eq[k]===id}">${itemIcon(ITEMS[id])}${esc(ITEMS[id].n)}</button>`).join(""):`<span class="muted">まだ ないよ。たいかいで かつと もらえる!</span>`}</div></div>`}).join("");
+  const eq=game.equip||{}, owned=(game.items||[]).filter(id=>own(ITEMS,id)).concat(GEARIDS.filter(id=>own(game.made||{},id)));
+  const items=SLOTS.map(([k,label])=>{const mine=owned.filter(id=>slotOf(id)===k);
+    return `<div><span class="label">${label}</span><div class="itemrow">${mine.length?mine.map(id=>{const x=gearOf(id);return `<button type="button" class="item" data-equip="${id}" aria-pressed="${eq[k]===id}">${itemIcon(x)}${esc(x.n)}</button>`;}).join(""):`<span class="muted">${k==="boots"||k==="shin"?"まだ ないよ。こうぼうで つくれる!":"まだ ないよ。たいかいで かつと もらえる!"}</span>`}</div></div>`}).join("");
   const log=(game.log||[]).slice(0,6).map(l=>`<div><span>${l.win?"○":"●"} ${esc(l.opp)}</span><span>${l.gm} - ${l.go}${l.pk?` (PK ${l.pk[0]}-${l.pk[1]})`:""}</span></div>`).join("");
   return `<section class="panel"><h2>${cup?esc(cup.n)+" "+(rn[game.round]||""):"エキシビション"}</h2>
     ${cup?"":`<p class="muted">ぜんぶの たいかいで ゆうしょうした! さいきょうチームに ちょうせんできるよ。</p>`}
@@ -1604,7 +1811,139 @@ function viewMatch(g){
   </section>
   <section class="panel"><h2>トロフィー</h2><div class="cups">${cups}</div></section>
   <section class="panel"><h2>そうび</h2><p class="muted">タップして つけたり はずしたり できるよ。もっているだけで チームが すこし つよくなるよ。</p><div class="items">${items}</div></section>
+  ${craftPanel(g)}
   ${log?`<section class="panel"><h2>さいきんの しあい</h2><div class="loglist">${log}</div></section>`:""}`;
+}
+
+/* ---------- v13 the workshop (こうぼう) ---------- */
+function craftPanel(g){
+  const left=matLeft(g), playing=!!(live&&!live.done);
+  const tiles=MATS.map(([k,nm])=>`<div class="mat">${matIcon(k)}<span>${nm}</span><b>${Math.max(0,left[k])}</b></div>`).join("");
+  const debt=MATS.some(([k])=>left[k]<0)?`<p class="muted">そざいが たりなく なったよ。ノートを かくと また たまるよ。</p>`:"";
+  const tags=k=>CHIPS.filter(c=>MAT[c.id]===k).map(c=>`<span class="mtag">${esc(c.t)}</span>`).join("");
+  const how=`<details class="more" id="matHow"${matHowOpen?" open":""}><summary>そざいの あつめかた</summary><ul class="howlist">
+    <li>${matIcon("hane")}<div><b>かぜの はね</b><br>がんばったこと 1つに 1こ ${tags("hane")}<br>ポジションの ポイント か つぎの めあてを かくと 1こ</div></li>
+    <li>${matIcon("ishi")}<div><b>ゆうきの いし</b><br>がんばったこと 1つに 1こ ${tags("ishi")}<br>めあてが「できた!」か 「やってみた!」で 1こ</div></li>
+    <li>${matIcon("ito")}<div><b>なかまの いと</b><br>がんばったこと 1つに 1こ ${tags("ito")}<br>うまく いったことを かくと 1こ</div></li></ul></details>`;
+  return `<section class="panel craft" id="craft"><h2>こうぼう <span class="muted">つくった もの ${madeCount(game.made)} / ${GEARIDS.length}</span></h2>
+    <p class="muted">ノートを かくと そざいが たまるよ。そざいで スパイクや すねあてを つくろう!</p>
+    <div class="mats">${tiles}</div>${debt}${how}<div class="lines">${LINES.map(L=>gearLine(g,L,left,playing)).join("")}</div></section>`;
+}
+function gearLine(g,L,left,playing){
+  const gm=game.made||{}, eq=game.equip||{}, nx=nextOf(L), G=nx&&GEAR[nx], open=!!(shopSheet&&GEAR[shopSheet.id].L===L);
+  const note=lineNote(L.k), busy=crafting&&crafting.k===L.k?`<div class="gnext"><button class="ghost gwait" type="button" disabled>${esc(GEAR[crafting.id].n)}${crafting.re?"の いろを かえています…":"を つくっています…"}</button></div>`:"";
+  const menu=!open&&gearMenu&&own(GEAR,gearMenu)&&GEAR[gearMenu].L===L&&own(gm,gearMenu)?gearMenu:null;
+  const shelf=[1,2,3,4].map(t=>{const id=L.k+t;
+    if(own(gm,id)){const x=gearOf(id), on=eq[L.slot]===id;
+      return `<button type="button" class="shelfbox made${on?" on":""}" id="gb-${id}" data-gmenu="${id}" aria-expanded="${menu===id}" aria-label="${esc(x.n)}${on?"(そうび ちゅう)":""}">${itemIcon(x)}${on?`<i aria-hidden="true">✓</i>`:""}</button>`;}
+    return id===nx?`<div class="shelfbox next"><span>つぎ</span></div>`:`<div class="shelfbox later" aria-hidden="true">?</div>`;}).join("");
+  let body="";
+  if(open)body=paintSheet(g);
+  else{
+    if(menu){const x=gearOf(menu), on=eq[L.slot]===menu;
+      body+=`<div class="gmenu"><b>${esc(x.n)}</b><div class="row"><button class="ghost" type="button" id="gmEquip" data-equip="${menu}" aria-pressed="${on}">${on?L.off:L.on}</button><button class="ghost" type="button" id="gmColor" data-recolor="${menu}">いろを かえる</button></div></div>`;}
+    body+=busy||(!G?`<p class="gdone">ぜんぶ つくった!</p>`:`<div class="gnext"><div class="row2"><b>つぎ:${esc(G.n)}</b><span class="muted">チームりょく +0.5</span></div>
+      <div class="cost">${MATS.filter(([k])=>G.cost[k]||left[k]<0).map(([k,nm])=>{const c=G.cost[k]||0, need=c-left[k];return `<div class="${need>0?"":"ok"}">${matIcon(k)}<span>${nm}</span><b>${c?c+"こ ":""}${need>0?`<small>(あと ${need}こ)</small>`:"✓"}</b></div>`;}).join("")}</div>
+      ${playing?`<button class="ghost gwait" type="button" disabled>しあいが おわったら つくれるよ</button>`:canMake(g,nx)?`<button class="primary" type="button" id="mk-${L.k}" data-make="${nx}">つくる!</button>`:`<button class="ghost gwait" type="button" disabled>そざいを あつめよう</button>`}</div>`);}
+  return `<div class="gline${open?" open":""}"><h3>${L.n}</h3><p class="muted">${esc(L.about)}</p><div class="shelf">${shelf}</div><p class="craftmsg" id="cm-${L.k}"${note?"":" hidden"}>${esc(note)}</p>${body}</div>`;
+}
+function paintSheet(g){
+  const s=shopSheet, G=GEAR[s.id], L=look(), sock=g.level<2?"#f2f4f8":L.pos==="GK"?"":L.color;
+  const sw=PAINTS.map(([nm,c],i)=>`<button type="button" class="pswatch" id="pt-${i}" data-paint="${i}" aria-pressed="${s.c===i}" aria-label="${nm}" title="${nm}"${paintOk(i,G.t)?"":" disabled"} style="background:${c}"></button>`).join("");
+  const notes=(G.t<4?["ゴールドは さいごの 1こ だけ"]:[]).concat(G.slot==="shin"&&PAINTS[s.c][1]===sock?["ソックスと おなじ いろだと めだたないかも"]:[]);
+  return `<div class="sheet" id="sheet"><b>${s.re?"いろを かえる":"いろを えらぼう"}</b>
+    <div class="sprev"><div class="legs">${pixSVG(Object.assign(heroOpts(g,equipNow()),{crop:"legs",label:G.n}),"sp")}</div>
+      <div><b>${esc(G.n)}</b><br><span class="muted">${s.re?"こんな かんじ":"つくると こうなる"}</span><br><b class="pname2">${PAINTS[s.c][0]}</b></div></div>
+    <div class="paints">${sw}</div>${notes.map(t=>`<p class="muted">${t}</p>`).join("")}
+    <div class="row"><button class="primary" type="button" id="sheetGo"${crafting?" disabled":""}>${crafting?busyText(s.re):s.re?"これに する":"これで つくる!"}</button><button class="ghost" type="button" id="sheetNo"${crafting?" disabled":""}>やめる</button></div></div>`;
+}
+// The colour first offered: the line's last colour, else, for spikes, the first colour that is not the team's and, for shin guards, しろ.
+function firstPaint(id){const G=GEAR[id], gm=game.made||{};
+  for(let t=4;t>=1;t--){const k=G.L.k+t; if(k!==id&&own(gm,k)&&paintOk(gm[k].c,G.t))return gm[k].c;}
+  if(G.slot==="shin")return 6;
+  const i=PAINTS.findIndex(p=>p[1]!==look().color); return i<0?0:i;}
+// Making (and changing a colour) is one save. If it fails, only this piece goes back as it was, so a piece is never half made,
+// and a change made while the save was on its way stays. Until the save ends (however long that takes) nothing else is made,
+// played or restored, so two saves never undo each other. After 10 s the sheet closes and the line says the save is still on its way.
+const busyText=re=>re?"かえています…":"つくっています…";
+const stayText=c=>`${GEAR[c.id].n}${c.re?"の いろ":""}を まだ ほぞんして いるよ。 でんぱが よわいかも しれないよ。`;
+// The words that ask to wait. They go as soon as the save or the restore they wait for has ended.
+const SAVEWAIT="いま そうびを ほぞんして いるよ。 すこし まってね。", BKWAIT="いま ノートを もどして いるよ。 すこし まってね。";
+// What line k of the workshop says: its own message (for 8 s), else, while its piece is still saving after 10 s, that it is.
+function lineNote(k){return craftNote&&craftNote.k===k?craftNote.t:crafting&&crafting.slow&&crafting.k===k?stayText(crafting):"";}
+function paintLine(k){const el=$("#cm-"+k); if(!el)return false; const t=lineNote(k); el.textContent=t; el.hidden=!t; return true;}
+// A message in line k, where the child is looking. On another tab, or for a result while the line is out of view (or behind the tab bar)
+// or while the banner still shows older words, the banner shows it.
+// wait ("craft" or "bk") marks a message that asks to wait for that.
+function craftSay(k,t,wait){
+  craftNote={k,t,wait:wait||""}; clearTimeout(craftNoteT);
+  craftNoteT=setTimeout(()=>{craftNote=null;LINES.forEach(L=>paintLine(L.k));},8000);
+  LINES.forEach(L=>paintLine(L.k));
+  const el=$("#cm-"+k);
+  if(!el){if(flashMsg!==t)flash(t);return;}
+  if(flashMsg===t)return; // the banner has it already, and has read it out
+  if(!wait&&(flashMsg||!inView(el)))flash(t); else say(t);
+}
+// Whether an element shows on the screen, above the tab bar at the bottom.
+function inView(el){const r=el.getBoundingClientRect(), nb=$("nav.tabs"), lim=nb?nb.getBoundingClientRect().top:innerHeight; return r.bottom>0&&r.top<lim;}
+// When a save or a restore ends, its wait message goes, and in the banner the outcome takes its place.
+function waitOver(kind,outcome){
+  if(craftNote&&craftNote.wait===kind){craftNote=null;clearTimeout(craftNoteT);}
+  if(flashMsg===(kind==="craft"?SAVEWAIT:BKWAIT)){if(outcome)flash(outcome);else{flashMsg="";clearTimeout(flashT);showStatus();}}
+}
+// Focus comes back to the workshop only from the workshop (or from nowhere), never out of something else.
+function craftFocus(sel,still){const ae=document.activeElement; if(ae&&ae!==document.body&&!(ae.closest&&ae.closest("#craft")))return; const f=$(sel); if(f)f.focus(still?{preventScroll:true}:undefined);}
+async function makeGear(id,ci,re){
+  const G=own(GEAR,id)?GEAR[id]:null;
+  if(!G||crafting||(live&&!live.done)||!paintOk(ci,G.t))return;
+  if(bkBusy){craftSay(G.L.k,BKWAIT,"bk");return;}
+  if(re?!own(game.made||{},id):!canMake(lastG,id)){shopSheet=null;shopTry=null;render();return;}
+  const k=G.L.k; crafting={id,k,re,slow:false}; craftNote=null; clearTimeout(craftNoteT); introDone();
+  const b=$("#sheetGo"), n=$("#sheetNo"); if(b){b.disabled=true;b.textContent=busyText(re);} if(n)n.disabled=true;
+  const was=own(game.made||{},id)?Object.assign({},game.made[id]):null, wasOn=(game.equip||{})[G.slot];
+  game.made=Object.assign({},game.made,{[id]:Object.assign({},was||{},{c:ci})});
+  if(!re)game.equip=Object.assign({},game.equip,{[G.slot]:id});
+  let ok=true, late=false;
+  const slow=setTimeout(()=>{late=true;if(crafting)crafting.slow=true;shopSheet=null;shopTry=null;render();
+    const st=stayText({id,re}), el=$("#cm-"+k); if(el&&inView(el))say(st); else flash(st); craftFocus("#gb-"+id,true);},10000);
+  try{if(db)await store.setGame();else if(!lsSave())throw new Error("local");}
+  catch(err){ok=false;
+    const m=game.made||{}; if(own(m,id)&&m[id]&&m[id].c===ci){const x=Object.assign({},m); if(was)x[id]=was; else delete x[id]; game.made=x;}
+    if(!re&&(game.equip||{})[G.slot]===id){const e=Object.assign({},game.equip); if(wasOn&&gearOf(wasOn))e[G.slot]=wasOn; else delete e[G.slot]; game.equip=e;}
+    if(db)store.setGame().catch(()=>{});} // so the store ends as the screen, after any write that went out meanwhile
+  clearTimeout(slow); crafting=null;
+  const fail=re?`${G.n}の いろを かえられませんでした。 もういちど おしてね。`:`${G.n}を つくれませんでした。 もういちど おしてね。`;
+  const res=!ok?fail:late?(re?`${G.n}の いろを かえたよ。`:`${G.n}が できたよ!`):"";
+  waitOver("craft",res);
+  if(late){render();craftSay(k,res);if(!ok)craftFocus(re?"#gb-"+id:"#mk-"+k,true);return;}
+  shopSheet=null; shopTry=null; render();
+  if(!ok){craftSay(k,fail);craftFocus(re?"#gb-"+id:"#mk-"+k);return;}
+  if(re){gearMenu=id;render();craftFocus("#gb-"+id);return;}
+  celebrateMade(id);
+}
+function openSheet(id,re){
+  const c=re?(paintOk(game.made[id].c,GEAR[id].t)?game.made[id].c:0):firstPaint(id);
+  shopSheet={id,c,re}; shopTry={id,c}; gearMenu=null; craftNote=null; introDone(); holdUntil=Date.now()+400; // the second tap of a double tap must not make it at once
+  render(); const sh=$("#sheet"); if(sh&&sh.scrollIntoView)sh.scrollIntoView({block:"nearest"}); const f=$("#pt-"+c); if(f)f.focus({preventScroll:true});
+}
+function closeSheet(){const s=shopSheet; shopSheet=null; shopTry=null; render(); if(!s)return; const f=$(s.re?"#gb-"+s.id:"#mk-"+GEAR[s.id].L.k)||$("#gb-"+s.id); if(f)f.focus();}
+function toCraft(){introDone(); go("match"); const c=$("#craft"); if(c&&c.scrollIntoView)c.scrollIntoView({block:"start"});}
+function celebrateMade(id){
+  const G=GEAR[id], x=gearOf(id); if(!x)return;
+  const ov=document.createElement("div"); ov.className="overlay";
+  ov.innerHTML=`<div class="reward made-rw" role="dialog" aria-modal="true" aria-label="できた">
+    <div class="big">できた!!</div>
+    <div class="legsbig">${pixSVG(Object.assign(heroOpts(lastG,equipNow()),{crop:"legs",label:x.n}),"mk")}</div>
+    <div class="lvup">${esc(x.n)}</div>
+    <div><b>チームりょく +0.5</b></div>
+    <p>${esc(G.L.done)}</p>
+    <div class="muted">そうび したよ!${figUp?"<br>「ぜんしんを みる」で あしもとが みえるよ":""}</div>
+    <div class="row" style="justify-content:center"><button class="primary" type="button" id="ovok" style="flex:1">やったね!</button></div></div>`;
+  document.body.appendChild(ov);
+  const born=Date.now(), early=()=>Date.now()-born<500, close=()=>{ov.remove();const f=$("#gb-"+id);if(f)f.focus({preventScroll:true});};
+  ov.querySelector("#ovok").addEventListener("click",()=>{if(!early())close();});
+  ov.addEventListener("click",ev=>{if(ev.target===ov&&!early())close();});
+  ov.querySelector("#ovok").focus({preventScroll:true});
 }
 
 function viewNotes(g){
@@ -1622,7 +1961,7 @@ function viewNotes(g){
       ?`<div class="voice"><textarea id="pc-${e.id}" maxlength="300" placeholder="ひとこと ほめてあげてください">${esc(own(pcText,e.id)?pcText[e.id]:e.parent)}</textarea>${micBtn("pc-"+e.id)}</div><div class="row"><button class="ghost" data-pcsave="${e.id}" type="button"${pcBusy===e.id?" disabled":""}>${pcBusy===e.id?"ほぞん中…":"コメントをほぞん"}</button><button class="ghost" data-pccancel="${e.id}" type="button">${handoff===e.id?"とじる":"やめる"}</button></div>`
       :(e.parent?`<div class="parent"><span class="k">おうちの人</span>${esc(e.parent)}</div>`:`<div class="row"><button class="ghost" data-pc="${e.id}" type="button">おうちの人コメントをかく(+10 XP)</button></div>`);
     const del=confirmDel===e.id
-      ?`<div class="row"><span class="muted">このノートをけしますか?</span><button class="ghost" data-delyes="${e.id}" type="button" style="color:var(--kick)">けす</button><button class="ghost" data-delno type="button">やめる</button></div>`
+      ?`<div class="row"><span class="muted">このノートをけしますか? (XP と そざいも へるよ)</span><button class="ghost" data-delyes="${e.id}" type="button" style="color:var(--kick)">けす</button><button class="ghost" data-delno type="button">やめる</button></div>`
       :`<div class="row"><button class="ghost" data-del="${e.id}" type="button" style="font-size:.8rem">けす</button></div>`;
     return `<article class="note" id="note-${esc(e.id)}" data-date="${esc(e.date)}" data-id="${esc(e.id)}" tabindex="-1"><div class="top"><span class="date">${esc(fmtDate(e.date))}<span class="tag">${kind}</span>${w||temp?`<span class="wx">${w?w[1]+" "+w[2]:""}${w&&temp?" ":""}${temp}</span>`:""}</span><span class="xp">+${g.per[e.id].sum} XP</span></div>
     ${e.place?`<p><span class="k">ばしょ</span>${esc(e.place)}</p>`:""}
@@ -1690,11 +2029,12 @@ function fmtDate(s){const d=new Date(s+"T00:00");return `${d.getMonth()+1}月${d
 function renderView(g){
   g=g||lastG;
   const ae=document.activeElement, active=ae&&ae.id, sg=!active&&ae&&ae.dataset&&ae.dataset.v!==undefined&&ae.parentElement&&ae.parentElement.dataset.seg?[ae.parentElement.dataset.seg,ae.dataset.v]:null;
-  const keep={};document.querySelectorAll('#view [id^="pc-"],#view #s-name,#view #s-num,#view #s-team,#view #bk-code,#view #wx-q,#view #gc-in').forEach(el=>keep[el.id]=el.value);
+  const keep={};document.querySelectorAll('#view [id^="pc-"],#view #s-name,#view #s-num,#view #s-team,#view #bk-code,#view #wx-q,#view #gc-in,#view #mn-in').forEach(el=>keep[el.id]=el.value);
+  const mf=document.querySelector("#view #mnForm"), km=mf?mf.dataset.mate:null; // a name being typed belongs to one teammate
   const wait=!loaded()&&(tab==="team"||tab==="notes");
   $("#view").innerHTML=wait?`<section class="panel empty"><p class="muted">よみこみ中…</p></section>`:tab==="home"?viewHome(g):tab==="write"?viewWrite():tab==="team"?viewTeam(g):tab==="match"?viewMatch(g):viewNotes(g);
   document.querySelectorAll("nav.tabs button[data-tab]").forEach(b=>{if(b.dataset.tab===tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
-  for(const id in keep){const el=document.getElementById(id);if(el)el.value=keep[id];}
+  for(const id in keep){const el=document.getElementById(id); if(!el||(id==="mn-in"&&(!el.form||el.form.dataset.mate!==km)))continue; el.value=keep[id];}
   if(sg){const el=[...document.querySelectorAll(`#view [data-seg="${sg[0]}"] button`)].find(x=>x.dataset.v===sg[1]); if(el)el.focus({preventScroll:true});}
   if(active){const el=document.getElementById(active); if(el&&el.focus){el.focus(); if(el.setSelectionRange&&el.type!=="date"){const n=el.value.length;try{el.setSelectionRange(n,n)}catch(e){}}}}
   if(tab==="write")wxMaybe();
@@ -1706,24 +2046,29 @@ function showStatus(){
       :!STANDALONE?"いまは この端末(ブラウザ)だけに ほぞんしています。"
       :IOS_TAB?"おうちの人へ:Safari の 共有ボタンから「ホーム画面に追加」して、ホーム画面の アイコンから ひらいてください。Safari の ままだと、ノートが きえることが あります。"
       :bkDue()?"おうちの人へ:ノートの バックアップを しばらく とっていません。上の「せってい」の いちばん下で とれます。":""):"";
-  const st=$("#status"), t=flashMsg||base; st.hidden=!t; st.textContent=t;
+  const st=$("#status"), t=flashMsg||base; st.hidden=!t; if(st.textContent!==t)st.textContent=t; // the same words are not read out again
 }
 function render(){
+  if(tab!=="match"||live){shopSheet=null;shopTry=null;gearMenu=null;} // the workshop is not on screen, so neither are its sheet and try-on
   checkKept();
   const g=compute(entries); lastG=g; renderCard(g); showStatus(); renderView(g);
 }
 // After every change to the draft: keep a copy in this browser and refresh the XP preview.
 function draftChanged(){if(draft)touchedId=draft.id;keepDraft();const el=$("#xpprev");if(!el||!draft)return;el.innerHTML=`このノートで <b>+${draftXP()} XP</b> と しあいチケット 1まい`;}
-function flash(msg){flashMsg=msg;clearTimeout(flashT);flashT=setTimeout(()=>{flashMsg="";showStatus();},7000);showStatus();}
+// Words for screen readers: the region is emptied first, so the same words are read again.
+let sayT=null;
+function say(t){const el=$("#say"); if(!el)return; el.textContent=""; clearTimeout(sayT); if(t)sayT=setTimeout(()=>{el.textContent=t;},60);}
+function flash(msg){flashMsg=msg;clearTimeout(flashT);flashT=setTimeout(()=>{flashMsg="";showStatus();},7000);showStatus();say(msg);}
 // Messages about the note form go next to its button, where the writer is looking.
 function formMsg(msg){formNote=msg;const el=$("#saveMsg"); if(el){el.textContent=msg;el.hidden=!msg;} else if(msg)flash(msg);}
-function go(t){stopVoice();if(t==="notes"){stampSeen();calM="";}chalOpen=false;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);}
+function go(t){stopVoice();if(t==="notes"){stampSeen();calM="";}chalOpen=false;mateEdit=null;shopSheet=null;shopTry=null;gearMenu=null;craftNote=null;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);}
 
 /* match flow: the result is decided and saved at kick-off, then played back line by line */
 function kickoff(){
   const g=lastG; if(live||!gameReady||!loaded()||tickets(g)<1)return;
+  if(crafting||bkBusy){flash(crafting?SAVEWAIT:BKWAIT);const st=$("#status");if(st&&st.scrollIntoView)st.scrollIntoView({block:"nearest"});return;}
   const opp=currentOpp(), ex=!!opp.ex, cupI=game.cup, round=game.round, res=simulate(g,opp);
-  const prevEquip=Object.assign({},game.equip||{}), rewards=[]; let cupWon=false;
+  const prevEquip=Object.assign({},game.equip||{}), rewards=[]; let cupWon=false, keep=false;
   const tp0=teamPower(g), joined=squad(g).filter(m=>m.joined).length;
   const hint=joined<7?"「なかまと つながる」プレーを ノートに かくと、なかまが ふえて チームが ぐっと つよくなるよ。"
     :tp0.hero<tp0.avg?"「じぶんを きたえる」プレーを ノートに かくと、エースの きみが つよくなるよ。":"ノートを つづけると スキルが ふえて、チームが つよくなるよ。";
@@ -1736,15 +2081,17 @@ function kickoff(){
       const nR=cup.teams.length;
       if(round===nR-2)rewards.push(cup.sf);
       if(round===nR-1){rewards.push(cup.f);cupWon=true;next.trophies=(next.trophies||[]).concat([cupI]);}
-      rewards.forEach(id=>{if(!(next.items||[]).includes(id))next.items=(next.items||[]).concat([id]);next.equip=Object.assign({},next.equip,{[ITEMS[id].slot]:id});});
+      // A prize is put on only in place of nothing or another prize: a made pair being worn stays on.
+      rewards.forEach(id=>{if(!(next.items||[]).includes(id))next.items=(next.items||[]).concat([id]);const sl=ITEMS[id].slot, cur=(next.equip||{})[sl];
+        if(!cur||own(ITEMS,cur)||!gearOf(cur))next.equip=Object.assign({},next.equip,{[sl]:id});else keep=true;});
       next.round=round+1; if(next.round>=nR){next.cup=cupI+1;next.round=0;}
     }
   }else next.lossStreak=(next.lossStreak||0)+1;
   next.log=[{t:Date.now(),opp:opp.n,gm:res.gm,go:res.go,pk:res.pk,win:res.win}].concat(next.log||[]).slice(0,12);
-  live={res,opp,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,rewards,cupWon,hint,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":roundNames(CUPS[cupI].teams.length)[round],timer:null};
+  live={res,opp,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,prevMade:madeCount(game.made),rewards,cupWon,keep,hint,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":roundNames(CUPS[cupI].teams.length)[round],timer:null};
   game=next;
   store.setGame().catch(()=>flash("しあいの きろくを ほぞんできませんでした。"));
-  tab="match"; render(); window.scrollTo(0,0);
+  shopSheet=null; shopTry=null; gearMenu=null; tab="match"; render(); window.scrollTo(0,0);
   live.timer=setInterval(()=>{if(!live)return; if(live.shown>=live.res.ev.length-1)finishLive(); else{live.shown++;if(tab==="match")renderView();}},1200);
 }
 function finishLive(){if(!live)return;clearInterval(live.timer);live.shown=live.res.ev.length-1;live.done=true;render();}
@@ -1755,7 +2102,7 @@ document.querySelector("nav.tabs").addEventListener("click",e=>{
   const b=e.target.closest("button[data-tab]");if(!b)return;go(b.dataset.tab);});
 function openSettings(){
   if(!loaded()||!profReady){flash("よみこみ中です。すこし まってから もういちど おしてね。");return;}
-  settingsOpen=true;sdraft=null;bkReset();wxHits=null;wxMsg="";tab="home";render();const s=$("#settings");if(s)s.scrollIntoView({behavior:"smooth",block:"start"});}
+  settingsOpen=true;sdraft=null;bkReset();wxHits=null;wxMsg="";shopSheet=null;shopTry=null;gearMenu=null;tab="home";render();const s=$("#settings");if(s)s.scrollIntoView({behavior:"smooth",block:"start"});}
 $("#gearBtn").addEventListener("click",openSettings);
 // The card shows the whole figure or a waist-up close view; a tap on the figure or on the button switches.
 try{figUp=localStorage.getItem("soccer-note-fig")==="up";}catch(e){}
@@ -1783,8 +2130,18 @@ document.addEventListener("compositionend",e=>{if(/^g-g[fa]-\d$/.test(e.target.i
 const refreshNext=()=>{const np=$("#nextPresets");if(np&&draft)np.innerHTML=presetBtns(nextPresets(draft),"ng",draft.next);};
 // Marks the preset button whose text is now in the field (if any).
 const pressData=(sel,key,val)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",String(x.dataset[key]===val)));
-$("#view").addEventListener("toggle",e=>{if(e.target.id==="skAll")skOpen=e.target.open;if(e.target.id==="bk")bkOpen=e.target.open;if(e.target.id==="wxp")wxpOpen=e.target.open;},true); // keep these open across re-renders
+$("#view").addEventListener("toggle",e=>{if(e.target.id==="matHow")matHowOpen=e.target.open;if(e.target.id==="skAll")skOpen=e.target.open;if(e.target.id==="bk")bkOpen=e.target.open;if(e.target.id==="wxp")wxpOpen=e.target.open;},true); // keep these open across re-renders
 $("#view").addEventListener("change",e=>{if(e.target.id==="bk-in")bkFile(e.target);});
+// A teammate's new name: OK or the keyboard's done key saves it, an empty box or the teammate's own name puts the own name back.
+async function setMateName(id,v){
+  if(!loaded()||!profReady){flash("よみこみ中です。すこし まってから もういちど おしてね。");return;}
+  const m=MATES.find(x=>x.id===id); if(!m){mateEdit=null;render();return;}
+  const n=cleanMateName(v), names=Object.assign({},profile.mnames||{});
+  if(n&&n!==m.n)names[id]=n; else delete names[id];
+  try{await store.setProfile({mnames:names});}catch(err){flash("ほぞんできませんでした。もういちど ためしてください。");return;}
+  mateEdit=null; render(); const f=document.querySelector(`[data-mname="${id}"]`); if(f)f.focus();
+}
+$("#view").addEventListener("submit",e=>{if(e.target.id!=="mnForm")return; e.preventDefault(); const el=$("#mn-in"); setMateName(e.target.dataset.mate,el?el.value:"");});
 // The side row in settings: shown for FW, MF and DF with the places that line has (left and right for a FW or DF, and the middle
 // too for a MF); a tap on the picked side takes it off.
 function sideShow(){const f=$("#s-sidef"); if(!f)return; const on=SIDEPOS.includes(sdraft.pos), a=sidesFor(sdraft.pos,TEAMSHAPE), sd=$("#s-side"); f.hidden=!on;
@@ -1809,6 +2166,9 @@ $("#view").addEventListener("click",async e=>{
     if(f&&f.disabled){const o=document.getElementById(kb==="calPrev"?"calNext":"calPrev");if(o&&!o.disabled)o.focus();}return;}
   if(b.dataset.calday){const d=b.dataset.calday;showNote(a=>a.dataset.date===d);return;}
   if(b.id==="openSettings"){openSettings();return;}
+  if(b.dataset.mname){if(!loaded()||!profReady){flash("よみこみ中です。すこし まってから もういちど おしてね。");return;}mateEdit=b.dataset.mname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}return;}
+  if(b.id==="mnCancel"){const id=mateEdit;mateEdit=null;render();const f=document.querySelector(`[data-mname="${id}"]`);if(f)f.focus();return;}
+  if(b.id==="mnReset"){await setMateName(mateEdit,"");return;}
   if(b.id==="kick"){kickoff();return;}
   if(b.id==="skipLive"){finishLive();return;}
   if(b.id==="closeLive"){live=null;render();window.scrollTo(0,0);return;}
@@ -1821,7 +2181,17 @@ $("#view").addEventListener("click",async e=>{
   if(b.id==="wx-find"){await wxFind();return;}
   if(b.dataset.wxi!==undefined){await wxPick(+b.dataset.wxi);return;}
   if(b.id==="wx-off"){await wxOff();return;}
-  if(b.dataset.equip){const id=b.dataset.equip,slot=ITEMS[id].slot;game.equip=Object.assign({},game.equip);
+  if(b.id==="shopIntroGo"){introDone();toCraft();return;}
+  if(b.id==="shopIntroNo"){introDone();render();const f=$("#shopGo");if(f)f.focus();return;}
+  if(b.id==="shopGo"){toCraft();return;}
+  {const w=b.dataset.make||b.dataset.recolor||b.dataset.gmenu; if(w&&own(GEAR,w)&&(crafting||bkBusy)){craftSay(GEAR[w].L.k,crafting?`いま ${GEAR[crafting.id].n}${crafting.re?"の いろ":""}を ほぞんして いるよ。 すこし まってね。`:BKWAIT,crafting?"craft":"bk");return;}}
+  if(b.dataset.make){if(crafting||(live&&!live.done)||!canMake(lastG,b.dataset.make))return;openSheet(b.dataset.make,false);return;}
+  if(b.dataset.recolor){if(crafting||(live&&!live.done)||!own(game.made||{},b.dataset.recolor))return;openSheet(b.dataset.recolor,true);return;}
+  if(b.dataset.paint!==undefined&&shopSheet){if(crafting)return;const ci=+b.dataset.paint;if(!paintOk(ci,GEAR[shopSheet.id].t))return;shopSheet.c=ci;shopTry={id:shopSheet.id,c:ci};render();return;}
+  if(b.id==="sheetGo"&&shopSheet){await makeGear(shopSheet.id,shopSheet.c,shopSheet.re);return;}
+  if(b.id==="sheetNo"){closeSheet();return;}
+  if(b.dataset.gmenu){if(crafting)return;gearMenu=gearMenu===b.dataset.gmenu?null:b.dataset.gmenu;shopSheet=null;shopTry=null;render();return;}
+  if(b.dataset.equip){const id=b.dataset.equip,slot=slotOf(id);if(!slot||!gearOf(id))return;game.equip=Object.assign({},game.equip);
     if(game.equip[slot]===id)delete game.equip[slot];else game.equip[slot]=id;
     render();store.setGame().catch(()=>flash("ほぞんできませんでした。"));return;}
   if(tab==="write"&&draft){
@@ -1914,16 +2284,23 @@ function celebrate(before,gain,after,ticket,handoff){
   const lvup=after.level>before.level;
   const sb=skillList(before), newSkills=skillList(after).filter((s,i)=>s.lv>sb[i].lv);
   const qb=squad(before), newMates=squad(after).filter((m,i)=>m.joined&&!qb[i].joined);
-  const looks=UNLOCKS.filter(x=>x[0]>before.level&&x[0]<=after.level).map(x=>x[1]);
+  const gained=UNLOCKS.filter(x=>x[0]>before.level&&x[0]<=after.level), looks=gained.map(x=>x[1]), lookCrop=gained.some(x=>x[2]==="full")?"":"up";
+  const starUp=after.stars>before.stars;
+  // v13: the materials this note brought, and a piece it made possible to make.
+  const gm=gain.mat, matGot=gm&&MATS.some(([k])=>gm[k])?`<div class="matgot"><b>そざい ゲット!</b>${MATS.filter(([k])=>gm[k]).map(([k,nm])=>`<span title="${nm}">${matIcon(k)}+${gm[k]}</span>`).join("")}</div>`:"";
+  const newMake=gameReady&&!live&&before.mat?GEARIDS.filter(id=>canMake(after,id)&&!canMake(before,id)):[];
   const ov=document.createElement("div"); ov.className="overlay";
   ov.innerHTML=`<div class="reward" role="dialog" aria-modal="true" aria-label="けっか">
     <div class="big">+${gain.sum} XP</div>
-    ${lvup?`<div class="lvup">レベルアップ! Lv.${after.level}</div>${rankOf(after.level)!==rankOf(before.level)?`<div><b>「${rankOf(after.level)}」になった!</b></div>`:""}`:`<div class="muted">つぎのレベルまで あと ${need(after.level)-after.rest} XP</div>`}
-    <ul>${gain.parts.map(p=>`<li><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>
-    ${looks.length?`<div class="newmate"><div class="ava look">${pixSVG(Object.assign(heroOpts(after,equipNow()),{crop:"up",label:heroName()}),"lk")}</div><div><b>あたらしい すがた!</b><br><span class="muted">${esc(looks.join("、"))}</span></div></div>`:""}
+    ${lvup?`<div class="lvup">レベルアップ! Lv.${after.level}${after.level>=MAXLV?" MAX!":""}</div>${rankOf(after.level)!==rankOf(before.level)?`<div><b>「${rankOf(after.level)}」になった!</b></div>`:""}`:""}
+    ${starUp?`<div class="lvup">★ ゲット! ★×${after.stars}</div>`:""}
+    ${lvup||starUp?"":`<div class="muted">${after.level>=MAXLV?`MAX! つぎの ★まで あと ${toNext(after)} XP`:`つぎのレベルまで あと ${toNext(after)} XP`}</div>`}
+    <ul>${gain.parts.map(p=>`<li><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>${matGot}
+    ${looks.length?`<div class="newmate"><div class="ava look">${pixSVG(Object.assign(heroOpts(after,equipNow()),{crop:lookCrop,label:heroName()}),"lk")}</div><div><b>あたらしい すがた!</b><br><span class="muted">${esc(looks.join("、"))}</span></div></div>`:""}
     ${newSkills.map(s=>`<div><span class="sk${s.lv===2?" gold":""}">${s.lv===2?"★ ":""}${esc(s.n)}</span> ${s.lv===2?"が ゴールドスキルに なった!":"を おぼえた!"}</div>`).join("")}
-    ${newMates.map(m=>`<div class="newmate"><div class="ava">${pixSVG(mateOpts(m),"n"+m.id)}</div><div><b>${esc(m.n)}(${m.pos})が なかまに なった!</b><br><span class="muted">${esc(m.cat)}</span></div></div>`).join("")}
+    ${newMates.map(m=>`<div class="newmate"><div class="ava">${pixSVG(mateOpts(m),"n"+m.id)}</div><div><b>${esc(m.n)}(${m.pos})が なかまに なった!</b><br><span class="muted">${esc(m.cat)}</span><br><button class="ghost mini" type="button" data-ovmname="${m.id}" style="margin:6px 0 0">なまえを かえる</button></div></div>`).join("")}
     ${ticket?`<div><b>しあいチケット +1</b> <span class="muted">(いま ${tickets(after)}まい)</span></div>`:""}
+    ${newMake.length?`<div class="craft-ask"><b>🔨 ${esc(GEAR[newMake[0]].n)}${newMake.length>1?" など":""}が つくれるよ!</b><button class="ghost" type="button" id="ovcraft">こうぼうへ</button></div>`:""}
     ${handoff?`<div class="handoff-ask"><b>👪 つぎは おうちの人の ばん!</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
     <div class="row" style="justify-content:center">${ticket?`<button class="ghost" type="button" id="ovmatch">しあいに いく</button>`:""}<button class="primary" type="button" id="ovok" style="flex:1">やったね!</button></div></div>`;
   document.body.appendChild(ov);
@@ -1932,6 +2309,8 @@ function celebrate(before,gain,after,ticket,handoff){
   ov.querySelector("#ovok").addEventListener("click",()=>{if(!early())close();});
   const mb=ov.querySelector("#ovmatch"); if(mb)mb.addEventListener("click",()=>{if(early())return;close();go("match");});
   const pb=ov.querySelector("#ovpar"); if(pb)pb.addEventListener("click",()=>{if(early())return;close();openParent(handoff);});
+  const cb=ov.querySelector("#ovcraft"); if(cb)cb.addEventListener("click",()=>{if(early())return;close();toCraft();});
+  ov.querySelectorAll("[data-ovmname]").forEach(x=>x.addEventListener("click",()=>{if(early())return;close();go("team");mateEdit=x.dataset.ovmname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}}));
   ov.addEventListener("click",ev=>{if(ev.target===ov&&!early())close()});
   // A reward that does not fit (a level up with new looks and teammates) leaves the parents' ask to the button on home.
   const rw=ov.querySelector(".reward"), ask=rw.querySelector(".handoff-ask"); if(ask&&rw.scrollHeight>rw.clientHeight+1)ask.remove();
@@ -1948,9 +2327,9 @@ Promise.resolve(use).then(d=>{
   const timer=setTimeout(()=>{if(mode==="loading"){mode="slow";render();}},10000);
   db.collection("entries").onSnapshot(snap=>{clearTimeout(timer);mode="db";entries=snap.docs.map(x=>Object.assign({id:x.id},x.data()));render();},
     err=>{clearTimeout(timer);mode="error";render();});
-  db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists)profile=cleanProfile(Object.assign({},profile,s.data()));if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
+  db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists){const d=s.data()||{};profile=cleanProfile(Object.assign({},profile,d,{mnames:d.mnames}));}if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
   // Skip echoes of our own writes while one is queued or a match is being played back: the local state is already ahead.
-  db.doc("game/main").onSnapshot(s=>{if(gameBusy||(live&&!live.done))return;gameReady=true;if(s.exists)game=Object.assign(newGame(),s.data());render();},()=>{});
+  db.doc("game/main").onSnapshot(s=>{if(gameBusy||(live&&!live.done))return;gameReady=true;if(s.exists){game=Object.assign(newGame(),s.data());game.made=cleanMade(game.made);}render();},()=>{});
 }).catch(()=>{goLocal();});
 if(window.claude&&window.claude.use){
   Promise.resolve(window.claude.use("dictation")).then(d=>{dictReady=true;if(d)wireDictation(d);render();}).catch(()=>{dictReady=true;render();});
