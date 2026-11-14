@@ -146,6 +146,9 @@ p{margin:0}
 .grp{font-size:.82rem;font-weight:800;display:flex;align-items:center;gap:6px}
 .grp i{width:10px;height:10px;border-radius:50%;background:var(--good);display:inline-block}
 .grp.team i{background:var(--bond)}
+.chiphint{margin:6px 0 0;font-size:.8rem}
+/* the group lines and the hint break only at spaces */
+.grp,.chiphint{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere}
 .faces{display:flex;gap:6px}
 .faces button{flex:1;border:2px solid var(--rule);background:var(--chip);border-radius:14px;padding:6px 0;font-size:1.5rem;line-height:1.2}
 .faces button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent)}
@@ -1646,6 +1649,13 @@ async function bkApply(){
 function seg(name,opts,val){return `<div class="seg" data-seg="${name}">${opts.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${val===v}">${t}</button>`).join("")}</div>`}
 const draftXP=()=>entryXP(draft,sortEntries(entries).filter(e=>e.date<=draft.date).pop()).reduce((a,p)=>a+p[1],0);
 const chipFull=(d,team)=>d.chips.length>=MAXCHIPS||d.chips.filter(id=>CHIP[id]&&!!CHIP[id].team===team).length>=MAXGROUP;
+// What a group of chips says about how many more can be picked: both limits count (each group, and the whole note).
+const grpN=(d,team)=>d.chips.filter(id=>CHIP[id]&&!!CHIP[id].team===team).length;
+function grpLeft(d,team){const n=grpN(d,team), left=Math.min(MAXGROUP-n,MAXCHIPS-d.chips.length);
+  return left>0?`あと ${left}つ`:n>=MAXGROUP?`${MAXGROUP}つで いっぱい`:`ぜんぶで ${MAXCHIPS}つで いっぱい`;}
+// The hint shows when the whole note is full while a group still has room, the case that looked like a group allowing fewer than three.
+const chipHintOn=d=>d.chips.length>=MAXCHIPS&&[false,true].some(t=>grpN(d,t)<MAXGROUP);
+function chipCounts(d){const a=$("#gl-self"), b=$("#gl-team"), h=$("#chipHint"); if(a)a.textContent=grpLeft(d,false); if(b)b.textContent=grpLeft(d,true); if(h)h.hidden=!chipHintOn(d);}
 function chipBtns(team,d){const full=chipFull(d,team);
   return CHIPS.filter(c=>!!c.team===team).map(c=>{const on=d.chips.includes(c.id);return `<button type="button" data-chip="${c.id}" aria-pressed="${on}"${!on&&full?" disabled":""}>${c.t}</button>`}).join("");}
 // One question about the position that helps the writer think back; it changes from day to day.
@@ -1713,8 +1723,9 @@ function viewWrite(){
   <h3 class="sec">ふりかえり</h3>
   ${focusField(d)}
   <div class="field" id="chipField"><span class="q">がんばったこと<small>${MAXCHIPS}つまで えらべるよ(<span id="chipN">${d.chips.length}</span>/${MAXCHIPS})</small></span>
-    <span class="grp"><i></i>じぶんを きたえる(${MAXGROUP}つまで)→ のうりょくアップ</span><div class="chips" data-chips="self">${chipBtns(false,d)}</div>
-    <span class="grp team"><i></i>なかまと つながる(${MAXGROUP}つまで)→ キズナが たまって なかまが ふえる</span><div class="chips team" data-chips="team">${chipBtns(true,d)}</div></div>
+    <span class="grp"><i></i><span>じぶんを きたえる(<span id="gl-self">${grpLeft(d,false)}</span>)→ のうりょくアップ</span></span><div class="chips" data-chips="self">${chipBtns(false,d)}</div>
+    <span class="grp team"><i></i><span>なかまと つながる(<span id="gl-team">${grpLeft(d,true)}</span>)→ キズナが たまって なかまが ふえる</span></span><div class="chips team" data-chips="team">${chipBtns(true,d)}</div>
+    <p class="muted chiphint" id="chipHint"${chipHintOn(d)?"":" hidden"}>ぜんぶで ${MAXCHIPS}つまで だよ。 かえる ときは、えらんだ ものを もう1かい おして はずしてね。</p></div>
   <div class="field"><label class="q" for="f-good">うまくいったこと</label><p class="muted hint" id="askHint"${ask?"":" hidden"}>${ask?"かんがえて みよう:"+esc(ask):""}</p><div class="voice"><textarea id="f-good" maxlength="300" placeholder="れい:〇〇くんに パスがとおった">${esc(d.good)}</textarea>${micBtn("f-good")}</div></div>
   <div class="field"><label class="q" for="f-hard">むずかしかったこと<small>かけたら +5 XP</small></label><div class="voice"><textarea id="f-hard" maxlength="200" placeholder="れい:トラップが はねた。つぎは よく みて とめる">${esc(d.hard)}</textarea>${micBtn("f-hard")}</div></div>
   <div class="field"><label class="q" for="f-coach">コーチに いわれたこと・ほめられたこと<small>かけたら +5 XP</small></label><div class="voice"><textarea id="f-coach" maxlength="200" placeholder="れい:まえを むいて もらえたね!">${esc(d.coach)}</textarea>${micBtn("f-coach")}</div></div>
@@ -2215,7 +2226,7 @@ $("#view").addEventListener("click",async e=>{
     if(b.dataset.chip){const i=draft.chips.indexOf(b.dataset.chip);
       if(i<0){if(chipFull(draft,!!CHIP[b.dataset.chip].team))return;draft.chips.push(b.dataset.chip);}else draft.chips.splice(i,1);
       document.querySelectorAll("#chipField [data-chip]").forEach(x=>{const on=draft.chips.includes(x.dataset.chip);x.setAttribute("aria-pressed",on);x.disabled=!on&&chipFull(draft,!!CHIP[x.dataset.chip].team);});
-      $("#chipN").textContent=draft.chips.length;draftChanged();return;}
+      $("#chipN").textContent=draft.chips.length;chipCounts(draft);draftChanged();return;}
     if(b.dataset.f){const v=+b.dataset.f;draft.fun=draft.fun===v?0:v;document.querySelectorAll("#faces button").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.f===draft.fun));draftChanged();return;}
     if(b.id==="saveBtn"){await save();return;}
   }
