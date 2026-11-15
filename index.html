@@ -24,18 +24,18 @@
 :root{
   --bg:#eceff6; --paper:#ffffff; --ink:#141a2e; --muted:#5a6480; --rule:#d3d9e8;
   --accent:#ffc928; --accent-ink:#3a2c00; --accent-text:#8a6800; --kick:#e8501f; --on:#ffffff;
-  --good:#2f6fe4; --soft:#e3e9fb; --chip:#f2f5fc; --bond:#d93a74; --bond-soft:#fde6ee; --msn:#6c44c8; --msn-soft:#efe8fd;
+  --good:#2f6fe4; --soft:#e3e9fb; --chip:#f2f5fc; --bond:#d93a74; --bond-soft:#fde6ee; --msn:#6c44c8; --msn-soft:#efe8fd; --fire:#b53d0c;
   --display:"Dela Gothic One","Hiragino Sans","Noto Sans JP",sans-serif;
   --body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#090d18; --paper:#121a2e; --ink:#e8ecf8; --muted:#98a3bf; --rule:#27314f;
   --accent:#ffd34f; --accent-ink:#2a2000; --accent-text:#ffd34f; --kick:#ff875f; --on:#160b05;
-  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; --msn:#b99bff; --msn-soft:#261d42; color-scheme:dark}}
+  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; --msn:#b99bff; --msn-soft:#261d42; --fire:#ff9b70; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#090d18; --paper:#121a2e; --ink:#e8ecf8; --muted:#98a3bf; --rule:#27314f;
   --accent:#ffd34f; --accent-ink:#2a2000; --accent-text:#ffd34f; --kick:#ff875f; --on:#160b05;
-  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; --msn:#b99bff; --msn-soft:#261d42; color-scheme:dark}
+  --good:#73a2ff; --soft:#1a2545; --chip:#161f38; --bond:#ff7aa8; --bond-soft:#3a1626; --msn:#b99bff; --msn-soft:#261d42; --fire:#ff9b70; color-scheme:dark}
 html,body{background:var(--bg);color:var(--ink)}
 /* Paints the strip under the status bar, so the page does not show through it while it scrolls past the pinned card. */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -454,6 +454,19 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-t
    --soft and --paper in both schemes (the blue and orange were 3.8:1 in light); 「かずを みる」 centred under the big-jump question */
 .reward{max-height:100%} .reward li,.bk li,.bk p{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .msf .sidetip b,.msf summary,.ms .msnew{color:var(--msn)} #jugBack{display:block;margin:0 auto;min-height:44px}
+/* v14.1 れんぞく (p_v14_1.py): home's 🔥 strip and the reward's 🔥 row and banner in --fire (text 4.5:1 or more on --paper, --chip and
+   --soft in both schemes); colour is never the only sign (🔥 and the words carry it); the lines break at spaces only */
+.streak{border-left:4px solid var(--fire);gap:6px} .streak p{margin:0} .stk-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:wrap}
+.stk-h h2{margin:0} .stk-pill{font-size:.8rem;font-weight:800;color:var(--fire);border:2px solid var(--fire);background:var(--paper);border-radius:999px;padding:0 8px}
+.stk-now{font-weight:800} .stk-now b{color:var(--fire);font-size:1.25rem} .reward li.stk span,.reward li.stk b{color:var(--fire)}
+.stkban{display:flex;flex-direction:column;gap:2px;border-radius:14px;padding:8px 12px;border:2px solid var(--fire)} .stkban b{color:var(--fire)}
+.streak p,.stkban span{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+/* v14.1 the reward's button row stays at the bottom of the reward while it scrolls, so やったね! shows on its first screen (a long reward
+   on an iPad held sideways or a phone); the shadows in --paper cover what scrolls under the row and the reward's bottom padding */
+.reward>.row:last-child{position:sticky;bottom:0;z-index:1;background:var(--paper);box-shadow:0 20px 0 var(--paper),0 -10px 0 var(--paper)}
+/* v14.1 👪 (p_v14_1p.py): the comment reward's banner in --msn, as the mission banners; the lines break at spaces only */
+.parban{display:flex;flex-direction:column;gap:2px;border-radius:14px;padding:8px 12px;background:var(--msn-soft);border:2px solid var(--msn)} .parban b{color:var(--msn)}
+.parban,.msc .vpar{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 </style>
 <script>if("serviceWorker"in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});</script>
 </head>
@@ -685,7 +698,18 @@ const KINDS=[["practice","れんしゅう"],["match","しあい"],["self","じ�
 const JUGS=[["r","みぎあし"],["l","ひだりあし"],["b","りょうあし"]], JUGMAX=9999, LADDER=[5,10,20,50,100];
 const JUGXP=5, JUGPB=10, JUGSTEP=20, JUGASK=20; // a note with any count; the first new best of a writing day; each target, once; ask once from this count
 const VIDEOBONUS=50, LEARNBONUS=30, PROBONUS=30, MINCHARS=2;  // once a day each, for the first finished record of its day (mday)
+// v14.1 👪: the first finished 🎬 record of a day (writing order) with a parent's comment (any non-empty one, as for the comment's +10)
+// gets VIDEOPARENT more, once a day, on top of the comment's +10. Worked out every time, never stored. Forward-only: VIDEOPARENT may go
+// up, never down.
+const VIDEOPARENT=100, VPART="👪 おうちの人と ふりかえり";
 const MKINDS=[["video","🎬 どうが ふりかえり",VIDEOBONUS],["learn","🔍 しらべて まなぶ",LEARNBONUS],["pro","🌟 プロの しあいを みる",PROBONUS]];
+// v14.1 れんぞく: a writing day is a day with a note (its writing day, wday) or a finished mission record (mday). Writing days at most
+// STREAKGAP days apart make a chain (one day off keeps it going); the first thing written on the n-th day of a chain gets streakXP(n):
+// +5 on the 2nd day and 5 more each day after, never more than STREAKMAX. Worked out every time, never stored. Forward-only, as above:
+// STREAKSTEP and STREAKMAX may go up, never down; STREAKGAP may grow, never shrink (a shorter gap would break chains already paid).
+const STREAKGAP=2, STREAKSTEP=5, STREAKMAX=20, STREAKMARKS=[7,14,30,50,100];
+const streakXP=n=>n<2?0:Math.min(STREAKSTEP*(n-1),STREAKMAX);
+const STREAKRULE="ノートか ミッションを かいた 日が つづくと、 2日めから ボーナス! 1日\u00a0やすんでも つづくよ。";
 const LEARNSRC=[["book","本"],["movie","どうが"],["coach","コーチに きいた"],["family","おうちの人に きいた"],["other","ほか"]];
 // v14 pro (spec14_pro.md): how he watched (one at most, never required; 「ネット・どうが」 also names the video apps on the iPad); three plays
 // a pro makes without the ball (the hints with no position, and the third hint for a FW, MF or DF: proLooks); two safety lines, new with
@@ -824,7 +848,7 @@ function entryXP(e,prev){
   if(String(e.coach||"").trim())parts.push(["コーチの ことば",5]);
   if((e.next||"").trim())parts.push(["つぎのめあて",10]);
   if((e.parent||"").trim())parts.push(["おうちの人のコメント",10]);
-  if(prev){const d=daysBetween(prev.date,e.date); if(d>=1&&d<=4)parts.push(["つづけてかいた",5]);}
+  if(prev){const d=daysBetween(prev.date,e.date); if(d>=1&&d<=4)parts.push(["こまめに かいた",5]);}
   return parts;
 }
 // The position points a note counts: known ones, for the position the note was written for, each once.
@@ -868,13 +892,41 @@ function jugPass(es){
 const missionDone=m=>m.kind==="video"?written(m.good)&&written(m.fix):m.kind==="learn"?written(m.learn):m.kind==="pro"?written(m.wow)||written(m.next):false;
 function missionPass(ms){
   const list=(Array.isArray(ms)?ms:[]).filter(m=>m&&typeof m==="object"&&typeof m.id==="string"&&MKINDS.some(k=>k[0]===m.kind)).sort(byWritten);
-  const won=Object.create(null), per=Object.create(null); let pn=0;
+  const won=Object.create(null), per=Object.create(null), vpar=Object.create(null); let pn=0;
   list.forEach(m=>{const key=m.kind+"|"+mday(m), mk=MKINDS.find(k=>k[0]===m.kind), parts=[];
     if(!won[key]&&missionDone(m)){won[key]=m.id; parts.push([mk[1],mk[2],"msn"]);}
     if(String(m.parent||"").trim()){parts.push(["おうちの人のコメント",10]); pn++;} // as on notes (entryXP)
+    const vd=mday(m); if(m.kind==="video"&&!vpar[vd]&&missionDone(m)&&String(m.parent||"").trim()){vpar[vd]=m.id; parts.push([VPART,VIDEOPARENT,"msn"]);} // v14.1 👪
     per[m.id]={parts,sum:parts.reduce((a,p)=>a+p[1],0),mat:{hane:0,ishi:0,ito:0}};});
   return {list,per,pn};
 }
+// v14.1 👪: true when a parent's comment on record id (a finished 🎬 record) would bring the 👪 part: no 🎬 record of its day has it yet.
+function vparOpen(g,id){const m=g.ms.find(x=>x.id===id); if(!m||m.kind!=="video"||!missionDone(m))return false; const d=mday(m);
+  return !g.ms.some(x=>x.kind==="video"&&mday(x)===d&&((g.mper[x.id]||{}).parts||[]).some(p=>p[0]===VPART));}
+// v14.1 the reward of a parent's comment: the parts the note or record gained and the XP the notebook gained (after - before). When
+// the 👪 part only moved from a later 🎬 record of that day, it brought no XP, so it is not listed.
+function parGain(before,after,id){const ps=g=>((g.per[id]||g.mper[id]||{}).parts||[]), left=ps(before).map(p=>p[0]+"|"+p[1]);
+  let parts=ps(after).filter(p=>{const i=left.indexOf(p[0]+"|"+p[1]); if(i<0)return true; left.splice(i,1); return false;});
+  const sum=after.xp-before.xp; if(parts.reduce((a,p)=>a+p[1],0)>sum)parts=parts.filter(p=>p[0]!==VPART);
+  return {parts,sum,par:parts.some(p=>p[0]===VPART)};}
+// v14.1 the chains of writing days. Every note and every finished record is a mark on its day; in writing order the first mark of a day
+// gets the day's bonus. note and rec: id -> {n (the day's place in its chain), xp, day}; cur: the chain of the last writing day (last);
+// best: the longest chain. A note written later for an earlier date counts on the day it was written, so it never fills a gap.
+function streakPass(es,ms){
+  const marks=es.map(e=>[wkey(e),wday(e),0,e.id]).concat(ms.filter(missionDone).map(m=>[wkey(m),mday(m),1,m.id])).filter(x=>isDay(x[1]))
+    .sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0);
+  const first=Object.create(null); marks.forEach(x=>{if(!first[x[1]])first[x[1]]=x;});
+  const note=Object.create(null), rec=Object.create(null); let cur=0, last="", best=0;
+  Object.keys(first).sort().forEach(d=>{cur=last&&daysBetween(last,d)<=STREAKGAP?cur+1:1; last=d; if(cur>best)best=cur;
+    const x=first[d]; (x[2]?rec:note)[x[3]]={n:cur,xp:streakXP(cur),day:d};});
+  return {note,rec,cur,last,best,days:first};
+}
+const stkPart=s=>s&&s.xp?[["🔥 れんぞく "+s.n+"日め",s.xp,"stk"]]:[];
+// v14.1 the reward shows a 🔥 bonus only when this save brought it: the day had no mark before (before.stk.days) and the records are
+// known (known: in save() the records may still be loading or have failed, and one of them may be the day's first mark). A mark saved
+// with an earlier save time on a day that had one (a retried note) only moves the day's bonus, so its reward shows none.
+function stkGain(gain,before,known){const s=gain&&gain.stk; if(!s||!s.xp||(known&&before&&before.stk&&before.stk.days&&!before.stk.days[s.day]))return gain;
+  return Object.assign({},gain,{parts:gain.parts.filter(p=>p[2]!=="stk"),sum:gain.sum-s.xp,stk:null});}
 
 // v13 materials from one note: one for each "がんばったこと", a はね for position points or a next goal, an いし for a goal that was tried, an いと for
 // "うまくいったこと". Parent comments, stamps, wins, streaks and length give none, and nothing is random.
@@ -885,19 +937,21 @@ function noteMat(e){const m={hane:0,ishi:0,ito:0};
   if(String(e.good||"").trim())m.ito++;
   return m;}
 function compute(list,ms){
-  const es=sortEntries(list), jp=jugPass(es), mp=missionPass(ms); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
+  const es=sortEntries(list), jp=jugPass(es), mp=missionPass(ms), sp=streakPass(es,mp.list); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
   const per={}, chipCount={}, mat={hane:0,ishi:0,ito:0}; let kizuna=0, done=0, parentN=0;
   es.forEach((e,i)=>{
-    const j=jp.per[e.id], parts=entryXP(e,es[i-1]).concat(j?j.parts:[]); const sum=parts.reduce((a,p)=>a+p[1],0);
-    const nm=noteMat(e); per[e.id]={parts,sum,mat:nm,jug:j?j.info:null}; xp+=sum; for(const k in nm)mat[k]+=nm[k];
+    const j=jp.per[e.id], s=sp.note[e.id]||null, parts=entryXP(e,es[i-1]).concat(j?j.parts:[],stkPart(s)); const sum=parts.reduce((a,p)=>a+p[1],0);
+    const nm=noteMat(e); per[e.id]={parts,sum,mat:nm,jug:j?j.info:null,stk:s}; xp+=sum; for(const k in nm)mat[k]+=nm[k];
     (e.chips||[]).slice(0,MAXCHIPS).forEach(id=>{const c=CHIP[id]; if(!c)return; chipCount[id]=(chipCount[id]||0)+1; for(const k in c.s)stats[k]+=c.s[k]; if(c.team)kizuna++;});
     if(e.goalResult==="done")done++;
     if((e.parent||"").trim())parentN++;
   });
-  for(const id in mp.per)xp+=mp.per[id].sum; parentN+=mp.pn; // v14 records add XP (and a parent's comment counts for おうえんパワー): no ticket, stats, materials or streak
+  // v14.1 a finished record's day is a writing day too, so the first thing written on a day may be a record: the bonus then goes on it.
+  for(const id in sp.rec){const r=mp.per[id], s=sp.rec[id]; if(!r)continue; r.stk=s; if(s.xp){r.parts=r.parts.concat(stkPart(s)); r.sum+=s.xp;}}
+  for(const id in mp.per)xp+=mp.per[id].sum; parentN+=mp.pn; // v14 records add XP (and a parent's comment counts for おうえんパワー): no ticket, stats, materials or こまめに かいた (つづけてかいた before v14.1)
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
-  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per};
+  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
 }
 const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
 
@@ -1611,7 +1665,7 @@ function viewHome(g){
   const max=Math.max(10,...Object.values(g.stats));
   const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
   const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに だいじ。</p>`:"";
-  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${tkb}${shopNews(g)}
+  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${tkb}${shopNews(g)}
   <section class="panel"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   <p class="muted">「がんばったこと」を えらぶと のうりょくが のびるよ。</p>${pw}</section>
   ${posPanel(g)}${skillsPanel(g)}${looksPanel(g)}`;
@@ -1799,9 +1853,24 @@ async function saveMission(kind){
   clearTimeout(slow); if(mdraft[kind]!==d)return; // another press already finished this record
   msaving=false; if(db)missions=missions.filter(x=>x.id!==m.id).concat([m]); // until the snapshot lands
   mdraft[kind]=null; keepMission(); missionOpen=null; msNote=""; handSet(m.id); tab="home"; render(); window.scrollTo(0,0);
-  const gain=lastG.mper[m.id];
+  const gain=stkGain(lastG.mper[m.id],before,true); // the records are in: saveMission() waits for them
   if(gain&&gain.sum)celebrate(before,gain,lastG,false,m.id,{mk:kind,plan:m.next,focus:"#ms-"+kind});
-  else{flash("かけたね! きょうの XP は もう もらって いるよ。 また あした!"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
+  else{flash(kind==="video"&&vparOpen(lastG,m.id)?`かけたね! おうちの人に コメントを もらうと +${VIDEOPARENT}\u00a0XP!`:"かけたね! きょうの XP は もう もらって いるよ。 また あした!"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
+}
+// v14.1 home's 🔥 strip, after the ミッション panel, under the goal card's own condition, once the records are in (they count too). It never says a chain ended: after
+// one, it shows the best chain and how a new one starts. "alive": the last writing day is today, or at most STREAKGAP days ago.
+// The last writing day it reads is at most one day after today (a note saved abroad in the evening is on Japan's next day), so a mark
+// saved while a device clock was far ahead does not hold the strip on that future day. The rule line shows while no chain of 2+ is alive.
+function streakPanel(g){
+  if(!loaded()||!profReady||(!profile.name&&!g.es.length)||!msReady||msErr)return "";
+  const t=today(); let L=null; const see=s=>{if(s&&daysBetween(t,s.day)<=1&&(!L||s.day>L.day))L=s;};
+  for(const id in g.per)see(g.per[id].stk); for(const id in g.mper)see(g.mper[id].stk);
+  const S={cur:L?L.n:0,last:L?L.day:"",best:g.stk.best}, on=!!S.last&&S.last>=t, alive=on||(!!S.last&&daysBetween(S.last,t)<=STREAKGAP), n=alive?S.cur:0, x=streakXP(n+1);
+  const now=on?`<b>${n}日め</b>! きょう${n>=2?"も":"は"} かけたね。`:alive?(n===1?"<b>1日め</b> かけたね!":`<b>${n}日</b> つづいて いるよ!`):"きょう かくと 1日め!";
+  const nx=on?`あしたも かくと ${n+1}日め! +${x} XP`:alive?`きょう かくと ${n+1}日め! +${x} XP`:`あしたも かくと +${x||streakXP(2)} XP`;
+  const pill=alive&&n>=2&&n>=S.best?"さいこう きろく!":S.best>=2&&S.best>n?`さいこう きろく ${S.best}日`:"";
+  return `<section class="panel streak" id="streak" aria-labelledby="stkH"><div class="stk-h"><h2 id="stkH"><span aria-hidden="true">🔥 </span>れんぞく</h2>${pill?`<span class="stk-pill">${pill}</span>`:""}</div>
+  <p class="stk-now">${now}</p><p>${nx}</p>${alive&&n>=2?"":`<p class="muted">${STREAKRULE}</p>`}</section>`;
 }
 // The ミッション panel on home, under the goal card's own condition. NEW! until the first record or count.
 function missionPanel(g){
@@ -1817,7 +1886,7 @@ function mCard(g,kind){
   const head=pill=>`<div class="msc-h"><h3><span aria-hidden="true">${ic} </span>${nm}</h3>${pill}</div>`;
   if(!msReady||msErr)return `<div class="${c}" id="ms-${kind}" tabindex="-1">${head("")}<p class="muted">${msReady?"いまは ミッションを ひらけないよ。 あとで もういちど ためしてね。":"よみこみ中…"}</p></div>`;
   if(!missionLeft(kind))return `<div class="${c} done" id="ms-${kind}" tabindex="-1">${head(`<span class="ms-pill">✓ クリア!</span>`)}<p>${MDONE[kind]} (これまで ${n}かい)</p></div>`;
-  const body=kind==="video"?`<p>じぶんの しあいの どうがを みて かこう。</p>`
+  const body=kind==="video"?`<p>じぶんの しあいの どうがを みて かこう。</p><p class="muted vpar"><span aria-hidden="true">👪 </span>おうちの人の コメントで +${VIDEOPARENT}\u00a0XP!</p>`
     :kind==="learn"?`<p><span class="label">きょうの ヒント</span> ${esc(hintsFor(today())[0])}</p><p class="muted"><span aria-hidden="true">👪 </span>ネットで しらべる ときは おうちの人と いっしょに。<br>どうがを みる ときも、 おうちの人と いっしょに。</p>`
     :`<p>しあいを みたら かこう。 ぜんはんだけ、 こうはんだけでも OK!</p><p><span class="label">プロの ここを みよう</span> ${esc(proCardLook(today()))}</p><p class="muted"><span aria-hidden="true">👪 </span>${PRORULE}</p>`;
   return `<div class="${c}" id="ms-${kind}" tabindex="-1">${head(`<span class="ms-pill">+${xp} XP</span>`)}${body}
@@ -2117,10 +2186,10 @@ async function bkApplyMissions(p){if(!p.addM.length)return false;
 const bkApplyMsg=(p,mFail)=>(p.fixJ.length?"リフティングの きろくも もどしました。":"")+(p.addM.length?(mFail?"ミッションの きろくは もどせませんでした。あとで もういちど ためしてください。":`ミッションの きろくも ${p.addM.length}こ もどしました。`):"");
 
 function seg(name,opts,val){return `<div class="seg" data-seg="${name}">${opts.map(([v,t])=>`<button type="button" data-v="${v}" aria-pressed="${val===v}">${t}</button>`).join("")}</div>`}
-// v14: the note's XP as save() will store it (the +5 for counts included), without the mission XP (🏅 and 🎯, tag "msn"), so a bigger count typed
+// v14: the note's XP as save() will store it (the +5 for counts included), without the mission XP (🏅 and 🎯, tag "msn") and the 🔥 れんぞく bonus (v14.1, tag "stk": the reward shows it), so a bigger count typed
 // never makes the number grow, and the reward is never smaller than the preview.
 const draftXP=()=>{const e=noteOf(draft,draft.createdAt||new Date().toISOString());
-  return compute(entries.filter(x=>x.id!==e.id).concat([e]),missions).per[e.id].parts.filter(p=>p[2]!=="msn").reduce((a,p)=>a+p[1],0);};
+  return compute(entries.filter(x=>x.id!==e.id).concat([e]),missions).per[e.id].parts.filter(p=>p[2]!=="msn"&&p[2]!=="stk").reduce((a,p)=>a+p[1],0);};
 const chipFull=(d,team)=>d.chips.length>=MAXCHIPS||d.chips.filter(id=>CHIP[id]&&!!CHIP[id].team===team).length>=MAXGROUP;
 // What a group of chips says about how many more can be picked: both limits count (each group, and the whole note).
 const grpN=(d,team)=>d.chips.filter(id=>CHIP[id]&&!!CHIP[id].team===team).length;
@@ -2517,13 +2586,13 @@ function recordItem(g,m){
     rows=line("しらべた",src.map(esc).join("、 "))+line("テーマ",esc(mstr(m.topic)))+line("まなんだ",esc(mstr(m.learn)))+line("やってみたい",esc(mstr(m.next)));}
   const pb=editingParent===m.id
     ?`<div class="voice"><textarea id="pc-${id}" maxlength="300" placeholder="${v?"どうがで みつけた いい プレーを、 ひとこと ほめて あげてください":p?"プロの しあいで みつけた ことを、 ひとこと ほめて あげてください":"まなんだ ことを、 ひとこと ほめて あげてください"}">${esc(own(pcText,m.id)?pcText[m.id]:m.parent)}</textarea>${micBtn("pc-"+m.id)}</div><div class="row"><button class="ghost" data-pcsave="${id}" type="button"${pcBusy===m.id?" disabled":""}>${pcBusy===m.id?"ほぞん中…":"コメントをほぞん"}</button><button class="ghost" data-pccancel="${id}" type="button">${handoff===m.id?"とじる":"やめる"}</button></div>`
-    :(mstr(m.parent)?`<div class="parent"><span class="k">おうちの人</span>${esc(m.parent)}</div>`:`<div class="row"><button class="ghost" data-pc="${id}" type="button">おうちの人コメントをかく(+10 XP)</button></div>`);
+    :(mstr(m.parent)?`<div class="parent"><span class="k">おうちの人</span>${esc(m.parent)}</div>`:`<div class="row"><button class="ghost" data-pc="${id}" type="button">おうちの人コメントをかく(+${v&&vparOpen(g,m.id)?10+VIDEOPARENT:10}\u00a0XP)</button></div>`);  // review C5: a no-break space before XP
   const del=confirmDel===m.id
     ?`<div class="row"><span class="muted">この きろくを けしますか? (XP も へるよ)</span><button class="ghost" data-delyes="${id}" type="button" style="color:var(--kick)">けす</button><button class="ghost" data-delno type="button">やめる</button></div>`
     :`<div class="row"><button class="ghost" data-del="${id}" type="button" style="font-size:.8rem">けす</button></div>`;
   return `<article class="note mission" id="note-${id}" data-id="${id}" data-date="${esc(day)}" data-mkind="${esc(m.kind)}" tabindex="-1"><div class="top"><span class="date">${esc(dayText(day))}<span class="tag msn"><span aria-hidden="true">${MTITLE[m.kind][0]} </span>${MTITLE[m.kind][1]}</span></span>${sum>0?`<span class="xp">+${sum} XP</span>`:""}</div>
     ${rows}
-    ${handoff===m.id?`<div class="handoff" id="handoffBox"><b>👪 おうちの人の ばん</b><p class="phint">${PHINT[m.kind]}</p>${stampBlock(m,true)}${pb}</div>`:stampBlock(m)+pb}${del}</article>`;
+    ${handoff===m.id?`<div class="handoff" id="handoffBox"><b>👪 おうちの人の ばん</b><p class="phint">${PHINT[m.kind]}${v&&vparOpen(g,m.id)?` コメントを かいて くださると、 とくべつ ボーナス +${VIDEOPARENT}\u00a0XP です。`:""}</p>${stampBlock(m,true)}${pb}</div>`:stampBlock(m)+pb}${del}</article>`;
 }
 // Stamps on a note, and (for the parents) the row to put them on.
 let stampOpen=null;
@@ -2814,8 +2883,9 @@ $("#view").addEventListener("click",async e=>{
     if(handoff&&handoff===id){handoff=null;stampOpen=null;editingParent=null;render();const f=document.getElementById("so-"+id);if(f)f.focus();return;} // とじる ends the parents' turn; the words typed stay
     delete pcText[id];editingParent=null;render();const f=document.querySelector(`[data-pc="${id}"]`)||document.getElementById("note-"+id);if(f)f.focus();return;}
   if(b.dataset.pcsave){if(pcBusy)return;const id=b.dataset.pcsave;pcBusy=id;b.disabled=true;b.textContent="ほぞん中…";
-    try{await stopVoice();const pcEl=$("#pc-"+id);if(!pcEl)return;const v=pcEl.value.trim();const before=lastG;
-      await (isMission(id)?mstore:store).update(id,{parent:v,parentAt:v?new Date().toISOString():""});pcBusy=null;delete pcText[id];editingParent=null;if(handoff===id){handoff=null;stampOpen=null;}render();if(v)celebrate(before,{parts:[["おうちの人のコメント",10]],sum:10},lastG,false);}
+    try{await stopVoice();const pcEl=$("#pc-"+id);if(!pcEl)return;const v=pcEl.value.trim();const was=(isMission(id)?missions:entries).find(x=>x.id===id), oldP=was?was.parent:"";
+      await (isMission(id)?mstore:store).update(id,{parent:v,parentAt:v?new Date().toISOString():""});pcBusy=null;delete pcText[id];editingParent=null;if(handoff===id){handoff=null;stampOpen=null;}render();if(v){const back=a=>a.map(x=>x.id===id?Object.assign({},x,{parent:oldP}):x), before=compute(back(entries),back(missions)), gn=parGain(before,lastG,id);
+        if(gn.sum>0)celebrate(before,gn,lastG,false,null,{par:gn.par}); else flash("コメントを ほぞんしたよ。");}}
     catch(err){flash("ほぞんできませんでした。");}
     finally{if(pcBusy===id){pcBusy=null;render();}}return;}
   if(b.dataset.del){confirmDel=b.dataset.del;render();return;}
@@ -2859,7 +2929,7 @@ async function save(){
   if(db){entries=entries.filter(x=>x.id!==e.id).concat([e]);} // optimistic until the snapshot lands
   saving=false; formNote=""; liftNote=""; draft=null; dropKept(); if(!e.parent)handSet(e.id); tab="home"; render(); window.scrollTo(0,0);
   // v14: the reward's juggling banners show for a target cleared, a new best or a first count of 1 or more; closing it then goes to the ⚽ card.
-  const gain=lastG.per[e.id], J=gain.jug, jc=jugOf(e), banner=!!J&&(J.clr.length>0||J.pb.length>0||J.first.some(k=>jc[k]>=1));
+  const gain=stkGain(lastG.per[e.id],before,msReady&&!msErr), J=gain.jug, jc=jugOf(e), banner=!!J&&(J.clr.length>0||J.pb.length>0||J.first.some(k=>jc[k]>=1));
   celebrate(before,gain,lastG,true,e.parent?null:e.id,banner?{note:e,focus:"#ms-lift"}:{note:e});
 }
 
@@ -2881,6 +2951,9 @@ function celebrate(before,gain,after,ticket,handoff,opt){
     return `<span>${jn(k)} ${hit.join("かい・")}かい クリア! ${nx===undefined?"ぜんぶ クリア!":`つぎは ${nx}かい`}</span>`;}).join("")]);
   if(J.pb.length)bn.push(["pbest","<b>🏅 じこベスト!</b>"+J.pb.map(k=>`<span>${jn(k)} ${jc[k]}かい (まえは ${before.jug&&before.jug[k]?before.jug[k].n:0}かい)</span>`).join("")+firsts.map(k=>`<span>${jn(k)} ${jc[k]}かい (はじめての きろく)</span>`).join("")]);
   else if(firsts.length)bn.push(["pbest","<b>⚽ はじめての きろく!</b>"+firsts.map(k=>`<span>${jn(k)} ${jc[k]}かい</span>`).join("")]);
+  // v14.1 the 7th, 14th, 30th, 50th and 100th day of a chain are celebrated (the 🔥 row in the list says the other days)
+  if(o.par)bn.push(["parban","<b>👪 おうちの人と ふりかえり ボーナス!</b><span>いっしょに ふりかえったね!</span>"]); // v14.1 👪
+  const S=gain.stk; if(S&&STREAKMARKS.includes(S.n))bn.push(["stkban",`<b>🔥 れんぞく ${S.n}日め!</b><span>すごい! ${S.n}日 つづけて かけたね!</span>`]);
   const banners=bn.map(([c,h],i)=>`<div class="${c}"${i?"":' id="ovban"'}>${h}</div>`).join("");
   // v14 the plan he wrote, with one tap to make it the goal on home
   const pl=written(o.plan)?String(o.plan).trim():"", plan=pl?`<div class="trygoal" id="ovplan"><span class="label">${o.mk==="learn"?"やってみたい こと":o.mk==="pro"?"まねしたい こと":"つぎに やってみる こと"}</span><b>${esc(pl)}</b>${pl===curGoal()?`<span class="muted">いまの めあてと おなじだね!</span>`:`<button class="ghost" id="ovgoal" type="button">これを めあてに する</button>`}</div>`:"";
@@ -2890,13 +2963,13 @@ function celebrate(before,gain,after,ticket,handoff,opt){
     ${lvup?`<div class="lvup">レベルアップ! Lv.${after.level}${after.level>=MAXLV?" MAX!":""}</div>${rankOf(after.level)!==rankOf(before.level)?`<div><b>「${rankOf(after.level)}」になった!</b></div>`:""}`:""}
     ${starUp?`<div class="lvup">★ ゲット! ★×${after.stars}</div>`:""}
     ${lvup||starUp?"":`<div class="muted">${after.level>=MAXLV?`MAX! つぎの ★まで あと ${toNext(after)} XP`:`つぎのレベルまで あと ${toNext(after)} XP`}</div>`}
-    <ul>${gain.parts.map(p=>`<li${p[2]==="msn"?' class="msn"':""}><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>${matGot}${plan}
+    <ul>${gain.parts.map(p=>`<li${p[2]==="msn"||p[2]==="stk"?` class="${p[2]}"`:""}><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>${matGot}${plan}
     ${looks.length?`<div class="newmate"><div class="ava look">${pixSVG(Object.assign(heroOpts(after,equipNow()),{crop:lookCrop,label:heroName()}),"lk")}</div><div><b>あたらしい すがた!</b><br><span class="muted">${esc(looks.join("、"))}</span></div></div>`:""}
     ${newSkills.map(s=>`<div><span class="sk${s.lv===2?" gold":""}">${s.lv===2?"★ ":""}${esc(s.n)}</span> ${s.lv===2?"が ゴールドスキルに なった!":"を おぼえた!"}</div>`).join("")}
     ${newMates.map(m=>`<div class="newmate"><div class="ava">${pixSVG(mateOpts(m),"n"+m.id)}</div><div><b>${esc(m.n)}(${m.pos})が なかまに なった!</b><br><span class="muted">${esc(m.cat)}</span><br><button class="ghost mini" type="button" data-ovmname="${m.id}" style="margin:6px 0 0">なまえを かえる</button></div></div>`).join("")}
     ${ticket?`<div><b>しあいチケット +1</b> <span class="muted">(いま ${tickets(after)}まい)</span></div>`:""}
     ${newMake.length?`<div class="craft-ask"><b>🔨 ${esc(GEAR[newMake[0]].n)}${newMake.length>1?" など":""}が つくれるよ!</b><button class="ghost" type="button" id="ovcraft">こうぼうへ</button></div>`:""}
-    ${handoff?`<div class="handoff-ask"><b>${o.mk==="learn"?"👪 おうちの人に おしえて あげよう!":o.mk==="pro"?"👪 みた プレーを おうちの人と はなそう!":"👪 つぎは おうちの人の ばん!"}</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
+    ${handoff?`<div class="handoff-ask"><b>${o.mk==="learn"?"👪 おうちの人に おしえて あげよう!":o.mk==="pro"?"👪 みた プレーを おうちの人と はなそう!":o.mk==="video"&&vparOpen(after,handoff)?`👪 おうちの人と いっしょに ふりかえろう! コメントで +${VIDEOPARENT}\u00a0XP`:"👪 つぎは おうちの人の ばん!"}</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
     <div class="row" style="justify-content:center">${ticket?`<button class="ghost" type="button" id="ovmatch">しあいに いく</button>`:""}<button class="primary" type="button" id="ovok" style="flex:1">やったね!</button></div></div>`;
   document.body.appendChild(ov);
   // The second tap of a double tap on the save button lands on the reward, so for half a second it ignores taps: it must not vanish before it has been seen.
@@ -2912,8 +2985,9 @@ function celebrate(before,gain,after,ticket,handoff,opt){
   const cb=ov.querySelector("#ovcraft"); if(cb)cb.addEventListener("click",()=>{if(early())return;close();toCraft();});
   ov.querySelectorAll("[data-ovmname]").forEach(x=>x.addEventListener("click",()=>{if(early())return;close();go("team");mateEdit=x.dataset.ovmname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}}));
   ov.addEventListener("click",ev=>{if(ev.target===ov&&!early())close(true)});
-  // A reward that does not fit (a level up with new looks and teammates) leaves the parents' ask to the button on home.
-  const rw=ov.querySelector(".reward"), ask=rw.querySelector(".handoff-ask"); if(ask&&rw.scrollHeight>rw.clientHeight+1)ask.remove();
+  // A reward that does not fit (a level up with new looks and teammates) keeps the parents' ask (v14.1): the button row is sticky at
+  // the reward's bottom, so やったね! stays whole on its first screen; the reward opens at its top.
+  const rw=ov.querySelector(".reward");
   ov.querySelector("#ovok").focus({preventScroll:true}); rw.scrollTop=0;
 }
 
