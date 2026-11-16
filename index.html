@@ -447,6 +447,14 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-t
 .growcard{display:flex;flex-direction:column;gap:6px} .growcard b{font-size:1.05rem;line-height:1.5} .growcard .ghost{align-self:flex-start;min-height:44px}
 #mhTip{margin:8px 0 0} #growth{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px)}
 .ptip,.pstart,#forParents,.growth,.growcard{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+/* v16: わざ (the chips in the note and the 🏠 form, the book on home) */
+.wzgrp{display:block;font-size:.85rem;font-weight:700;color:var(--muted);margin:8px 0 4px}
+.wzlist{display:flex;flex-direction:column;gap:6px;margin:0 0 10px}
+details.wz{background:var(--chip);border:1px solid var(--rule);border-radius:12px;padding:4px 12px}
+details.wz.on{border-color:var(--good)} details.wz.gold{border-color:var(--accent)}
+details.wz summary{cursor:pointer;min-height:44px;padding:8px 0;line-height:1.5} details.wz summary .muted{display:block;font-size:.85rem}
+details.wz p{margin:0 0 8px;line-height:1.6} details.wz p b{display:block;font-size:.85rem;color:var(--muted)}
+#wazaField,#mhWaza,#wazaBook{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .mk.k-msn{width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:0 4px 8px;border-color:transparent transparent var(--msn)} .cal-grid .cd i{gap:2px}
 .ms,.msf,.msbox,.msclear,.pbest,.trygoal,.lifts,.stampnews,.handoff .phint{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 /* v14, beside the spec's block: the note form's .lift rule is scoped to its boxes (.lifts>.lift), so it does not restyle the ⚽ card (class "msc lift");
@@ -552,6 +560,32 @@ const CHIPS=[
   {id:"listen",t:"コーチの話をよくきいた",s:{pass:1,defense:1},team:1,skill:"せんじゅつがん",line:"コーチの さくせんどおりに うごけた!"}
 ];
 const CHIP={};CHIPS.forEach(c=>CHIP[c.id]=c);
+// v16 わざ: techniques he practises for real. [id, group, name, how it is done, tip (about the ball or the target), match line]. Ids are
+// never reused; names and words may change. Learned after WAZATH[0] different days of practice, gold after WAZATH[1]. A note or a 🏠
+// record holds WAZAMAX at most, and a day counts WAZAMAX at most. In a match a learned one gives the team WAZAPOW[0] (gold WAZAPOW[1]); the hero's goal or assist uses
+// one with the chance WAZAUSE, and WAZALINES technique lines are added.
+const WAZAGROUPS=[["shoot","シュート"],["drib","ドリブル"],["pass","パス・トラップ"]];
+const WAZA=[
+  ["direct","shoot","ダイレクトシュート","きた ボールを とめずに、そのまま シュートする。","ボールを さいごまで よく みよう。 つよく ふらずに、ゴールの すみを ねらおう。","{h}が ダイレクトシュート! キーパーが なんとか はじいた!"],
+  ["corner","shoot","コースを ねらう シュート","つよく けるより、キーパーの いない ところへ ころがす。","ゴールの すみの ネットを ねらおう。","{h}が ゴールの すみを ねらって シュート! おしい、ポストの よこ!"],
+  ["loop","shoot","ループシュート","まえに でた キーパーの うえを、ふわりと こえる。","ボールの したを すくって、やまなりの みちを えがこう。","{h}の ループシュート! キーパーが ジャンプして なんとか さわった!"],
+  ["scissors","drib","シザーズ","ボールの まえを またいで、またいだ ほうと ぎゃくへ はこぶ。","ボールの まえを 大きく またいで、あいてを うごかそう。","{h}が シザーズで あいてを かわした!"],
+  ["dtouch","drib","ダブルタッチ","よこに ずらして、すぐ まえへ はこぶ。2回 つづけて さわる。","あいてが とどかない ところへ、ボールを すばやく 2回 うごかそう。","{h}の ダブルタッチ! あいての よこを すりぬけた!"],
+  ["kfeint","drib","キックフェイント","ける ふりを して、ボールを きりかえす。","ほんとうに ける ように あしを 大きく ふって、あいてが とびこんだら きりかえそう。","{h}の キックフェイントに あいてが ひっかかった!"],
+  ["roll","drib","あしうら ターン","あしの うらで ボールを ひいて、むきを かえる。","ボールに のらないで、かるく ひこう。 あいてから とおい ほうへ はこぼう。","{h}が あしうら ターンで ボールを まもった!"],
+  ["outside","pass","アウトサイドキック","あしの そとがわで、すばやく パスを だす。","ボールの よこを おして、みかたの あしもとへ とどけよう。","{h}の アウトサイドキックで パスが とおった!"],
+  ["onetwo","pass","ワンツー","パスを だしたら すぐ はしって、もういちど もらう。","パスを だしたら、あいての うしろの スペースへ はしろう。","{h}が ワンツーで ぬけだした!"],
+  ["dpass","pass","ダイレクトパス","きた ボールを とめずに、1回で みかたへ わたす。","ボールが くる まえに、だす みかたを きめて おこう。","{h}の ダイレクトパスで リズムが うまれた!"],
+  ["first","pass","まえを むく トラップ","ボールを もらう ときに、さいしょの タッチで まえを むく。","ボールを つぎに すすみたい ほうへ おこう。","{h}が さいしょの タッチで まえを むいた!"]
+];
+const WAZAMAX=3, WAZATH=[3,10], WAZAPOW=[.3,.6], WAZAUSE=.7, WAZALINES=2;
+const WZ=Object.create(null); WAZA.forEach(w=>{WZ[w[0]]=w;});
+// the hero's goal with a learned シュート ({a} the passer) and the hero's assist with a learned パス ({s} the scorer)
+const WAZAGOAL={direct:"{a}の パスを {h}が ダイレクトシュート! ゴール!!",corner:"{a}の パスから {h}が ゴールの すみへ! ゴール!!",loop:"{a}の パスから {h}が ループシュート! ゴール!!"};
+const WAZAAST={outside:"{h}の アウトサイドキックから {s}が ゴール!",onetwo:"{h}との ワンツーから {s}が ゴール!",dpass:"{h}の ダイレクトパスから {s}が ゴール!",first:"{h}が まえを むいて パス! {s}が ゴール!"};
+// the known techniques of a note, a record or a draft, each once, WAZAMAX at most
+const wazaOf=x=>(x&&Array.isArray(x.waza)?x.waza:[]).filter((id,i,a)=>typeof id==="string"&&WZ[id]!==undefined&&a.indexOf(id)===i).slice(0,WAZAMAX);
+const wazaNames=x=>wazaOf(x).map(id=>WZ[id][2]);
 const MAXCHIPS=6, MAXGROUP=3, MAXPERDAY=2; // six chips a note (v13.2), three at most from each group, so a full note is three "self" and three "team"
 const GOALS=["ルーズボールを1回おいかける","パスを1回もらいにいく","こえを3回だす","シュートを1本うつ","あいてに1回ちかづく","「パスちょうだい」を1回いう","さいごまで走る"];
 const POS={
@@ -924,7 +958,7 @@ function jugPass(es){
 }
 // v14 what a mission record is worth: its kind's XP for the first finished record of that kind on its day (mday), in writing order, nothing for the
 // others; a parent's comment +10, as on notes. Worked out every time and never stored, so deleting a record moves its XP to the next one of that day.
-const missionDone=m=>m.kind==="video"?written(m.good)&&written(m.fix):m.kind==="learn"?written(m.learn):m.kind==="pro"?written(m.wow)||written(m.next):m.kind==="home"?homeMenu(m).length>0:false;
+const missionDone=m=>m.kind==="video"?written(m.good)&&written(m.fix):m.kind==="learn"?written(m.learn):m.kind==="pro"?written(m.wow)||written(m.next):m.kind==="home"?homeMenu(m).length>0||wazaOf(m).length>0:false;
 function missionPass(ms){
   const list=(Array.isArray(ms)?ms:[]).filter(m=>m&&typeof m==="object"&&typeof m.id==="string"&&MKINDS.some(k=>k[0]===m.kind)).sort(byWritten);
   const won=Object.create(null), per=Object.create(null), vpar=Object.create(null); let pn=0;
@@ -972,6 +1006,15 @@ function noteMat(e){const m={hane:0,ishi:0,ito:0,hoshi:0};
   if(String(e.goal||"").trim()&&(e.goalResult==="done"||e.goalResult==="half"))m.ishi++;
   if(String(e.good||"").trim())m.ito++;
   return m;}
+// v16: the days each わざ was recorded. The day is the writing day (a note's wday, as 🔥 uses it; a finished 🏠 record's day), so notes
+// dated back or ahead in one sitting are one day. A day counts once however often a technique was tapped, and WAZAMAX different
+// techniques at most: the first ones written that day.
+function wazaPass(es,ms){
+  const xs=es.map(e=>[wday(e),e]).concat(ms.filter(m=>m.kind==="home"&&missionDone(m)).map(m=>[mday(m),m])).filter(x=>isDay(x[0]));
+  xs.sort((a,b)=>{const ka=wkey(a[1]), kb=wkey(b[1]); return ka<kb?-1:ka>kb?1:0;});
+  const day=Object.create(null), n={};
+  xs.forEach(([d,x])=>{const got=day[d]=day[d]||[]; wazaOf(x).forEach(id=>{if(got.indexOf(id)<0&&got.length<WAZAMAX){got.push(id); n[id]=(n[id]||0)+1;}});});
+  return n;}
 function compute(list,ms){
   const es=sortEntries(list), jp=jugPass(es), mp=missionPass(ms), sp=streakPass(es,mp.list); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
   const per={}, chipCount={}, mat={hane:0,ishi:0,ito:0,hoshi:0}; let kizuna=0, done=0, parentN=0;
@@ -987,7 +1030,7 @@ function compute(list,ms){
   for(const id in mp.per){xp+=mp.per[id].sum; const mm=mp.per[id].mat; for(const k in mm)mat[k]+=mm[k];} parentN+=mp.pn; // v14.2: a 🎬 record's ⭐ // v14 records add XP (and a parent's comment counts for おうえんパワー): no ticket, stats, materials or こまめに かいた (つづけてかいた before v14.1)
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
-  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
+  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,waza:wazaPass(es,mp.list),stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
 }
 const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
 
@@ -1000,6 +1043,10 @@ function skillList(g){
   arr.forEach(s=>{s.lv=s.count>=s.th[1]?2:s.count>=s.th[0]?1:0; s.next=s.lv===0?s.th[0]:s.lv===1?s.th[1]:null;});
   return arr;
 }
+// v16: every technique with its days, level (0, 1 learned, 2 gold) and the days needed next. Kept apart from skillList (18 skills).
+function wazaList(g){const c=g.waza||{};
+  return WAZA.map(w=>{const count=c[w[0]]||0, lv=count>=WAZATH[1]?2:count>=WAZATH[0]?1:0;
+    return {id:w[0],grp:w[1],n:w[2],how:w[3],tip:w[4],line:w[5],count,lv,next:lv===0?WAZATH[0]:lv===1?WAZATH[1]:null};});}
 function squad(g){
   return MATES.map((m,i)=>{const th=KIZUNA[i], joined=g.kizuna>=th;
     return Object.assign({},m,{n:mateName(m),th,joined,power:joined?m.base+Math.min(40,Math.round(4*Math.sqrt(g.kizuna-th))):0});});
@@ -1024,7 +1071,8 @@ function teamPower(g){
   // While a match is being played back the bonuses stay as they were at kick-off, so the team page does not give the result away.
   const held=live&&!live.done, it=(held?live.prevItems:(game.items||[]).length)*.5, fire=Math.min(9,((held?live.prevLoss:game.lossStreak)||0)*3);
   const mk=(held?live.prevMade||0:madeCount(game.made))*.5; // v13: each made piece, worn or not
-  return {lu,hero,avg,sk,it,mk,fire,total:0.3*hero+0.7*avg+sk+it+mk+fire};
+  const wz=wazaList(g).reduce((a,x)=>a+(x.lv===2?WAZAPOW[1]:x.lv===1?WAZAPOW[0]:0),0); // v16: learned techniques
+  return {lu,hero,avg,sk,it,mk,wz,fire,total:0.3*hero+0.7*avg+sk+it+mk+wz+fire};
 }
 const tickets=g=>Math.max(0,g.es.length-(game.used||0));
 
@@ -1038,11 +1086,16 @@ function simulate(g,opp){
   const W={FW:3,MF:1.7,DF:.6,GK:.05}, wt=p=>W[p.pos]*(p.helper?.5:1)*(p.hero?1.3:1);
   const pick=not=>{const c=players.filter(p=>p!==not); let r=Math.random()*c.reduce((a,p)=>a+wt(p),0); for(const p of c){r-=wt(p); if(r<=0)return p;} return c[c.length-1];};
   const ev=[], add=(m,t,o)=>ev.push(Object.assign({m,t},o||{})), minute=()=>1+Math.floor(Math.random()*30);
+  // v16: learned techniques. The names go in by a function, so a name is never read as a pattern.
+  const wzAll=wazaList(g).filter(x=>x.lv>0), wzS=wzAll.filter(x=>own(WAZAGOAL,x.id)), wzP=wzAll.filter(x=>own(WAZAAST,x.id));
   for(let i=0;i<gm;i++){const sc=pick(null), as=pick(sc);
-    add(minute(),sc.hero?`${as.n}の パスから ${hero}が シュート! ゴール!!`:as.hero?`${hero}の パスから ${sc.n}が ゴール!`:`${as.n}から ${sc.n}へ! シュートが きまった!`,{side:"me",goal:1});}
+    const ws=sc.hero&&wzS.length&&Math.random()<WAZAUSE?rnd(wzS):null, wa=!ws&&as.hero&&wzP.length&&Math.random()<WAZAUSE?rnd(wzP):null;
+    const wline=ws?WAZAGOAL[ws.id]:wa?WAZAAST[wa.id]:""; // not "wt": that is the weight function of pick()
+    add(minute(),wline?wline.replace(/\{([ahs])\}/g,(m,k)=>k==="h"?hero:k==="a"?as.n:sc.n):sc.hero?`${as.n}の パスから ${hero}が シュート! ゴール!!`:as.hero?`${hero}の パスから ${sc.n}が ゴール!`:`${as.n}から ${sc.n}へ! シュートが きまった!`,wline?{side:"me",goal:1,waza:1}:{side:"me",goal:1});}
   for(let i=0;i<go;i++)add(minute(),rnd(["あいての シュートが きまってしまった…","カウンターから しってん…","コーナーキックから きめられた…"]),{side:"opp",goal:1});
   const sk=skillList(g).filter(s=>s.lv>0&&s.line);
   shuffle(sk).slice(0,3).forEach(s=>add(minute(),`【${s.n}】${s.line.replace(/\{h\}/g,hero)}`,{skill:1}));
+  shuffle(wzAll).slice(0,WAZALINES).forEach(x=>add(minute(),`【${x.n}】${x.line.replace(/\{h\}/g,()=>hero)}`,{skill:1,waza:1})); // v16
   // v13: each made piece being worn has its own line.
   ["boots","shin","ball"].forEach(k=>{const id=(game.equip||{})[k], x=own(GEAR,id)?gearOf(id):null; if(x&&x.slot===k)add(minute(),GEAR[id].L.say.replace(/\{h\}/g,hero).replace(/\{n\}/g,x.n),{skill:1});});
   shuffle(players.filter(p=>p.mate)).slice(0,2).forEach(p=>add(minute(),`${p.n}の【${p.mate.skill}】 ${p.mate.line}`,{mate:1}));
@@ -1297,11 +1350,13 @@ function noteExtras(x){
   const s=(v,n)=>typeof v==="string"?v.slice(0,n):"", n2=v=>Number.isInteger(v)&&v>=0&&v<=99?v:null;
   const ids=(v,ok)=>(Array.isArray(v)?v:[]).filter((id,i,a)=>typeof id==="string"&&ok(id)&&a.indexOf(id)===i);
   const npos=POSKEYS.includes(x.npos)||x.npos===MIX?x.npos:"", nshape=isShape(x.nshape)?x.nshape:"", nside=sideOf(npos,x.nside,nshape);
-  return {weather:WEATHERS.some(w=>w[0]===x.weather)?x.weather:"",temp:Number.isFinite(x.temp)&&x.temp>=-50&&x.temp<=60?Math.round(x.temp):null,
+  const o={weather:WEATHERS.some(w=>w[0]===x.weather)?x.weather:"",temp:Number.isFinite(x.temp)&&x.temp>=-50&&x.temp<=60?Math.round(x.temp):null,
     place:s(x.place,20),menu:ids(x.menu,id=>MENUS.some(m=>m[0]===id)),
     games:(Array.isArray(x.games)?x.games:[]).filter(g=>g&&typeof g==="object").slice(0,20).map(g=>({opp:s(g.opp,20),gf:n2(g.gf),ga:n2(g.ga)})),
     npos,nside,nshape,focus:focusOf({npos,nside,nshape,focus:x.focus}).slice(0,pointsOf(npos,nside,nshape).length),
-    hard:s(x.hard,200),coach:s(x.coach,200),stamps:stampsOf(x),stampAt:isoOr(x.stampAt,""),parentAt:isoOr(x.parentAt,""),jug:cleanJug(x.jug)};
+    hard:s(x.hard,200),coach:s(x.coach,200),stamps:stampsOf(x),stampAt:isoOr(x.stampAt,""),parentAt:isoOr(x.parentAt,""),jug:cleanJug(x.jug)}, wz=wazaOf(x);
+  if(wz.length)o.waza=wz; // v16: only when he tapped one, so a note without techniques keeps its v15 shape
+  return o;
 }
 function cleanEntry(x){
   if(!x||typeof x!=="object"||typeof x.id!=="string"||!/^[A-Za-z0-9_-]{1,40}$/.test(x.id))return null;
@@ -1323,7 +1378,7 @@ function cleanMission(x){
   if(x.kind==="video"){m.good=s(x.good,300);m.fix=s(x.fix,200);m.fun=[1,2,3,4,5].includes(x.fun)?x.fun:0;
     m.vdate=isDay(x.vdate)&&x.vdate<=x.date?x.vdate:"";m.vtext=m.vdate?"":s(x.vtext,20);}
   else if(x.kind==="pro"){m.how=PROHOW.some(c=>c[0]===x.how)?x.how:"";m.match=s(x.match,30);m.look=s(x.look,40);m.wow=s(x.wow,300);}
-  else if(x.kind==="home"){m.menu=homeMenu(x);m.mins=homeMins(x.mins);m.memo=s(x.memo,60);} // v15 🏠
+  else if(x.kind==="home"){m.menu=homeMenu(x);m.mins=homeMins(x.mins);m.memo=s(x.memo,60);const wz=wazaOf(x);if(wz.length)m.waza=wz;} // v15 🏠, v16 わざ
   else{m.src=(Array.isArray(x.src)?x.src:[]).filter((id,i,a)=>typeof id==="string"&&LEARNSRC.some(c=>c[0]===id)&&a.indexOf(id)===i);m.topic=s(x.topic,20);m.learn=s(x.learn,300);}
   if(typeof x.createdAt==="string"&&x.createdAt.length<=40&&!isNaN(Date.parse(x.createdAt)))m.createdAt=x.createdAt;
   return m;
@@ -1604,7 +1659,8 @@ function newDraft(){const es=sortEntries(entries), last=es[es.length-1], lp=es.s
 function noteOf(d,at){const e=Object.assign({},d,{createdAt:at,chips:d.chips.slice(0,MAXCHIPS),goal:d.goal.trim(),good:d.good.trim(),next:d.next.trim(),parent:d.parent.trim(),
     place:d.place.trim(),hard:d.hard.trim(),coach:d.coach.trim(),focus:focusOf(d),nside:sideOf(d.npos,d.nside,d.nshape),nshape:isShape(d.nshape)?d.nshape:"",
     menu:d.kind==="match"?[]:d.menu.slice(),games:d.kind==="match"?d.games.map(g=>({opp:g.opp.trim(),gf:g.gf,ga:g.ga})).filter(gameUsed):[],jug:cleanJug(d.jug)});
-  delete e.wxHand; delete e.wxFor; delete e.goalFrom; delete e.jugAsk; return e;} // only the form needs these
+  delete e.wxHand; delete e.wxFor; delete e.goalFrom; delete e.jugAsk; // only the form needs these
+  const wz=wazaOf(d); if(wz.length)e.waza=wz; else delete e.waza; return e;} // v16
 // v14: reads a count box. ０-９ become 0-9, and かい, 回 or spaces at the ends are taken off. Then 0-4 digits are a count ("" = none),
 // 5 digits or more are "big" (the box is emptied, so 10000 never turns into 1000), and anything else is "nan" (v:null: the last count is put back).
 const jugRead=raw=>{const s=String(raw==null?"":raw).replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).trim().replace(/(かい|回)$/,"").trim();
@@ -1697,6 +1753,13 @@ function skillsPanel(g){
   <div class="sklist">${sl.map(s=>`<div class="${s.lv===2?"gold":s.lv===1?"on":""}"><b>${s.lv===2?"★ ":""}${esc(s.n)}</b><span class="muted">${esc(s.how)}  ${Math.min(s.count,s.next||s.th[1])} / ${s.next||s.th[1]}回</span></div>`).join("")}</div></details></section>`;
 }
 
+// v16 わざ ずかん: every technique with how it is done, a tip and the days left. An opened one stays open over a redraw (wzOpen).
+let wzOpen={};
+function wazaPanel(g){const wl=wazaList(g), got=wl.filter(x=>x.lv>0).length;
+  return `<section class="panel" id="wazaBook" aria-labelledby="wzH"><h2 id="wzH">わざ ずかん <span class="muted">${got} / ${wl.length}</span></h2>
+  <p class="muted">ほんとうに れんしゅうした わざを、ノートか 🏠 ボールあそびで えらぼう。 ${WAZATH[0]}日で おぼえて、ゲームの しあいで つかえるよ。 ${WAZATH[1]}日で ★ゴールド! 1日に かぞえるのは ${WAZAMAX}つまで。</p>
+  ${WAZAGROUPS.map(([k,t])=>`<h3>${t}</h3><div class="wzlist">${wl.filter(x=>x.grp===k).map(x=>`<details class="wz${x.lv===2?" gold":x.lv===1?" on":""}" id="wzb-${x.id}"${wzOpen["wzb-"+x.id]?" open":""}><summary><b>${x.lv===2?"★ ":x.lv===1?"✓ ":""}${x.n}</b><span class="muted">${x.lv===2?"ゴールド! しあいで つかえる":x.lv===1?`しあいで つかえる! ★まで あと ${x.next-x.count}日`:`あと ${x.next-x.count}日 れんしゅうすると おぼえる`}</span></summary>
+    <p><b>やりかた</b>${x.how}</p><p><b>コツ</b>${x.tip}</p></details>`).join("")}</div>`).join("")}</section>`;}
 // Every look the player grows into, so the next eye colour is something to aim for.
 function looksPanel(g){
   return `<section class="panel"><h2>すがたの へんか</h2><p class="muted">レベルが あがると、目の いろや スーツが かわるよ。</p>
@@ -1720,7 +1783,7 @@ function viewHome(g){
   return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${tkb}${shopNews(g)}
   <section class="panel"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   <p class="muted">「がんばったこと」を えらぶと のうりょくが のびるよ。</p>${pw}</section>
-  ${posPanel(g)}${skillsPanel(g)}${looksPanel(g)}`;
+  ${posPanel(g)}${skillsPanel(g)}${wazaPanel(g)}${looksPanel(g)}`;
 }
 
 // v13 ways into the workshop from home: a one-time NEW note on each device, then a reminder while a piece can be made.
@@ -1814,7 +1877,7 @@ function keptMissions(){const out={video:null,learn:null,pro:null,home:null};
       m.next=s(d.next,40);
       if(kind==="video"){m.vdate=isDay(d.vdate)&&d.vdate<=today()?d.vdate:""; m.vother=d.vother===true; m.vtext=s(d.vtext,20); m.good=s(d.good,300); m.fix=s(d.fix,200); m.fun=[1,2,3,4,5].includes(d.fun)?d.fun:0;}
       else if(kind==="pro"){m.how=PROHOW.some(c=>c[0]===d.how)?d.how:""; m.match=s(d.match,30); m.look=s(d.look,40); m.wow=s(d.wow,300);}
-      else if(kind==="home"){m.menu=homeMenu(d); m.mins=homeMins(d.mins); m.memo=s(d.memo,60);}
+      else if(kind==="home"){m.menu=homeMenu(d); m.mins=homeMins(d.mins); m.memo=s(d.memo,60); const wz=wazaOf(d); if(wz.length)m.waza=wz;}
       else{m.src=(Array.isArray(d.src)?d.src:[]).filter((id,i,a)=>LEARNSRC.some(c=>c[0]===id)&&a.indexOf(id)===i); m.topic=s(d.topic,20); m.learn=s(d.learn,300);}
       if(kind==="pro"&&age&&!(m.wow.trim()||m.next.trim()||m.match.trim()))return; // v14 pro: taps alone come back the same day only
       if(kind==="home"&&age&&!m.memo.trim())return; // v15 🏠: the same
@@ -1825,7 +1888,7 @@ function missionOf(d,at){const day=localDay(Date.parse(at)), s=(v,n)=>String(v==
   const m={id:d.id,kind:d.kind,date:day,createdAt:at,next:s(d.next,40),parent:"",parentAt:"",stamps:[],stampAt:""};
   if(d.kind==="video"){m.good=s(d.good,300);m.fix=s(d.fix,200);m.fun=[1,2,3,4,5].includes(d.fun)?d.fun:0;m.vdate=isDay(d.vdate)&&d.vdate<=day?d.vdate:"";m.vtext=!m.vdate&&d.vother?s(d.vtext,20):"";}
   else if(d.kind==="pro"){m.how=PROHOW.some(c=>c[0]===d.how)?d.how:"";m.match=s(d.match,30);m.look=s(d.look,40);m.wow=s(d.wow,300);}
-  else if(d.kind==="home"){m.menu=homeMenu(d);m.mins=homeMins(d.mins);m.memo=s(d.memo,60);}
+  else if(d.kind==="home"){m.menu=homeMenu(d);m.mins=homeMins(d.mins);m.memo=s(d.memo,60);const wz=wazaOf(d);if(wz.length)m.waza=wz;}
   else{m.src=(Array.isArray(d.src)?d.src:[]).filter((id,i,a)=>LEARNSRC.some(c=>c[0]===id)&&a.indexOf(id)===i);m.topic=s(d.topic,20);m.learn=s(d.learn,300);}
   return m;}
 // Web addresses are not kept in a record (the app keeps no links); v14 pro: also the hosts of streaming and share links typed without a
@@ -1836,7 +1899,7 @@ const missionLeft=(kind,id)=>!missions.some(m=>m.id!==id&&m.kind===kind&&mday(m)
 // What to say when the record is not finished yet: [message, box to focus], or null when it is.
 function missionWhy(m){
   // v14 pro: \u2060 (WORD JOINER) keeps each particle on the line of its 」 (keep-all still breaks after a closing bracket)
-  if(m.kind==="home")return homeMenu(m).length?null:["やった あそびを 1つ えらんでね。","mh-touch"]; // v15 🏠
+  if(m.kind==="home")return homeMenu(m).length||wazaOf(m).length?null:["やった あそびか わざを 1つ えらんでね。","mh-touch"]; // v15 🏠, v16
   if(m.kind==="pro")return written(m.wow)||written(m.next)?null:nchars(m.wow)?["「すごかった プレー」\u2060を もう すこし かいてね。","mp-wow"]
     :nchars(m.next)?["「まねしたい こと」\u2060を もう すこし かいてね。","mp-next"]:["「すごかった プレー」\u2060か 「まねしたい こと」\u2060を かいてね。 どちらか 1つで OK!","mp-wow"];
   if(m.kind==="learn")return written(m.learn)?null:nchars(m.learn)?["「まなんだ こと」\u2060を もう すこし かいてね。","ml-learn"]:["「まなんだ こと」\u2060を かいてね。 みじかくて OK!","ml-learn"];
@@ -1853,7 +1916,7 @@ function matchDays(){const by={}; entries.forEach(e=>{if(e&&e.kind==="match"&&is
 const matchName=(x,f)=>`${f(x.date)}${x.opp.length?" vs "+x.opp[0]+(x.opp.length>1?" ほか":""):"の しあい"}`;
 // Words typed in a mission draft (chips alone are not kept once the form closes). v14 pro: a tapped hint or way counts too, because he
 // taps them while the match is on, before he writes.
-const mWords=d=>!!d&&d.kind==="home"?homeMenu(d).length>0||String(d.memo||"").trim()!=="":!!d&&(d.kind==="video"?["good","fix","next","vtext"]:d.kind==="pro"?["wow","next","match","look","how"]:["learn","next"]).some(k=>String(d[k]==null?"":d[k]).trim()!=="");
+const mWords=d=>!!d&&d.kind==="home"?homeMenu(d).length>0||wazaOf(d).length>0||String(d.memo||"").trim()!=="":!!d&&(d.kind==="video"?["good","fix","next","vtext"]:d.kind==="pro"?["wow","next","match","look","how"]:["learn","next"]).some(k=>String(d[k]==null?"":d[k]).trim()!=="");
 /* ---------- v14 missions: the screens (spec14 §6.1-6.3) ---------- */
 // After every change in a mission form (each box and each chip) the box under it is refreshed (never a re-render) and the draft is kept at
 // once, as draftChanged keeps the note, so a reload (iOS dropping the app while a video plays in another app) brings back every box and chip.
@@ -1872,7 +1935,7 @@ function openMission(kind){
   const f=$("#msForm"); if(f&&f.scrollIntoView)f.scrollIntoView({block:"start"});
   const h=$("#msfH"); if(h){try{h.focus({preventScroll:true});}catch(e){h.focus();}}}
 // The box under a form: a pill for each part (✓ once written()), and what is left to clear the mission.
-const mSlots=d=>d.kind==="home"?[["やった あそび",homeMenu(d).length?"えらんだ":""]]:d.kind==="video"?[["よかった ところ",d.good],["なおしたい ところ",d.fix]]:d.kind==="pro"?[["すごかった プレー",d.wow],["まねしたい こと",d.next]]:[["まなんだ こと",d.learn]];
+const mSlots=d=>d.kind==="home"?[[homeMenu(d).length||!wazaOf(d).length?"やった あそび":"れんしゅうした わざ",homeMenu(d).length||wazaOf(d).length?"えらんだ":""]]:d.kind==="video"?[["よかった ところ",d.good],["なおしたい ところ",d.fix]]:d.kind==="pro"?[["すごかった プレー",d.wow],["まねしたい こと",d.next]]:[["まなんだ こと",d.learn]];
 const mNeed=d=>d.kind==="video"?2:1; // the parts to write: both for a video review, the one for learning, either one for a pro match
 const mCount=d=>mSlots(d).filter(x=>written(x[1])).length;
 let msBoxN=0; // the parts written when the box was drawn: say() speaks only when the number goes up
@@ -1913,6 +1976,8 @@ async function saveMission(kind){
   mdraft[kind]=null; keepMission(); missionOpen=null; msNote=""; handSet(m.id); tab="home"; render(); window.scrollTo(0,0);
   const gain=stkGain(lastG.mper[m.id],before,true); // the records are in: saveMission() waits for them
   if(gain&&gain.sum)celebrate(before,gain,lastG,false,m.id,{mk:kind,plan:m.next,focus:"#ms-"+kind});
+  else if(wazaList(lastG).some((x,i)=>x.lv>wazaList(before)[i].lv)){ // v16: a record without XP can still teach a わざ
+    flash("あたらしい わざを おぼえたよ! わざ ずかんを みてね。"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
   else{flash(kind==="video"&&vparOpen(lastG,m.id)?`かけたね! おうちの人に コメントを もらうと +${VIDEOPARENT}\u00a0XP!`:"かけたね! きょうの XP は もう もらって いるよ。 また あした!"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
 }
 // v14.1 home's 🔥 strip, after the ミッション panel, under the goal card's own condition, once the records are in (they count too). It never says a chain ended: after
@@ -2060,6 +2125,7 @@ function homeForm(d){const mn=homeMenu(d);
     <div class="sidetip" id="mhTip">${homeTipHTML(d)}</div></div>
   <div class="field"><span class="q">どのくらい? <small>えらばなくても OK</small></span>
     <div class="chips" id="mhMins">${HOMEMINS.map(([n,t])=>`<button type="button" data-mmins="${n}" aria-pressed="${d.mins===n}">${t}</button>`).join("")}</div></div>
+  <div class="field" id="mhWaza"><span class="q">れんしゅうした わざ <small>えらばなくても OK。 ${WAZAMAX}つまで(<span id="mhWazaN">${wazaOf(d).length}</span>/${WAZAMAX})</small></span>${wazaChips(wazaOf(d),"mwaza","mhw")}${wazaMsg("mhWazaN")}</div>
   <div class="field"><label class="q" for="mh-memo">ひとこと <small>かかなくても OK</small></label>
     <div class="voice"><input type="text" id="mh-memo" maxlength="60" value="${esc(d.memo)}" placeholder="れい:はんたいの あしで 3かい けれた">${micBtn("mh-memo")}</div></div>`;
 }
@@ -2331,6 +2397,21 @@ function kindField(d){
   <div class="chips">${MENUS.map(([id,t])=>`<button type="button" data-menu="${id}" aria-pressed="${d.menu.includes(id)}">${rec.includes(id)?'<span class="star">★</span>':""}${t}</button>`).join("")}</div>
   ${rec.length?`<p class="muted">★は ${esc(posTitle(d.npos,d.nside,d.nshape))}に おすすめの れんしゅう</p>`:""}</div>`;
 }
+// v16 the techniques practised (or used in a real match) that day: taps, WAZAMAX at most. No XP: three days of one technique teach it.
+const wazaChips=(mine,attr,pre)=>WAZAGROUPS.map(([k,t])=>`<span class="wzgrp">${t}</span><div class="chips">${WAZA.filter(w=>w[1]===k).map(w=>`<button type="button" id="${pre}-${w[0]}" data-${attr}="${w[0]}" aria-pressed="${mine.includes(w[0])}">${w[2]}</button>`).join("")}</div>`).join("");
+const WAZAFULL=`わざは ${WAZAMAX}つまで。 かえる ときは、えらんだ わざを もう1かい おして はずしてね。`;
+const wazaMsg=id=>`<p class="muted chiphint" id="${id}Msg" hidden>${WAZAFULL}</p>`; // shown under the chips by a tap past the third
+function wazaField(d){const mine=wazaOf(d);
+  return `<div class="field" id="wazaField"><span class="q">ほんとうに れんしゅうした わざ<small>${WAZAMAX}つまで(<span id="wazaN">${mine.length}</span>/${WAZAMAX})。 しあいで つかえた わざも OK</small></span>
+  ${wazaChips(mine,"waza","wz")}${wazaMsg("wazaN")}
+  <p class="muted">おなじ わざを ${WAZATH[0]}日 きろくすると、ゲームの しあいで つかえるよ(1日に かぞえるのは ${WAZAMAX}つまで)。 やりかたは 「せんしゅ」\u2060の わざ ずかんで みられるよ。</p></div>`;}
+// one tap on a technique chip of the note (box "wazaN") or of the 🏠 form (box "mhWazaN"): on, off, or the full message, which
+// shows right under the chips (the status line at the top of the page is out of sight there) and is read out
+function wazaTap(d,b,id,box){const cur=wazaOf(d), i=cur.indexOf(id), full=i<0&&cur.length>=WAZAMAX, msg=document.getElementById(box+"Msg");
+  if(msg)msg.hidden=!full;
+  if(full){say(WAZAFULL);return false;}
+  if(i<0)cur.push(id); else cur.splice(i,1);
+  d.waza=cur; b.setAttribute("aria-pressed",String(i<0)); const n=document.getElementById(box); if(n)n.textContent=cur.length; return true;}
 function focusField(d){
   const pn=POSNOTE[d.npos], pts=pointsOf(d.npos,d.nside,d.nshape);
   if(d.npos===MIX)return `<div class="field" id="focusBox"><span class="q">ポジションの ポイント</span><p class="muted">いろいろな ポジションを やった 日だね。やってみて ちがった ことを「うまくいったこと」や「むずかしかったこと」に かいてみよう。</p></div>`;
@@ -2389,6 +2470,7 @@ function viewWrite(){
     ${sidesFor(d.npos,d.nshape).length>1?`<div class="sidef" id="sideBox"><span class="q2">${sideHead(d.npos,d.nshape)}<small>せめる ゴールに むかって。わかれば</small></span>${seg("nside",sideOpts(d.npos,d.nshape),d.nside)}</div>`:""}</div>
   ${kindField(d)}
   ${liftField(d)}
+  ${wazaField(d)}
   <h3 class="sec">めあて</h3>
   <div class="field"><label class="q" for="f-goal">きょうの めあて<small>小さくてOK</small></label>
     <div class="voice"><input type="text" id="f-goal" maxlength="40" value="${esc(d.goal)}" placeholder="れい:ルーズボールを1回おいかける">${micBtn("f-goal")}</div>
@@ -2441,6 +2523,7 @@ function viewTeam(g){
     <span>${esc(heroName())}(${esc(posLabel(profile.pos||"MF",profile.side,TEAMSHAPE))})</span><em>${r1(tp.hero)}</em>
     <span>なかまの へいきん</span><em>${r1(tp.avg)}</em>
     <span>スキル ボーナス</span><em>+${r1(tp.sk)}</em>
+    ${tp.wz?`<span>わざ ボーナス</span><em>+${r1(tp.wz)}</em>`:""}
     <span>アイテム ボーナス</span><em>+${tp.it}</em>
     ${tp.mk?`<span>つくった そうび</span><em>+${r1(tp.mk)}</em>`:""}
     ${tp.fire?`<span>くやしさパワー</span><em>+${tp.fire}</em>`:""}
@@ -2656,6 +2739,7 @@ function viewNotes(g){
     ${e.place?`<p><span class="k">ばしょ</span>${esc(e.place)}</p>`:""}
     ${games.length?`<p><span class="k">しあい</span>${games.join("、")}</p>`:""}
     ${menu.length?`<p><span class="k">れんしゅう</span>${menu.map(esc).join("、")}</p>`:""}
+    ${wazaOf(e).length?`<p><span class="k">わざ</span>${wazaNames(e).join("、")}</p>`:""}
     ${jugLine(g,e)}
     ${e.goal?`<p class="kw"><span class="k">めあて</span>${esc(e.goal)}${res?` → <b>${res}</b>`:""}</p>`:""}
     ${focus.length?`<p class="kw"><span class="k">${esc(posLabel(e.npos,e.nside,e.nshape))}の ポイント</span>${focus.map(esc).join("、")}</p>`:POSKEYS.includes(e.npos)||e.npos===MIX?`<p><span class="k">ポジション</span>${esc(posLabel(e.npos,e.nside,e.nshape))}</p>`:""}
@@ -2704,7 +2788,7 @@ function recordItem(g,m){
   else if(p){const how=(PROHOW.find(c=>c[0]===m.how)||[])[1]||"";
     rows=line("なにで みた",how)+line("みた しあい",esc(mstr(m.match)))+line("みた ところ",esc(mstr(m.look)))+line("すごかった",esc(mstr(m.wow)))+line("まねしたい",esc(mstr(m.next)));}
   else if(h){const mins=(HOMEMINS.find(c=>c[0]===m.mins)||[])[1]||""; // v15 🏠
-    rows=line("やった あそび",homeMenu(m).map(x=>HOMEMENU.find(c=>c[0]===x)[1]).join("、 "))+line("じかん",mins)+line("ひとこと",esc(mstr(m.memo)));}
+    rows=line("やった あそび",homeMenu(m).map(x=>HOMEMENU.find(c=>c[0]===x)[1]).join("、 "))+line("わざ",wazaNames(m).join("、"))+line("じかん",mins)+line("ひとこと",esc(mstr(m.memo)));}
   else{const src=(Array.isArray(m.src)?m.src:[]).filter((x,i,a)=>a.indexOf(x)===i).map(x=>(LEARNSRC.find(c=>c[0]===x)||[])[1]).filter(Boolean);
     rows=line("しらべた",src.map(esc).join("、 "))+line("テーマ",esc(mstr(m.topic)))+line("まなんだ",esc(mstr(m.learn)))+line("やってみたい",esc(mstr(m.next)));}
   const pb=editingParent===m.id
@@ -2896,7 +2980,7 @@ document.addEventListener("compositionend",e=>{if(/^(g-g[fa]-\d|f-jug-[a-z])$/.t
 const refreshNext=()=>{const np=$("#nextPresets");if(np&&draft)np.innerHTML=presetBtns(nextPresets(draft),"ng",draft.next);};
 // Marks the preset button whose text is now in the field (if any).
 const pressData=(sel,key,val)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",String(x.dataset[key]===val)));
-$("#view").addEventListener("toggle",e=>{if(e.target.id==="vhow"&&e.target.open!==(e.target.dataset.open==="1"))vhowOpen=e.target.open;if(e.target.id==="matHow")matHowOpen=e.target.open;if(e.target.id==="skAll")skOpen=e.target.open;if(e.target.id==="bk")bkOpen=e.target.open;if(e.target.id==="wxp")wxpOpen=e.target.open;},true); // keep these open across re-renders
+$("#view").addEventListener("toggle",e=>{if(e.target.id==="vhow"&&e.target.open!==(e.target.dataset.open==="1"))vhowOpen=e.target.open;if(e.target.id==="matHow")matHowOpen=e.target.open;if(e.target.id==="skAll")skOpen=e.target.open;if(/^wzb-/.test(e.target.id||""))wzOpen[e.target.id]=e.target.open;if(e.target.id==="bk")bkOpen=e.target.open;if(e.target.id==="wxp")wxpOpen=e.target.open;},true); // keep these open across re-renders
 $("#view").addEventListener("change",e=>{if(e.target.id==="bk-in")bkFile(e.target);});
 // A teammate's new name: OK or the keyboard's done key saves it, an empty box or the teammate's own name puts the own name back.
 async function setMateName(id,v){
@@ -2976,6 +3060,7 @@ $("#view").addEventListener("click",async e=>{
     if(b.dataset.mlook!==undefined){d.look=d.look===b.dataset.mlook?"":b.dataset.mlook;document.querySelectorAll("#mpLook button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.mlook===d.look)));missionChanged();return;}
     if(b.dataset.mhow){d.how=d.how===b.dataset.mhow?"":b.dataset.mhow;document.querySelectorAll("#mpHow button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.mhow===d.how)));missionChanged();return;}
     if(b.dataset.mmenu&&d.kind==="home"){const id=b.dataset.mmenu, mn=homeMenu(d), i=mn.indexOf(id); if(i<0)mn.push(id);else mn.splice(i,1); d.menu=mn;b.setAttribute("aria-pressed",String(i<0));missionChanged();homeTip(d,i<0?id:"");return;} // v15 🏠 (the tip after the box: say() keeps the last words)
+    if(b.dataset.mwaza&&d.kind==="home"){if(wazaTap(d,b,b.dataset.mwaza,"mhWazaN"))missionChanged();return;} // v16
     if(b.dataset.mmins&&d.kind==="home"){const n=+b.dataset.mmins;d.mins=d.mins===n?0:n;document.querySelectorAll("#mhMins button").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.mmins===d.mins)));missionChanged();return;}
     if(b.id==="msSave"){await saveMission(missionOpen);return;}
   }
@@ -2993,6 +3078,7 @@ $("#view").addEventListener("click",async e=>{
       return;}
     if(b.dataset.place!==undefined){draft.place=b.dataset.place;$("#f-place").value=draft.place;pressData("#placeChips button","place",draft.place);draftChanged();return;}
     if(b.dataset.ng!==undefined){draft.next=b.dataset.ng;$("#f-next").value=draft.next;pressData("#nextPresets button","ng",draft.next);draftChanged();return;}
+    if(b.dataset.waza){if(wazaTap(draft,b,b.dataset.waza,"wazaN"))draftChanged(); return;} // v16
     if(b.dataset.menu){const i=draft.menu.indexOf(b.dataset.menu); if(i<0)draft.menu.push(b.dataset.menu); else draft.menu.splice(i,1); b.setAttribute("aria-pressed",String(i<0)); draftChanged(); return;}
     if(b.dataset.focus){const i=draft.focus.indexOf(b.dataset.focus); if(i<0)draft.focus.push(b.dataset.focus); else draft.focus.splice(i,1); b.setAttribute("aria-pressed",String(i<0)); draftChanged(); return;}
     if(b.id==="addGame"){if(draft.games.length<MAXGAMES){draft.games.push({opp:"",gf:null,ga:null});draftChanged();renderView();const el=$("#g-opp-"+(draft.games.length-1));if(el)el.focus();}return;}
@@ -3081,6 +3167,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
   const J=gain.jug||{pb:[],first:[],clr:[],paid:false}, o=opt||{};
   const lvup=after.level>before.level;
   const sb=skillList(before), newSkills=skillList(after).filter((s,i)=>s.lv>sb[i].lv);
+  const wb=wazaList(before), newWaza=wazaList(after).filter((x,i)=>x.lv>wb[i].lv); // v16
   const qb=squad(before), newMates=squad(after).filter((m,i)=>m.joined&&!qb[i].joined);
   const gained=UNLOCKS.filter(x=>x[0]>before.level&&x[0]<=after.level), looks=gained.map(x=>x[1]), lookCrop=gained.some(x=>x[2]==="full")?"":"up";
   const starUp=after.stars>before.stars;
@@ -3109,6 +3196,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
     <ul>${gain.parts.map(p=>`<li${p[2]==="msn"||p[2]==="stk"?` class="${p[2]}"`:""}><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>${matGot}${plan}
     ${looks.length?`<div class="newmate"><div class="ava look">${pixSVG(Object.assign(heroOpts(after,equipNow()),{crop:lookCrop,label:heroName()}),"lk")}</div><div><b>あたらしい すがた!</b><br><span class="muted">${esc(looks.join("、"))}</span></div></div>`:""}
     ${newSkills.map(s=>`<div><span class="sk${s.lv===2?" gold":""}">${s.lv===2?"★ ":""}${esc(s.n)}</span> ${s.lv===2?"が ゴールドスキルに なった!":"を おぼえた!"}</div>`).join("")}
+    ${newWaza.map(x=>`<div class="wzget"><span class="sk${x.lv===2?" gold":""}">${x.lv===2?"★ ":""}${x.n}</span> ${x.lv===2?"が ゴールドに なった!":"を おぼえた! しあいで つかえるよ!"}</div>`).join("")}
     ${newMates.map(m=>`<div class="newmate"><div class="ava">${pixSVG(mateOpts(m),"n"+m.id)}</div><div><b>${esc(m.n)}(${m.pos})が なかまに なった!</b><br><span class="muted">${esc(m.cat)}</span><br><button class="ghost mini" type="button" data-ovmname="${m.id}" style="margin:6px 0 0">なまえを かえる</button></div></div>`).join("")}
     ${ticket?`<div><b>しあいチケット +1</b> <span class="muted">(いま ${tickets(after)}まい)</span></div>`:""}
     ${newMake.length?`<div class="craft-ask"><b>🔨 ${esc(GEAR[newMake[0]].n)}${newMake.length>1?" など":""}が つくれるよ!</b><button class="ghost" type="button" id="ovcraft">こうぼうへ</button></div>`:""}
