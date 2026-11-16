@@ -317,7 +317,8 @@ textarea{min-height:76px;resize:vertical}
 .item[aria-pressed="true"]{border-color:var(--good);background:var(--soft)}
 .result{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
 /* v13 workshop */
-.mats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px} /* v14.2: four materials (two rows of two on a narrow phone) */
+@media (max-width:374px){.mats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .mat{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--chip);border:1px solid var(--rule);border-radius:12px;padding:8px 4px;text-align:center;font-size:.78rem;font-weight:700;line-height:1.3;min-width:0}
 .mat b{font-family:var(--display);font-size:1.5rem;line-height:1.1;font-variant-numeric:tabular-nums}
 .mi{width:24px;height:24px;flex:none;display:inline-block;vertical-align:middle}
@@ -802,20 +803,28 @@ const ITEMS={
   h_gold:{n:"チャンピオン ヘアバンド",slot:"head",c:"#f3c531"},
   b_legend:{n:"レジェンドスパイク",slot:"boots",c:"#b26bff",dk:"#3a0e7a"}
 };
-const SLOTS=[["head","ヘアバンド"],["boots","スパイク"],["shin","すねあて"],["wrist","リストバンド"]];
+const SLOTS=[["head","ヘアバンド"],["boots","スパイク"],["shin","すねあて"],["ball","ボール"],["wrist","リストバンド"]];
 // v13 the workshop (こうぼう): spikes and shin guards made from materials. The materials are worked out from the notes every time and never stored,
 // so deleting a note takes its materials back and restoring it returns them. game.made keeps each made piece as {c: a PAINTS index}.
-const MATS=[["hane","かぜの はね"],["ishi","ゆうきの いし"],["ito","なかまの いと"]];
+const MATS=[["hane","かぜの はね"],["ishi","ゆうきの いし"],["ito","なかまの いと"],["hoshi","ほしの かけら"]];
+// v14.2 ⭐ ほしの かけら: only from 🎬 records, worked out every time (missionPass), never stored. HOSHIVIDEO on the record that holds its
+// day's 🎬 mission part, HOSHIPARENT on the record that holds its day's 👪 part. Forward-only: they may go up, never down.
+const HOSHIVIDEO=1, HOSHIPARENT=2;
 // One material for each "がんばったこと" (the first MAXCHIPS of a note), by what the play takes: running (はね), courage (いし) or the team (いと).
 const MAT={chase:"hane",run:"hane",back:"hane",getpass:"hane",dribble:"hane",contact:"ishi",steal:"ishi",retry:"ishi",call:"ishi",shoot:"ishi",
   pass:"ito",voice:"ito",cheer:"ito",cover:"ito",listen:"ito"};
 const COST=[[3,0,2],[15,5,8],[40,15,16],[80,30,32]]; // tiers 1-4: the line's main material, the other one, いと. Costs may go down later, never up.
+// v14.2 the ball's own costs, tiers 1-4: ほしの かけら, なかまの いと (design/spec142.md §3 has the pace). May go down later, never up.
+const BALLCOST=[[2,1],[5,3],[10,6],[18,10]];
 const LINES=[
   {k:"sp",n:"スパイク",slot:"boots",main:"hane",other:"ishi",on:"はく",off:"ぬぐ",names:["そよかぜ スパイク","ダッシュ スパイク","つむじかぜ スパイク","ハリケーン スパイク"],
     about:"はやく はしれる くつ。こぼれだまに いちばんのり!",done:"これで こぼれだまに いちばんのり!",say:"{h}の {n}が かぜを きる! こぼれだまに いちばんのり!"},
   {k:"sg",n:"すねあて",slot:"shin",main:"ishi",other:"hane",on:"つける",off:"はずす",names:["はじめての すねあて","ガッツ すねあて","はがねの すねあて","ガーディアン すねあて"],
-    about:"あしを まもる どうぐ。まもって くれるから、あいてに ちかづいても だいじょうぶ!",done:"これで あいてに ちかづいても こわくない!",say:"{n}が まもって くれる! {h}は こわがらずに ちかづいて ボールを とった!"}];
-const GEAR={}; LINES.forEach(L=>L.names.forEach((n,i)=>{const c=COST[i]; GEAR[L.k+(i+1)]={n,L,slot:L.slot,t:i+1,cost:{[L.main]:c[0],[L.other]:c[1],ito:c[2]}};}));
+    about:"あしを まもる どうぐ。まもって くれるから、あいてに ちかづいても だいじょうぶ!",done:"これで あいてに ちかづいても こわくない!",say:"{n}が まもって くれる! {h}は こわがらずに ちかづいて ボールを とった!"},
+  // v14.2 ⚽ the ball, from ほしの かけら (🎬 reviews) and なかまの いと, with its own costs (BALLCOST)
+  {k:"bl",n:"ボール",slot:"ball",main:"hoshi",other:"ito",cost:BALLCOST,on:"つかう",off:"しまう",names:["きらり ボール","ながれぼし ボール","すいせい ボール","ギャラクシー ボール"],
+    about:"ほしの かけらで つくる ボール。あしに ぴたっと つくよ!",done:"これで ボールが あしに ぴたっと つく!",say:"{h}の {n}が あしに ぴたっと つく! ドリブルで ぐんぐん すすんだ!"}];
+const GEAR={}; LINES.forEach(L=>L.names.forEach((n,i)=>{const c=(L.cost||COST)[i]; GEAR[L.k+(i+1)]={n,L,slot:L.slot,t:i+1,cost:L.cost?{[L.main]:c[0],[L.other]:c[1]}:{[L.main]:c[0],[L.other]:c[1],ito:c[2]}};}));
 const GEARIDS=Object.keys(GEAR);
 // Colours for made pieces: name, colour, stripe, gold mark. A saved piece keeps the list position, so new colours go at the end. ゴールド is for tier 4 only.
 const PAINTS=[["あお","#2f7bff","#fcfcfc","#ffd34f"],["あか","#ff3b4a","#fcfcfc","#ffd34f"],["オレンジ","#ff9a1f","#232a3e","#fff2a8"],["むらさき","#a45bff","#fcfcfc","#ffd34f"],
@@ -834,7 +843,7 @@ const madeCount=gm=>Object.keys(gm||{}).filter(id=>own(GEAR,id)).length;
 const nextOf=L=>{for(let t=1;t<=4;t++)if(!own(game.made||{},L.k+t))return L.k+t; return null;};
 // Materials left: what the notes earned minus what the made pieces cost. Deleting notes can take it below 0 (the screen shows 0 then).
 function matLeft(g){const r={}; MATS.forEach(([k])=>r[k]=g.mat[k]); Object.keys(game.made||{}).forEach(id=>{if(own(GEAR,id)){const c=GEAR[id].cost;for(const k in c)r[k]-=c[k];}}); return r;}
-const canMake=(g,id)=>{const G=own(GEAR,id)?GEAR[id]:null; if(!G||nextOf(G.L)!==id)return false; const r=matLeft(g); return MATS.every(([k])=>r[k]>=(G.cost[k]||0));};
+const canMake=(g,id)=>{const G=own(GEAR,id)?GEAR[id]:null; if(!G||nextOf(G.L)!==id)return false; const r=matLeft(g); return Object.keys(G.cost).every(k=>r[k]>=G.cost[k]);}; // v14.2: only the piece's own materials
 const EXBASE=CUPS[CUPS.length-1].teams.slice(-1)[0][1]+3; // after the last cup: an endless challenge that gets a little harder with every win
 
 function entryXP(e,prev){
@@ -893,11 +902,11 @@ const missionDone=m=>m.kind==="video"?written(m.good)&&written(m.fix):m.kind==="
 function missionPass(ms){
   const list=(Array.isArray(ms)?ms:[]).filter(m=>m&&typeof m==="object"&&typeof m.id==="string"&&MKINDS.some(k=>k[0]===m.kind)).sort(byWritten);
   const won=Object.create(null), per=Object.create(null), vpar=Object.create(null); let pn=0;
-  list.forEach(m=>{const key=m.kind+"|"+mday(m), mk=MKINDS.find(k=>k[0]===m.kind), parts=[];
-    if(!won[key]&&missionDone(m)){won[key]=m.id; parts.push([mk[1],mk[2],"msn"]);}
+  list.forEach(m=>{const key=m.kind+"|"+mday(m), mk=MKINDS.find(k=>k[0]===m.kind), parts=[]; let hoshi=0;
+    if(!won[key]&&missionDone(m)){won[key]=m.id; parts.push([mk[1],mk[2],"msn"]); if(m.kind==="video")hoshi+=HOSHIVIDEO;} // v14.2 ⭐
     if(String(m.parent||"").trim()){parts.push(["おうちの人のコメント",10]); pn++;} // as on notes (entryXP)
-    const vd=mday(m); if(m.kind==="video"&&!vpar[vd]&&missionDone(m)&&String(m.parent||"").trim()){vpar[vd]=m.id; parts.push([VPART,VIDEOPARENT,"msn"]);} // v14.1 👪
-    per[m.id]={parts,sum:parts.reduce((a,p)=>a+p[1],0),mat:{hane:0,ishi:0,ito:0}};});
+    const vd=mday(m); if(m.kind==="video"&&!vpar[vd]&&missionDone(m)&&String(m.parent||"").trim()){vpar[vd]=m.id; parts.push([VPART,VIDEOPARENT,"msn"]); hoshi+=HOSHIPARENT;} // v14.1 👪 (v14.2 ⭐ +2)
+    per[m.id]={parts,sum:parts.reduce((a,p)=>a+p[1],0),mat:{hane:0,ishi:0,ito:0,hoshi}};});
   return {list,per,pn};
 }
 // v14.1 👪: true when a parent's comment on record id (a finished 🎬 record) would bring the 👪 part: no 🎬 record of its day has it yet.
@@ -908,7 +917,8 @@ function vparOpen(g,id){const m=g.ms.find(x=>x.id===id); if(!m||m.kind!=="video"
 function parGain(before,after,id){const ps=g=>((g.per[id]||g.mper[id]||{}).parts||[]), left=ps(before).map(p=>p[0]+"|"+p[1]);
   let parts=ps(after).filter(p=>{const i=left.indexOf(p[0]+"|"+p[1]); if(i<0)return true; left.splice(i,1); return false;});
   const sum=after.xp-before.xp; if(parts.reduce((a,p)=>a+p[1],0)>sum)parts=parts.filter(p=>p[0]!==VPART);
-  return {parts,sum,par:parts.some(p=>p[0]===VPART)};}
+  const mat={}; MATS.forEach(([k])=>{const d=((after.mat||{})[k]||0)-((before.mat||{})[k]||0); if(d>0)mat[k]=d;}); // v14.2 ⭐
+  return {parts,sum,par:parts.some(p=>p[0]===VPART),mat};}
 // v14.1 the chains of writing days. Every note and every finished record is a mark on its day; in writing order the first mark of a day
 // gets the day's bonus. note and rec: id -> {n (the day's place in its chain), xp, day}; cur: the chain of the last writing day (last);
 // best: the longest chain. A note written later for an earlier date counts on the day it was written, so it never fills a gap.
@@ -930,7 +940,7 @@ function stkGain(gain,before,known){const s=gain&&gain.stk; if(!s||!s.xp||(known
 
 // v13 materials from one note: one for each "がんばったこと", a はね for position points or a next goal, an いし for a goal that was tried, an いと for
 // "うまくいったこと". Parent comments, stamps, wins, streaks and length give none, and nothing is random.
-function noteMat(e){const m={hane:0,ishi:0,ito:0};
+function noteMat(e){const m={hane:0,ishi:0,ito:0,hoshi:0};
   (Array.isArray(e.chips)?e.chips:[]).slice(0,MAXCHIPS).forEach(id=>{if(typeof id==="string"&&own(MAT,id))m[MAT[id]]++;});
   if(focusOf(e).length||String(e.next||"").trim())m.hane++;
   if(String(e.goal||"").trim()&&(e.goalResult==="done"||e.goalResult==="half"))m.ishi++;
@@ -938,7 +948,7 @@ function noteMat(e){const m={hane:0,ishi:0,ito:0};
   return m;}
 function compute(list,ms){
   const es=sortEntries(list), jp=jugPass(es), mp=missionPass(ms), sp=streakPass(es,mp.list); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
-  const per={}, chipCount={}, mat={hane:0,ishi:0,ito:0}; let kizuna=0, done=0, parentN=0;
+  const per={}, chipCount={}, mat={hane:0,ishi:0,ito:0,hoshi:0}; let kizuna=0, done=0, parentN=0;
   es.forEach((e,i)=>{
     const j=jp.per[e.id], s=sp.note[e.id]||null, parts=entryXP(e,es[i-1]).concat(j?j.parts:[],stkPart(s)); const sum=parts.reduce((a,p)=>a+p[1],0);
     const nm=noteMat(e); per[e.id]={parts,sum,mat:nm,jug:j?j.info:null,stk:s}; xp+=sum; for(const k in nm)mat[k]+=nm[k];
@@ -948,7 +958,7 @@ function compute(list,ms){
   });
   // v14.1 a finished record's day is a writing day too, so the first thing written on a day may be a record: the bonus then goes on it.
   for(const id in sp.rec){const r=mp.per[id], s=sp.rec[id]; if(!r)continue; r.stk=s; if(s.xp){r.parts=r.parts.concat(stkPart(s)); r.sum+=s.xp;}}
-  for(const id in mp.per)xp+=mp.per[id].sum; parentN+=mp.pn; // v14 records add XP (and a parent's comment counts for おうえんパワー): no ticket, stats, materials or こまめに かいた (つづけてかいた before v14.1)
+  for(const id in mp.per){xp+=mp.per[id].sum; const mm=mp.per[id].mat; for(const k in mm)mat[k]+=mm[k];} parentN+=mp.pn; // v14.2: a 🎬 record's ⭐ // v14 records add XP (and a parent's comment counts for おうえんパワー): no ticket, stats, materials or こまめに かいた (つづけてかいた before v14.1)
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
   return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
@@ -1008,7 +1018,7 @@ function simulate(g,opp){
   const sk=skillList(g).filter(s=>s.lv>0&&s.line);
   shuffle(sk).slice(0,3).forEach(s=>add(minute(),`【${s.n}】${s.line.replace(/\{h\}/g,hero)}`,{skill:1}));
   // v13: each made piece being worn has its own line.
-  ["boots","shin"].forEach(k=>{const id=(game.equip||{})[k], x=own(GEAR,id)?gearOf(id):null; if(x&&x.slot===k)add(minute(),GEAR[id].L.say.replace(/\{h\}/g,hero).replace(/\{n\}/g,x.n),{skill:1});});
+  ["boots","shin","ball"].forEach(k=>{const id=(game.equip||{})[k], x=own(GEAR,id)?gearOf(id):null; if(x&&x.slot===k)add(minute(),GEAR[id].L.say.replace(/\{h\}/g,hero).replace(/\{n\}/g,x.n),{skill:1});});
   shuffle(players.filter(p=>p.mate)).slice(0,2).forEach(p=>add(minute(),`${p.n}の【${p.mate.skill}】 ${p.mate.line}`,{mate:1}));
   if(ev.length<3)add(minute(),`${hero}も ボールを おいかける!`),add(minute(),"みんなで こえを かけあって まもる!");
   ev.sort((a,b)=>a.m-b.m);
@@ -1062,6 +1072,8 @@ const cmix=(a,b,t)=>"#"+[1,3,5].map(i=>{const x=parseInt(a.slice(i,i+2),16),y=pa
 const eyeFrom=c=>({c,hi:cmix(c,"#ffffff",.55),dk:cmix(c,"#000000",.6),glow:0,flare:false}); // teammates keep one eye colour
 // pixSVG(o): o.level, color (team), number, hair, hairColor, skin, mood (fierce | grin | calm), gk, hero (captain band from Lv.12), fx (effects),
 // sweat (after a loss), head / wrist (item colours), boots (item, or a made pair {t, c, ln, g, dk, sh, hi}), shin (a made pair of shin guards),
+// ball (v14.2, a made ball {t, c, ln, g, sh, hi}: tier t's pattern in its colours; none: the white ball), crop "feet" (v14.2: the legs
+// with the ball, for the ball's paint sheet and reward),
 // iris (a teammate's eye colour), label, crop: "" full figure, "up" to the knees, "bust" avatar, "legs" the feet and shins (no ball, shadow or effects).
 const pixSVG=(()=>{
   const OL="#0c0c14", W=24, H=40, HX=4, HY=2, BY=18; // outline colour; grid size; where the 16 x 16 head and the body rows start
@@ -1079,6 +1091,12 @@ const pixSVG=(()=>{
     "........ww....ww........","........kk....kK........","........kk....kK........","........kk....kK........",
     "........kK....kK........",".......bbb....bbb.......","......bbbb....bbbb......","......BBBB....BBBB......"];
   const BALL=["..oooo..",".okwwko.","owwkkwwo","owkkkkwo","okwkkwko","owwwwwwo",".okwwko.","..oooo.."];
+  // v14.2 made balls, tiers 1-4 (c colour, s shade, h light, l stripe, g mark): dots; slanting stripes; panels round a gold middle; a star.
+  // Tier 4 adds two twinkles (frame 1). Drawn here for this page, not taken from any other picture.
+  const BALLS=[null,["..oooo..",".ohccco.","ohclccco","occcclco","olccccco","occlccso",".occcso.","..oooo.."],
+    ["..oooo..",".olcclo.","ocllcclo","occllcco","olccllco","ollccllo",".ollcco.","..oooo.."],
+    ["..oooo..",".olcclo.","ohcggcco","ocggggco","olcggclo","occcccso",".olcclo.","..oooo.."],
+    ["..oooo..",".ohggco.","oggggggo","ocggggco","ocgccgco","ogcccsgo",".osssso.","..oooo.."]];
   const DIG={"0":["111","101","101","101","111"],"1":["010","110","010","010","111"],"2":["111","001","111","100","111"],"3":["111","001","111","001","111"],"4":["101","101","111","001","001"],
     "5":["111","100","111","001","111"],"6":["111","100","111","101","111"],"7":["111","001","010","010","010"],"8":["111","101","111","101","111"],"9":["111","101","111","001","111"]};
   const runs=cells=>{const by={};cells.forEach(([x,y,c])=>{(by[c]=by[c]||[]).push([x,y]);});
@@ -1087,7 +1105,7 @@ const pixSVG=(()=>{
       return `<path fill="${c}" d="${d}"/>`;}).join("");};
   return function pixSVG(o){
     const level=Math.max(1,+o.level||1), team=hex(o.color)?o.color:TEAMCOLORS[0], pro=level>=2, gk=!!o.gk&&pro;
-    const crop=o.crop==="bust"||o.crop==="up"||o.crop==="legs"?o.crop:"", fx=o.fx!==false&&crop!=="bust"&&crop!=="legs";
+    const crop=o.crop==="bust"||o.crop==="up"||o.crop==="legs"||o.crop==="feet"?o.crop:"", fx=o.fx!==false&&crop!=="bust"&&crop!=="legs"&&crop!=="feet";
     const hc=HAIRCOLORS[o.hairColor||0]||HAIRCOLORS[0], sk=SKINS[o.skin||0]||SKINS[0], eye=o.iris?eyeFrom(o.iris):eyeOf(level);
     const jer=!pro?"#aab0c0":gk?"#22a046":team, dark=mix(jer,"#000000",.38);
     const pal={o:OL,s:sk.c,S:sk.sh,h:hc.c,H:hc.dk,i:hc.hi,j:jer,J:dark,w:gk?"#ffd34f":"#fcfcfc",
@@ -1131,7 +1149,8 @@ const pixSVG=(()=>{
       put(lx,31,sg.hi);put(lx+1,31,sg.c);for(let y=32;y<=(t>=4?34:33);y++){put(lx,y,sg.c);put(lx+1,y,sg.sh);}
       if(t>=2){put(lx,32,t>=3?sg.g:sg.ln);put(lx+1,32,t>=3?sg.g:sg.ln);}
       if(t>=4)tw.push([lx,31,"#ffffff"]);}}
-    const gtw=tw.length&&(crop===""||crop==="legs")?`<g class="pxf1 gtw">${runs(tw)}</g>`:"";
+    const bl=o.ball&&o.ball.t>=1&&o.ball.t<=4&&BALLS[o.ball.t]?o.ball:null; if(bl&&bl.t>=4)tw.push([23,29,"#ffffff"],[23,37,"#ffffff"]); // v14.2
+    const gtw=tw.length&&(crop===""||crop==="legs"||crop==="feet")?`<g class="pxf1 gtw">${runs(tw)}</g>`:"";
     if(o.hero&&level>=12){put(4,BY+3,"#ffd34f");put(5,BY+3,"#ffd34f");}
     if(o.head){const hb=o.head,hd=mix(hb,"#000000",.35);for(let x=1;x<=14;x++){F(x,5,hb);F(x,6,x>=13?hd:hb);}F(0,6,hb);F(0,7,hb);F(-1,8,hb);F(0,8,hd);F(-1,9,hd);}
     if(o.sweat){[[15,3],[14,4],[16,4],[13,5],[16,5],[13,6],[16,6],[14,7],[15,7]].forEach(([x,y])=>F(x,y,OL));F(15,4,"#bfe9ff");F(14,5,"#ffffff");F(15,5,"#5fc2ff");F(14,6,"#5fc2ff");F(15,6,"#2f8fe0");}
@@ -1154,10 +1173,11 @@ const pixSVG=(()=>{
       const isC=(x,y)=>cc.some(q=>q[0]===x&&q[1]===y), ol=[];
       cc.forEach(([x,y])=>[[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{const X=x+dx,Y=y+dy;if(!isC(X,Y)&&!(Y>=0&&filled(X,Y))&&!ol.some(q=>q[0]===X&&q[1]===Y))ol.push([X,Y,OL]);}));
       crown=`<g class="crown">${runs(ol.concat(cc))}<g class="pxf1">${runs([[12,r-2,"#ffffff"]])}</g></g>`;}
-    const ball=[];if(!crop)BALL.forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch!==".")ball.push([16+x,30+y,ch==="w"?"#f4f6fa":ch==="k"?"#141829":OL]);}));
+    const ball=[];if(!crop||crop==="feet"){const bp=bl?{o:OL,c:bl.c,s:bl.sh,h:bl.hi,l:bl.ln,g:bl.g}:{o:OL,w:"#f4f6fa",k:"#141829"}; // v14.2
+      (bl?BALLS[bl.t]:BALL).forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch!==".")ball.push([16+x,30+y,bp[ch]||OL]);}));}
     const shadow=crop?"":`<path fill="#000000" fill-opacity=".32" d="M6 38h17v1h-17z"/>`;
     // Frames: the avatar is 8:9 and fills its box; the others are 3:5. Room above the head keeps the hair clear of the card's zoom button on wide screens.
-    const vb=crop==="bust"?"4 2 16 18":crop==="up"?"2 -3.333 20 33.333":crop==="legs"?"4 28 16 11":"-1.5 -4 27 45";
+    const vb=crop==="bust"?"4 2 16 18":crop==="up"?"2 -3.333 20 33.333":crop==="legs"?"4 28 16 11":crop==="feet"?"5 28 20 11":"-1.5 -4 27 45";
     const label=esc(o.label||(crop==="bust"?"せんしゅ":"レベル"+level+"のせんしゅ"));
     return `<svg class="pix" viewBox="${vb}" role="img" aria-label="${label}" shape-rendering="crispEdges"${crop==="bust"?` preserveAspectRatio="xMidYMin slice"`:""}>${aura}${shadow}<g class="pxfig">${runs(cells)}</g>${crown}${runs(ball)}${runs(flare)}${bolts}${gtw}</svg>`;
   };
@@ -1165,6 +1185,10 @@ const pixSVG=(()=>{
 function itemIcon(it){const c=it.c, SPARK=it.t>=4?'<path d="M23 1l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#ffffff" stroke="#070914" stroke-width=".6"/>':"";
   // v13 made pieces: a shield for the shin guards; the spikes get a stripe from tier 2 (gold from 3), and studs and a spark at tier 4.
   if(it.slot==="shin")return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M9 2H19V12Q19 17 14 18.5Q9 17 9 12Z" fill="${c}" stroke="#070914"/><path d="M9.5 2.5H18.5V5H9.5Z" fill="${it.hi}"/>${it.t>=2?`<path d="M9.5 9.5H18.5V11.5H9.5Z" fill="${it.t>=3?it.g:it.ln}"/>`:""}${SPARK}</svg>`;
+  // v14.2 a made ball: a round ball with its tier's pattern
+  if(it.slot==="ball"&&it.made){const P=it.t===1?`<path d="M11 5.6a1.5 1.5 0 1 0 0 3a1.5 1.5 0 1 0 0-3ZM17.5 8a1.5 1.5 0 1 0 0 3a1.5 1.5 0 1 0 0-3ZM12.5 12a1.5 1.5 0 1 0 0 3a1.5 1.5 0 1 0 0-3Z" fill="${it.ln}"/>`:it.t===2?`<path d="M10.9 2.6L21.4 13.1M6.6 6.9L17.1 17.4" stroke="${it.ln}" stroke-width="2.4"/>`
+      :it.t===3?`<path d="M14 5.5L18 8.5 16.5 13H11.5L10 8.5Z" fill="${it.g}"/>`:`<path d="M14 3.5L15.8 8 20.5 8.2 16.8 11.1 18.1 15.8 14 13.1 9.9 15.8 11.2 11.1 7.5 8.2 12.2 8Z" fill="${it.g}"/>`;
+    return `<svg viewBox="0 0 28 20" aria-hidden="true"><circle cx="14" cy="10" r="8" fill="${it.c}"/>${P}<circle cx="14" cy="10" r="8" fill="none" stroke="#070914"/>${SPARK}</svg>`;}
   if(it.slot==="boots"&&it.made)return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M5 3H12L14 9 24 12Q26 13 26 16H4Q3 9 5 3Z" fill="${c}" stroke="#070914"/><path d="M4 16H26V18.5H4Z" fill="${it.dk}"/>${it.t>=2?`<path d="M8.5 12.8H21.5" stroke="${it.t>=3?it.g:it.ln}" stroke-width="1.6"/>`:""}${it.t>=4?'<path d="M7 18.5h2v1.5h-2zM14 18.5h2v1.5h-2zM21 18.5h2v1.5h-2z" fill="#ffd34f"/>':""}${SPARK}</svg>`;
   if(it.slot==="head")return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M5 9L1 15 4 17 7 12Z" fill="${c}" stroke="#070914"/><path d="M4 8Q14 2 25 8V13Q14 7 4 13Z" fill="${c}" stroke="#070914"/></svg>`;
   if(it.slot==="boots")return `<svg viewBox="0 0 28 20" aria-hidden="true"><path d="M5 3H12L14 9 24 12Q26 13 26 16H4Q3 9 5 3Z" fill="${c}" stroke="#070914"/><path d="M4 16H26V18.5H4Z" fill="${it.dk||"#070914"}"/></svg>`;
@@ -1172,8 +1196,9 @@ function itemIcon(it){const c=it.c, SPARK=it.t>=4?'<path d="M23 1l1 2 2 1-2 1-1 
 // v13 material icons, 8 x 8 pixels: a feather, a gem, a spool of thread.
 const MATART={hane:["....oooo","...owwqo","..owwqso",".owwqso.",".owqsso.","owqsso..","oqoo....","q......."],
   ishi:["........","..oooo..",".ohhrro.","ohrrrrdo","orrrrddo",".orrddo.","..oddo..","...oo..."],
-  ito:["oooooooo","obbbbbBo",".oppppo.",".oPPPPo.",".oppppo.",".oPPPPo.","obbbbbBo","oooooooo"]};
-const MATPAL={o:"#0c0c14",w:"#9af0b0",s:"#3ccf5a",q:"#f4f6fa",r:"#ff3b4a",h:"#ffc2c8",d:"#a01828",b:"#c47c3a",B:"#8a5a2e",p:"#ff7aa8",P:"#d94a82"};
+  ito:["oooooooo","obbbbbBo",".oppppo.",".oPPPPo.",".oppppo.",".oPPPPo.","obbbbbBo","oooooooo"],
+  hoshi:["...oo...","..oqyo..","oooyyooo","oyyyyyYo",".oyyyYo.",".oyyYYo.","oyYooYYo","ooo..ooo"]}; // v14.2 a star fragment
+const MATPAL={y:"#ffd34f",Y:"#c99a1a",o:"#0c0c14",w:"#9af0b0",s:"#3ccf5a",q:"#f4f6fa",r:"#ff3b4a",h:"#ffc2c8",d:"#a01828",b:"#c47c3a",B:"#8a5a2e",p:"#ff7aa8",P:"#d94a82"};
 function matIcon(k){const by={}; (MATART[k]||[]).forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch!==".")(by[ch]=by[ch]||[]).push(`M${x} ${y}h1v1h-1z`);}));
   return `<svg class="mi" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges">${Object.keys(by).map(ch=>`<path fill="${MATPAL[ch]}" d="${by[ch].join("")}"/>`).join("")}</svg>`;}
 const TROPHY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v5a5 5 0 0 1-10 0zM7 4H3v1.5A3.5 3.5 0 0 0 6.5 9H7M17 4h4v1.5A3.5 3.5 0 0 1 17.500 9H17M11 13h2v4h-2zM8 17h8v3.500H8z" fill="#ffd34f" stroke="#8a6800" stroke-width="1.1" stroke-linejoin="round"/></svg>';
@@ -1600,13 +1625,13 @@ const lossNow=()=>((live&&!live.done?live.prevLoss:game.lossStreak)||0)>0;
 const equipNow=()=>live&&!live.done?live.prevEquip:(game.equip||{});
 function heroOpts(g,eq){eq=eq||{};const L=look(), tr=shopTry&&own(GEAR,shopTry.id)?shopTry:null, it=k=>{if(tr&&GEAR[tr.id].slot===k)return gearLook(tr.id,tr.c);const x=gearOf(eq[k]);return x&&x.slot===k?x:null;};
   return {level:g.level,color:L.color,number:profile.number,hair:L.hair||0,hairColor:L.hairColor||0,skin:L.skin||0,mood:"fierce",gk:L.pos==="GK",hero:true,fx:true,sweat:lossNow(),
-    head:it("head")?it("head").c:null,wrist:it("wrist")?it("wrist").c:null,boots:it("boots"),shin:it("shin")};}
+    head:it("head")?it("head").c:null,wrist:it("wrist")?it("wrist").c:null,boots:it("boots"),shin:it("shin"),ball:it("ball")};}
 const mateOpts=m=>({level:4,color:profile.color,number:m.num,hair:m.hair,hairColor:m.hc,skin:m.skin,iris:m.iris,mood:m.mood,gk:m.pos==="GK",crop:"bust",label:m.n});
 const heroBust=(g,id)=>pixSVG(Object.assign(heroOpts(g,equipNow()),{crop:"bust",label:heroName()}),id);
 
 function renderCard(g){
   const eq=equipNow();
-  const L=look(), key=JSON.stringify([g.level,profile,eq,settingsOpen&&sdraft,figUp,lossNow(),[eq.boots,eq.shin].map(id=>{const x=gearOf(id);return x&&x.made?x.c:0;}),shopTry]);
+  const L=look(), key=JSON.stringify([g.level,profile,eq,settingsOpen&&sdraft,figUp,lossNow(),[eq.boots,eq.shin,eq.ball].map(id=>{const x=gearOf(id);return x&&x.made?x.c:0;}),shopTry]);
   if(key!==cardKey){cardKey=key;$("#fig").innerHTML=pixSVG(Object.assign(heroOpts(g,eq),{crop:figUp?"up":""}),"hero");
     const lp=$("#lookPrev"); if(lp)lp.innerHTML=heroBust(g,"lp");} // the small preview in the settings panel follows the choices too
   const zb=$("#zoomBtn"); zb.textContent=figUp?"ぜんしんを みる":"アップで みる";
@@ -2376,7 +2401,7 @@ function viewMatch(g){
   const cups=CUPS.map((c,i)=>{const won=(game.trophies||[]).includes(i);return `<div class="cup${won?" won":""}">${TROPHY}<b>${esc(c.n)}</b><span>${won?"ゆうしょう!":i===game.cup?"ちょうせん中":"これから"}</span></div>`}).join("");
   const eq=game.equip||{}, owned=(game.items||[]).filter(id=>own(ITEMS,id)).concat(GEARIDS.filter(id=>own(game.made||{},id)));
   const items=SLOTS.map(([k,label])=>{const mine=owned.filter(id=>slotOf(id)===k);
-    return `<div><span class="label">${label}</span><div class="itemrow">${mine.length?mine.map(id=>{const x=gearOf(id);return `<button type="button" class="item" data-equip="${id}" aria-pressed="${eq[k]===id}">${itemIcon(x)}${esc(x.n)}</button>`;}).join(""):`<span class="muted">${k==="boots"||k==="shin"?"まだ ないよ。こうぼうで つくれる!":"まだ ないよ。たいかいで かつと もらえる!"}</span>`}</div></div>`}).join("");
+    return `<div><span class="label">${label}</span><div class="itemrow">${mine.length?mine.map(id=>{const x=gearOf(id);return `<button type="button" class="item" data-equip="${id}" aria-pressed="${eq[k]===id}">${itemIcon(x)}${esc(x.n)}</button>`;}).join(""):`<span class="muted">${k==="boots"||k==="shin"||k==="ball"?"まだ ないよ。こうぼうで つくれる!":"まだ ないよ。たいかいで かつと もらえる!"}</span>`}</div></div>`}).join("");
   const log=(game.log||[]).slice(0,6).map(l=>`<div><span>${l.win?"○":"●"} ${esc(l.opp)}</span><span>${l.gm} - ${l.go}${l.pk?` (PK ${l.pk[0]}-${l.pk[1]})`:""}</span></div>`).join("");
   return `<section class="panel"><h2>${cup?esc(cup.n)+" "+(rn[game.round]||""):"エキシビション"}</h2>
     ${cup?"":`<p class="muted">ぜんぶの たいかいで ゆうしょうした! さいきょうチームに ちょうせんできるよ。</p>`}
@@ -2396,14 +2421,15 @@ function viewMatch(g){
 function craftPanel(g){
   const left=matLeft(g), playing=!!(live&&!live.done);
   const tiles=MATS.map(([k,nm])=>`<div class="mat">${matIcon(k)}<span>${nm}</span><b>${Math.max(0,left[k])}</b></div>`).join("");
-  const debt=MATS.some(([k])=>left[k]<0)?`<p class="muted">そざいが たりなく なったよ。ノートを かくと また たまるよ。</p>`:"";
+  const dk=MATS.filter(([k])=>left[k]<0).map(([k])=>k), debt=dk.length?`<p class="muted">${dk.every(k=>k==="hoshi")?"ほしの かけらが たりなく なったよ。🎬 どうがで ふりかえると また たまるよ。":dk.includes("hoshi")?"そざいが たりなく なったよ。ノートや 🎬 どうがの ふりかえりで また たまるよ。":"そざいが たりなく なったよ。ノートを かくと また たまるよ。"}</p>`:""; // v14.2
   const tags=k=>CHIPS.filter(c=>MAT[c.id]===k).map(c=>`<span class="mtag">${esc(c.t)}</span>`).join("");
   const how=`<details class="more" id="matHow"${matHowOpen?" open":""}><summary>そざいの あつめかた</summary><ul class="howlist">
     <li>${matIcon("hane")}<div><b>かぜの はね</b><br>がんばったこと 1つに 1こ ${tags("hane")}<br>ポジションの ポイント か つぎの めあてを かくと 1こ</div></li>
     <li>${matIcon("ishi")}<div><b>ゆうきの いし</b><br>がんばったこと 1つに 1こ ${tags("ishi")}<br>めあてが「できた!」か 「やってみた!」で 1こ</div></li>
-    <li>${matIcon("ito")}<div><b>なかまの いと</b><br>がんばったこと 1つに 1こ ${tags("ito")}<br>うまく いったことを かくと 1こ</div></li></ul></details>`;
+    <li>${matIcon("ito")}<div><b>なかまの いと</b><br>がんばったこと 1つに 1こ ${tags("ito")}<br>うまく いったことを かくと 1こ</div></li>
+    <li>${matIcon("hoshi")}<div><b>ほしの かけら</b><br>🎬 どうがで ふりかえると ${HOSHIVIDEO}こ(1日 1かい)<br>👪 おうちの人の コメントで もう ${HOSHIPARENT}こ</div></li></ul></details>`;
   return `<section class="panel craft" id="craft"><h2>こうぼう <span class="muted">つくった もの ${madeCount(game.made)} / ${GEARIDS.length}</span></h2>
-    <p class="muted">ノートを かくと そざいが たまるよ。そざいで スパイクや すねあてを つくろう!</p>
+    <p class="muted">ノートや 🎬 ふりかえりで そざいが たまるよ。そざいで スパイクや すねあて、ボールを つくろう!</p>
     <div class="mats">${tiles}</div>${debt}${how}<div class="lines">${LINES.map(L=>gearLine(g,L,left,playing)).join("")}</div></section>`;
 }
 function gearLine(g,L,left,playing){
@@ -2420,7 +2446,7 @@ function gearLine(g,L,left,playing){
     if(menu){const x=gearOf(menu), on=eq[L.slot]===menu;
       body+=`<div class="gmenu"><b>${esc(x.n)}</b><div class="row"><button class="ghost" type="button" id="gmEquip" data-equip="${menu}" aria-pressed="${on}">${on?L.off:L.on}</button><button class="ghost" type="button" id="gmColor" data-recolor="${menu}">いろを かえる</button></div></div>`;}
     body+=busy||(!G?`<p class="gdone">ぜんぶ つくった!</p>`:`<div class="gnext"><div class="row2"><b>つぎ:${esc(G.n)}</b><span class="muted">チームりょく +0.5</span></div>
-      <div class="cost">${MATS.filter(([k])=>G.cost[k]||left[k]<0).map(([k,nm])=>{const c=G.cost[k]||0, need=c-left[k];return `<div class="${need>0?"":"ok"}">${matIcon(k)}<span>${nm}</span><b>${c?c+"こ ":""}${need>0?`<small>(あと ${need}こ)</small>`:"✓"}</b></div>`;}).join("")}</div>
+      <div class="cost">${(G.L.cost?[G.L.main,G.L.other].map(k=>MATS.find(m=>m[0]===k)):MATS).filter(([k])=>own(G.cost,k)&&(G.cost[k]||left[k]<0)).map(([k,nm])=>{const c=G.cost[k]||0, need=c-left[k];return `<div class="${need>0?"":"ok"}">${matIcon(k)}<span>${nm}</span><b>${c?c+"こ ":""}${need>0?`<small>(あと ${need}こ)</small>`:"✓"}</b></div>`;}).join("")}</div>
       ${playing?`<button class="ghost gwait" type="button" disabled>しあいが おわったら つくれるよ</button>`:canMake(g,nx)?`<button class="primary" type="button" id="mk-${L.k}" data-make="${nx}">つくる!</button>`:`<button class="ghost gwait" type="button" disabled>そざいを あつめよう</button>`}</div>`);}
   return `<div class="gline${open?" open":""}"><h3>${L.n}</h3><p class="muted">${esc(L.about)}</p><div class="shelf">${shelf}</div><p class="craftmsg" id="cm-${L.k}"${note?"":" hidden"}>${esc(note)}</p>${body}</div>`;
 }
@@ -2429,7 +2455,7 @@ function paintSheet(g){
   const sw=PAINTS.map(([nm,c],i)=>`<button type="button" class="pswatch" id="pt-${i}" data-paint="${i}" aria-pressed="${s.c===i}" aria-label="${nm}" title="${nm}"${paintOk(i,G.t)?"":" disabled"} style="background:${c}"></button>`).join("");
   const notes=(G.t<4?["ゴールドは さいごの 1こ だけ"]:[]).concat(G.slot==="shin"&&PAINTS[s.c][1]===sock?["ソックスと おなじ いろだと めだたないかも"]:[]);
   return `<div class="sheet" id="sheet"><b>${s.re?"いろを かえる":"いろを えらぼう"}</b>
-    <div class="sprev"><div class="legs">${pixSVG(Object.assign(heroOpts(g,equipNow()),{crop:"legs",label:G.n}),"sp")}</div>
+    <div class="sprev"><div class="legs">${pixSVG(Object.assign(heroOpts(g,equipNow()),{crop:G.slot==="ball"?"feet":"legs",label:G.n}),"sp")}</div>
       <div><b>${esc(G.n)}</b><br><span class="muted">${s.re?"こんな かんじ":"つくると こうなる"}</span><br><b class="pname2">${PAINTS[s.c][0]}</b></div></div>
     <div class="paints">${sw}</div>${notes.map(t=>`<p class="muted">${t}</p>`).join("")}
     <div class="row"><button class="primary" type="button" id="sheetGo"${crafting?" disabled":""}>${crafting?busyText(s.re):s.re?"これに する":"これで つくる!"}</button><button class="ghost" type="button" id="sheetNo"${crafting?" disabled":""}>やめる</button></div></div>`;
@@ -2510,7 +2536,7 @@ function celebrateMade(id){
   const ov=document.createElement("div"); ov.className="overlay";
   ov.innerHTML=`<div class="reward made-rw" role="dialog" aria-modal="true" aria-label="できた">
     <div class="big">できた!!</div>
-    <div class="legsbig">${pixSVG(Object.assign(heroOpts(lastG,equipNow()),{crop:"legs",label:x.n}),"mk")}</div>
+    <div class="legsbig">${pixSVG(Object.assign(heroOpts(lastG,equipNow()),{crop:G.slot==="ball"?"feet":"legs",label:x.n}),"mk")}</div>
     <div class="lvup">${esc(x.n)}</div>
     <div><b>チームりょく +0.5</b></div>
     <p>${esc(G.L.done)}</p>
