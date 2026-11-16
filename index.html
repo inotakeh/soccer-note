@@ -455,6 +455,30 @@ details.wz.on{border-color:var(--good)} details.wz.gold{border-color:var(--accen
 details.wz summary{cursor:pointer;min-height:44px;padding:8px 0;line-height:1.5} details.wz summary .muted{display:block;font-size:.85rem}
 details.wz p{margin:0 0 8px;line-height:1.6} details.wz p b{display:block;font-size:.85rem;color:var(--muted)}
 #wazaField,#mhWaza,#wazaBook{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+/* v17: the pitch of a chance he plays himself. The pitch is a picture: its colours are the same in light and dark. */
+.pitchbox{display:flex;flex-direction:column;gap:8px;margin:10px auto;width:100%;max-width:480px;word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+.ptitle{margin:0;font-weight:800;font-size:1.05rem} .ptitle span{display:block;font-weight:400;font-size:.9rem;color:var(--muted)}
+.pmsg{margin:0;min-height:3em;font-weight:700} .plhint{margin:0;font-size:.85rem;color:var(--muted)}
+.ppitch{position:relative;height:0;padding-top:115%;border-radius:12px;overflow:hidden;border:2px solid #e9f5ec;touch-action:manipulation;
+  background:repeating-linear-gradient(180deg,#2f8f52 0,#2f8f52 12.5%,#2a8249 12.5%,#2a8249 25%)}
+.ppitch .plines{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.pgoal{position:absolute;left:20%;width:60%;top:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;padding:0 2px 2px;background:#fff;border-radius:0 0 8px 8px;z-index:2}
+.pz{min-height:44px;border:0;border-radius:0 0 6px 6px;background:#0c1220;color:#fff;font:inherit;font-size:clamp(.6rem,3vw,.8rem);font-weight:700;padding:0;cursor:pointer;white-space:nowrap}
+.pz:disabled{opacity:1;cursor:default;color:#c9d1e6}
+.reach{position:absolute;transform:translate(-50%,-50%);width:18%;height:0;padding-top:calc(18% - 4px);border-radius:50%;border:2px dashed rgba(255,255,255,.75);background:rgba(226,52,36,.3);pointer-events:none;box-sizing:border-box}
+.reach.in{width:10%;padding-top:10%;border:0;background:rgba(190,24,16,.55)}
+.pt{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;margin:0;padding:0;border:0;background:none;color:#fff;font:inherit;z-index:1}
+.pt .ava{width:30px;height:34px;border-radius:8px;border:2px solid rgba(255,255,255,.85)}
+.pt .pn{font-size:.68rem;line-height:1.25;font-weight:700;background:rgba(8,12,24,.86);color:#fff;border-radius:6px;padding:0 4px;max-width:6em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt.mine .pn{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:1px} /* the name above, so the player's middle is the spot the lanes are measured from */
+button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z-index:2} button.pt .ava{box-shadow:0 0 0 3px #ffd34f}
+.pt.has .ava{box-shadow:0 0 0 3px #fff}
+.pt.opp svg{width:26px;height:26px;display:block} .pt.opp.gk{z-index:3;top:48px;transform:translate(-50%,0)}
+.pd{position:absolute;transform:translate(-50%,-50%);min-width:48px;min-height:44px;border:2px dashed #1a1a22;border-radius:22px;background:#ffd34f;color:#1a1a22;font:inherit;font-size:clamp(.62rem,2.9vw,.78rem);font-weight:800;padding:0 6px;white-space:nowrap;cursor:pointer;z-index:2}
+.pball{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;border:2px solid #111;box-sizing:border-box;z-index:4;pointer-events:none}
+.pz:focus-visible,button.pt:focus-visible,.pd:focus-visible{outline:3px solid #ffd34f;outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.pball{transition:left .5s ease-out,top .5s ease-out} button.pt .ava,.pd{animation:ptap 1.4s ease-in-out infinite}@keyframes ptap{50%{filter:brightness(1.25)}}}
+.kickrow{display:flex;flex-direction:column;gap:8px} #playHint{margin:0}
 .mk.k-msn{width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:0 4px 8px;border-color:transparent transparent var(--msn)} .cal-grid .cd i{gap:2px}
 .ms,.msf,.msbox,.msclear,.pbest,.trygoal,.lifts,.stampnews,.handoff .phint{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 /* v14, beside the spec's block: the note form's .lift rule is scoped to its boxes (.lifts>.lift), so it does not restyle the ⚽ card (class "msc lift");
@@ -1076,9 +1100,80 @@ function teamPower(g){
 }
 const tickets=g=>Math.max(0,g.es.length-(game.used||0));
 
+// v17 ピッチ: the chances he plays himself. A scene is a still picture of the attack seen from above (x 0-100 across, y 0-115 from the
+// goal line down, one unit both ways): the player with the ball (h), two teammates (a, b), the other team's players (d), their keeper
+// (k: the part of the goal he covers) and, for the first move, a free spot to dribble to (s). What the eye sees decides the play:
+// a lane is open (2) when no opponent is within PLAYOPEN of the ball's way, blocked (0) within PLAYBLOCK, and tight (1) between.
+// A shot at the keeper's part is blocked, the middle beside a keeper is tight, and from further out than PLAYFAR a shot is tight at
+// best. Open moves and open shots work; a tight move works with the chance PLAYTIGHT.move, a tight shot with PLAYTIGHT.shot; blocked
+// ones fail. "sure" scenes (a goal the match already had) hold a fully open way; "hard" scenes (one extra chance a match) hold none.
+// In a sure scene the ball comes back PLAYRETRY time after a mistake (こぼれだま), so one slip does not cost the goal.
+const PLAYOPEN=9, PLAYBLOCK=5, PLAYFAR=62, PLAYTIGHT={move:.6,shot:.35}, PLAYSURE=2, PLAYHARD=1, PLAYMOVES=2, PLAYRETRY=1, PLAYFEET=5;
+const PZ={L:[32,3],C:[50,3],R:[68,3]}, PZN={L:"ひだり",C:"まんなか",R:"みぎ"}, PKX={L:35,C:50,R:65};
+const PLAYT={
+  sure:[
+    {h:[50,84],a:[20,42],b:[76,50],s:[34,66],d:[[50,64],[66,66],[62,26]],k:"C"},
+    {h:[44,80],a:[24,58],b:[70,34],s:[58,62],d:[[36,66],[52,50],[30,30]],k:"L"},
+    {h:[50,82],a:[30,46],b:[72,40],s:[50,60],d:[[38,60],[64,58],[76,24]],k:"R"},
+    {h:[56,78],a:[26,36],b:[80,56],s:[42,58],d:[[58,60],[72,66],[40,22]],k:"R"}
+  ],
+  hard:[
+    {h:[50,88],a:[24,72],b:[76,74],s:[50,76],d:[[42,60],[58,60],[30,44],[70,44]],k:"C"},
+    {h:[50,74],a:[28,42],b:[72,46],s:[45,63],d:[[33,50],[68,54],[50,24],[56,62]],k:"L"},
+    {h:[46,80],a:[22,50],b:[70,60],s:[56,66],d:[[30,56],[62,52],[40,28],[60,26]],k:"C"}
+  ]};
+const segDist=(a,b,p)=>{const dx=b[0]-a[0], dy=b[1]-a[1], l=dx*dx+dy*dy, t=l?clamp(((p[0]-a[0])*dx+(p[1]-a[1])*dy)/l,0,1):0; return Math.hypot(a[0]+t*dx-p[0],a[1]+t*dy-p[1]);};
+const laneOf=(sc,a,b)=>{const m=Math.min.apply(null,sc.d.map(p=>segDist(a,b,p))); return m<PLAYBLOCK?0:m<PLAYOPEN?1:2;};
+function shotOf(sc,from,z){if(z===sc.k)return 0; let r=laneOf(sc,from,PZ[z]); if(r===2&&(from[1]>PLAYFAR||(z==="C"&&sc.k!=="C")||sc.kind==="hard"))r=1; return r;}
+// the scene as it stands: st = {car: "h" | "a" | "b" (who has the ball), pos: {h,a,b} (where each stands), moves}
+const playStart=sc=>({car:"h",pos:{h:sc.h,a:sc.a,b:sc.b},moves:0});
+function playOptions(sc,st){const at=st.pos[st.car], o=[];
+  if(st.moves<PLAYMOVES)["h","a","b"].forEach(k=>{if(k!==st.car)o.push({t:"pass",to:k,q:laneOf(sc,at,st.pos[k])});});
+  if(st.car==="h"&&st.moves===0&&sc.s)o.push({t:"drib",to:"s",q:laneOf(sc,at,sc.s)});
+  ["L","C","R"].forEach(z=>o.push({t:"shot",to:z,q:shotOf(sc,at,z)}));
+  return o;}
+// one action with the luck r (0-1): {ok, st (the next state, for a move that worked), goal (a shot that went in), q}
+function playAct(sc,st,t,to,r){const op=playOptions(sc,st).find(x=>x.t===t&&x.to===to); if(!op)return null;
+  const ok=op.q===2||(op.q===1&&r<(t==="shot"?PLAYTIGHT.shot:PLAYTIGHT.move));
+  if(t==="shot")return {ok,goal:ok,q:op.q};
+  if(!ok)return {ok:false,q:op.q};
+  const pos=Object.assign({},st.pos); if(t==="drib")pos.h=sc.s;
+  return {ok:true,q:op.q,st:{car:t==="pass"?to:"h",pos,moves:st.moves+1}};}
+// the best chance to score from a state (he plays every move as well as it can be played)
+function playBest(sc,st){let best=0; playOptions(sc,st).forEach(o=>{const p=o.q===2?1:o.q===1?(o.t==="shot"?PLAYTIGHT.shot:PLAYTIGHT.move):0; if(!p)return;
+    if(o.t==="shot"){best=Math.max(best,p);return;}
+    const pos=Object.assign({},st.pos); if(o.t==="drib")pos.h=sc.s;
+    best=Math.max(best,p*playBest(sc,{car:o.t==="pass"?o.to:"h",pos,moves:st.moves+1}));});
+  return best;}
+const playFlip=t=>{const fx=p=>[100-p[0],p[1]], fk={L:"R",C:"C",R:"L"}; return {h:fx(t.h),a:fx(t.a),b:fx(t.b),s:t.s?fx(t.s):null,d:t.d.map(fx),k:fk[t.k]};};
+// a scene for one chance: a picture (mirrored half of the time) and who stands in it. The ball starts with him; when he is the keeper it
+// starts with a teammate and he calls the play from the back (coach).
+function playScene(kind,lu,hero){const t=rnd(PLAYT[kind]), sc=Object.assign({kind},Math.random()<.5?playFlip(t):{h:t.h,a:t.a,b:t.b,s:t.s,d:t.d,k:t.k});
+  const nm=x=>x.who.hero?{n:hero,hero:true}:x.who.mate?{n:x.who.mate.n,mate:x.who.mate}:{n:"すけっと",helper:true};
+  const field=lu.filter(x=>x.pos!=="GK"), me=field.find(x=>x.who.hero), ord=["FW","MF","DF"];
+  const rest=shuffle(field.filter(x=>x!==me)).sort((x,y)=>ord.indexOf(x.pos)-ord.indexOf(y.pos)), first=me||rest.shift();
+  sc.who={h:nm(first),a:nm(rest[0]),b:nm(rest[1])}; sc.coach=!me; sc.done=false; return sc;}
+const PLAYAUTO="チャンスを つくったけれど、シュートは キーパーに とめられた…"; // a hard scene that went by itself
+// what he is told: [what happened, what to look at next time] (never a scolding)
+const PLAYMSG={cut:["あいてに カットされた…","あかい まるに かからない みちを さがそう。"],stop:["あいてに とめられた…","あいての いない ほうへ はこぼう。"],
+  keeper:["キーパーの しょうめん だった…","キーパーの いない ほうを ねらおう。"],block:["あいてに ブロックされた…","あかい まるに かからない コースを ねらおう。"],
+  tight:["おしい!","あかい まるの ちかくは、うまく いかない ことも あるよ。"],far:["おしい!","とおくからの シュートは むずかしい。 パスや ドリブルで ゴールに ちかづいて みよう。"],
+  side:["おしい!","キーパーの すぐ よこ だった。 キーパーから とおい ほうを ねらおう。"],hard:["おしい!","むずかしい チャンスは、うまく いかない ことも あるよ。 ナイス チャレンジ!"],
+  goal:"ゴール!! あいての いない コースを よく みつけたね!",goalTight:"ゴール!! むずかしい コースを きめた!",again:"こぼれだまを ひろった! もう いちど チャンス!",
+  last:"さいごは シュート! ゴールの どこを ねらう?",start:"あいての いない コースを ねらって シュート!",startFar:"ゴールまで とおいよ。 フリーの みかたに パスするか、ドリブルで ちかづこう!"};
 /* ---------- match simulation ---------- */
 function poisson(l){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random();}while(p>L);return k-1;}
-function simulate(g,opp){
+// v17: the PK shoot-out of a drawn match (the lines simulate() had, word for word, so the draws come in the same order): draws it,
+// adds its line to ev and returns [pk, win].
+function pkShoot(g,ev){let pk, win;
+    const pm=clamp(.68+(g.stats.brave||0)/400,.5,.88), po=.7; let a=0,b=0,guard=0;
+    for(let i=0;i<5;i++){if(Math.random()<pm)a++; if(Math.random()<po)b++;}
+    while(a===b&&guard++<20){if(Math.random()<pm)a++; if(Math.random()<po)b++;}
+    if(a===b)a++;
+    pk=[a,b]; win=a>b;
+    ev.push({m:31,t:`どうてん! PKせん… ${a} - ${b} で ${win?"かった!":"まけた…"}`,mark:1,pk:1});
+    return [pk,win];}
+function simulate(g,opp,play){
   const tp=teamPower(g), ratio=tp.total/opp.r;
   const gm=Math.min(7,poisson(clamp(1.5*Math.pow(ratio,1.5),.25,4.5))), go=Math.min(7,poisson(clamp(1.5*Math.pow(1/ratio,1.5),.25,4.5)));
   const hero=profile.name||"きみ";
@@ -1100,6 +1195,10 @@ function simulate(g,opp){
   ["boots","shin","ball"].forEach(k=>{const id=(game.equip||{})[k], x=own(GEAR,id)?gearOf(id):null; if(x&&x.slot===k)add(minute(),GEAR[id].L.say.replace(/\{h\}/g,hero).replace(/\{n\}/g,x.n),{skill:1});});
   shuffle(players.filter(p=>p.mate)).slice(0,2).forEach(p=>add(minute(),`${p.n}の【${p.mate.skill}】 ${p.mate.line}`,{mate:1}));
   if(ev.length<3)add(minute(),`${hero}も ボールを おいかける!`),add(minute(),"みんなで こえを かけあって まもる!");
+  // v17: he plays up to PLAYSURE of the goals himself (as the match stands they are goals) and PLAYHARD chances more (as it stands, none).
+  // The draws come after every other one, so a match that is only watched is drawn as before.
+  if(play){shuffle(ev.filter(e=>e.goal&&e.side==="me")).slice(0,PLAYSURE).forEach(e=>{e.play=playScene("sure",tp.lu,hero);});
+    for(let i=0;i<PLAYHARD;i++)add(minute(),PLAYAUTO,{side:"me",play:playScene("hard",tp.lu,hero)});}
   ev.sort((a,b)=>a.m-b.m);
   const half=ev.filter(e=>e.m<=15).length;
   ev.splice(half,0,{m:15,t:"ハーフタイム",mark:1});
@@ -1107,12 +1206,7 @@ function simulate(g,opp){
   ev.push({m:30,t:"しあい しゅうりょう!",mark:1});
   let pk=null, win=gm>go;
   if(gm===go){
-    const pm=clamp(.68+(g.stats.brave||0)/400,.5,.88), po=.7; let a=0,b=0,guard=0;
-    for(let i=0;i<5;i++){if(Math.random()<pm)a++; if(Math.random()<po)b++;}
-    while(a===b&&guard++<20){if(Math.random()<pm)a++; if(Math.random()<po)b++;}
-    if(a===b)a++;
-    pk=[a,b]; win=a>b;
-    ev.push({m:31,t:`どうてん! PKせん… ${a} - ${b} で ${win?"かった!":"まけた…"}`,mark:1,pk:1});
+    const r=pkShoot(g,ev); pk=r[0]; win=r[1]; // v17: the lines that stood here are pkShoot(), also used when his plays end in a draw
   }
   return {gm,go,win,pk,ev,power:tp.total};
 }
@@ -2554,7 +2648,8 @@ function viewLive(){
   return `<section class="panel"><h2>${esc(L.cupName)} ${esc(L.roundName)}</h2>
     <div class="score"><span class="tn">${esc(myTeam())}</span><span class="sc">${sm} - ${so}</span><span class="tn">${esc(L.opp.n)}</span><span class="min">${L.done?"しあい しゅうりょう"+(L.res.pk?`(PK ${L.res.pk[0]} - ${L.res.pk[1]})`:""):minLabel(last.m)||"キックオフ"}</span></div>
     ${result}
-    ${L.done?"":`<button class="ghost" id="skipLive" type="button">けっかまで スキップ</button>`}
+    ${L.scene&&!L.done?pitchHTML(L):""}
+    ${L.done||!skipOk(L)?"":`<button class="ghost" id="skipLive" type="button">けっかまで スキップ</button>`}
     <div class="feed" aria-live="polite">${feed}</div></section>`;
 }
 function viewMatch(g){
@@ -2576,7 +2671,7 @@ function viewMatch(g){
     <div class="vs"><span>${esc(myTeam())}</span><span class="b"><i style="width:${Math.round(me/mx*100)}%"></i></span><em>${me}</em>
       <span>${esc(opp.n)}</span><span class="b opp"><i style="width:${Math.round(opp.r/mx*100)}%"></i></span><em>${opp.r}</em></div>
     <div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><span class="muted">ノートを 1かい かくと 1まい もらえる</span></div>
-    ${tk?`<button class="primary" id="kick" type="button">キックオフ!</button>`:`<button class="primary" data-go="write" type="button">ノートを かいて チケットを もらう</button>`}
+    ${tk?`<div class="kickrow"><button class="primary" id="kick" type="button">キックオフ!</button><p class="muted" id="playHint">チャンスが きたら、きみが ピッチで プレーするよ。</p><button class="ghost" id="kickAuto" type="button">みるだけで しあいを する</button></div>`:`<button class="primary" data-go="write" type="button">ノートを かいて チケットを もらう</button>`}
   </section>
   <section class="panel"><h2>トロフィー</h2><div class="cups">${cups}</div></section>
   <section class="panel"><h2>そうび</h2><p class="muted">タップして つけたり はずしたり できるよ。もっているだけで チームが すこし つよくなるよ。</p><div class="items">${items}</div></section>
@@ -2910,15 +3005,10 @@ function go(t){stopVoice();const mk=missionOpen;closeMission();liftNote="";if(t=
   if(mk&&t==="home"){const b=document.getElementById("msgo-"+mk);if(b)b.focus();}}
 
 /* match flow: the result is decided and saved at kick-off, then played back line by line */
-function kickoff(){
-  const g=lastG; if(live||!gameReady||!loaded()||tickets(g)<1)return;
-  if(crafting||bkBusy){flash(crafting?SAVEWAIT:BKWAIT);const st=$("#status");if(st&&st.scrollIntoView)st.scrollIntoView({block:"nearest"});return;}
-  const opp=currentOpp(), ex=!!opp.ex, cupI=game.cup, round=game.round, res=simulate(g,opp);
-  const prevEquip=Object.assign({},game.equip||{}), rewards=[]; let cupWon=false, keep=false;
-  const tp0=teamPower(g), joined=squad(g).filter(m=>m.joined).length;
-  const hint=joined<7?"「なかまと つながる」プレーを ノートに かくと、なかまが ふえて チームが ぐっと つよくなるよ。"
-    :tp0.hero<tp0.avg?"「じぶんを きたえる」プレーを ノートに かくと、エースの きみが つよくなるよ。":"ノートを つづけると スキルが ふえて、チームが つよくなるよ。";
-  const next=JSON.parse(JSON.stringify(game)); next.used=(next.used||0)+1;
+// v17: what a result does to the game: the ticket, the round, the prizes and the log (the lines kickoff() had, word for word).
+// base: the game before the match, c: {opp, ex, cupI, round, t}.
+function settle(base,res,c){const opp=c.opp, ex=c.ex, cupI=c.cupI, round=c.round, rewards=[]; let cupWon=false, keep=false;
+  const next=JSON.parse(JSON.stringify(base)); next.used=(next.used||0)+1;
   if(res.win){
     next.lossStreak=0;
     if(ex)next.exWins=(next.exWins||0)+1;
@@ -2933,14 +3023,102 @@ function kickoff(){
       next.round=round+1; if(next.round>=nR){next.cup=cupI+1;next.round=0;}
     }
   }else next.lossStreak=(next.lossStreak||0)+1;
-  next.log=[{t:Date.now(),opp:opp.n,gm:res.gm,go:res.go,pk:res.pk,win:res.win}].concat(next.log||[]).slice(0,12);
-  live={res,opp,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,prevMade:madeCount(game.made),rewards,cupWon,keep,hint,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":roundNames(CUPS[cupI].teams.length)[round],timer:null};
+  next.log=[{t:c.t,opp:opp.n,gm:res.gm,go:res.go,pk:res.pk,win:res.win}].concat(next.log||[]).slice(0,12);
+  return {next,rewards,cupWon,keep};}
+function kickoff(auto){
+  const g=lastG; if(live||!gameReady||!loaded()||tickets(g)<1)return;
+  if(crafting||bkBusy){flash(crafting?SAVEWAIT:BKWAIT);const st=$("#status");if(st&&st.scrollIntoView)st.scrollIntoView({block:"nearest"});return;}
+  const opp=currentOpp(), ex=!!opp.ex, cupI=game.cup, round=game.round, res=simulate(g,opp,!auto);
+  const prevEquip=Object.assign({},game.equip||{});
+  const tp0=teamPower(g), joined=squad(g).filter(m=>m.joined).length;
+  const hint=joined<7?"「なかまと つながる」プレーを ノートに かくと、なかまが ふえて チームが ぐっと つよくなるよ。"
+    :tp0.hero<tp0.avg?"「じぶんを きたえる」プレーを ノートに かくと、エースの きみが つよくなるよ。":"ノートを つづけると スキルが ふえて、チームが つよくなるよ。";
+  // v17: the match as it goes by itself is saved now; base and ctx let finishLive() work the result out again after his plays
+  const base=JSON.parse(JSON.stringify(game)), ctx={opp,ex,cupI,round,t:Date.now()}, sv=settle(base,res,ctx), next=sv.next, rewards=sv.rewards, cupWon=sv.cupWon, keep=sv.keep;
+  live={res,opp,base,ctx,scene:null,ptimer:null,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,prevMade:madeCount(game.made),rewards,cupWon,keep,hint,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":roundNames(CUPS[cupI].teams.length)[round],timer:null};
   game=next;
   store.setGame().catch(()=>flash("しあいの きろくを ほぞんできませんでした。"));
   shopSheet=null; shopTry=null; gearMenu=null; tab="match"; render(); window.scrollTo(0,0);
-  live.timer=setInterval(()=>{if(!live)return; if(live.shown>=live.res.ev.length-1)finishLive(); else{live.shown++;if(tab==="match")renderView();}},1200);
+  live.timer=setInterval(liveTick,1200);
 }
-function finishLive(){if(!live)return;clearInterval(live.timer);live.shown=live.res.ev.length-1;live.done=true;render();}
+// v17: one step of the playback. At a scene that is not played yet the clock stops and the pitch shows.
+function liveTick(){if(!live||live.done)return;
+  if(live.shown>=live.res.ev.length-1){finishLive();return;}
+  const nx=live.res.ev[live.shown+1];
+  if(nx.play&&!nx.play.done){clearInterval(live.timer);live.timer=null;live.scene={ei:live.shown+1,st:playStart(nx.play),from:"",drib:false,msg:"",over:null,busy:false,lost:false,tries:0,ball:null};
+    say(nx.play.kind==="hard"?"むずかしい チャンス!":"だいチャンス!"); if(tab==="match")renderView(); return;}
+  live.shown++; if(tab==="match")renderView();}
+function finishLive(){if(!live||live.done)return; clearInterval(live.timer); clearTimeout(live.ptimer); live.timer=null;
+  if(live.scene&&live.scene.over)playApply(live.res.ev[live.scene.ei],live.scene.over); // a scene that has ended counts
+  live.scene=null; live.res.ev.forEach(e=>{if(e.play)e.play.done=true;}); // scenes not played to the end stay as the match had them
+  liveSettle(); live.shown=live.res.ev.length-1; live.done=true; render();}
+// v17: his plays changed the number of goals (called when a scene ends and at the final whistle): the result, a PK shoot-out and what
+// the match brings are worked out again from the start of the match and saved. (A note deleted meanwhile may have lowered game.used;
+// that number is kept.)
+function liveSettle(){const L=live, R=L.res, gm=R.ev.filter(e=>e.goal&&e.side==="me").length; if(gm===R.gm)return;
+  const ev=R.ev.filter(e=>!e.pk); let pk=null, win=gm>R.go;
+  if(gm===R.go){const r=pkShoot(lastG,ev); pk=r[0]; win=r[1];}
+  L.res=Object.assign({},R,{gm,win,pk,ev});
+  const sv=settle(L.base,L.res,L.ctx); sv.next.used=game.used;
+  game=sv.next; L.rewards=sv.rewards; L.cupWon=sv.cupWon; L.keep=sv.keep;
+  store.setGame().catch(()=>flash("しあいの きろくを ほぞんできませんでした。"));}
+// one tap on the pitch: a pass (to "h", "a" or "b"), a dribble (to the free spot) or a shot ("L", "C", "R"). The ball goes first, then
+// the scene moves on (a move that worked) or ends (a shot, or a ball lost).
+function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over)return;
+  const sc=L.res.ev[S.ei].play, st=S.st, r=playAct(sc,st,t,to,Math.random()); if(!r)return;
+  const cn=sc.who[st.car].n, at=st.pos[st.car], aim=t==="shot"?PZ[to]:t==="drib"?sc.s:st.pos[to], end=r.ok?aim:t!=="shot"||(!r.q&&to!==sc.k)?[(at[0]+aim[0])/2,(at[1]+aim[1])/2]:to===sc.k||to==="C"?[PKX[sc.k],15]:[to==="L"?13:87,2]; // cut half way; a shot: caught by the keeper or wide of the post
+  S.busy=true; const ball=document.getElementById("pball"); if(ball){ball.style.left=end[0]+"%"; ball.style.top=(end[1]/1.15).toFixed(2)+"%";}
+  document.querySelectorAll("#pitchBox button,#skipLive").forEach(x=>{x.disabled=true;});
+  clearTimeout(L.ptimer); L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.busy=false;
+    if(t!=="shot"&&r.ok){const dw=t==="drib"?wazaList(lastG).filter(x=>x.lv>0&&x.grp==="drib"):[];
+      if(t==="pass")S.from=st.car; else S.drib=true;
+      S.st=r.st; S.msg=(t==="pass"?`ナイス パス! ${sc.who[to].n}に とおった!`:dw.length?`${rnd(dw).n}で あいてを かわした!`:"ドリブルで まえへ すすんだ!")+(r.st.moves>=PLAYMOVES?" "+PLAYMSG.last:" つぎは どうする?");
+      say(S.msg); if(tab==="match")renderView(); return;}
+    const o=playOver(sc,S,t,to,r,cn); S.msg=o.msg; S.ball=end;
+    if(!o.goal&&sc.kind==="sure"&&S.tries<PLAYRETRY){ // こぼれだま: in a sure scene the ball comes back, and he plays it again from the start with the tip
+      S.tries++; S.lost=true; say(S.msg); if(tab==="match")renderView();
+      L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.lost=false; S.st=playStart(sc); S.from=""; S.drib=false; S.ball=null; S.msg=PLAYMSG.again+" "+o.tip; say(S.msg); if(tab==="match")renderView();},1800);
+      return;}
+    S.over=o; say(S.msg); if(tab==="match")renderView();
+    L.ptimer=setTimeout(()=>{if(live===L&&L.scene===S)playEnd();},1800);},650);}
+// how a play ended: the line for the match and the words for him
+function playOver(sc,S,t,to,r,cn){const from=S.st.pos[S.st.car], clear=t==="shot"&&laneOf(sc,from,PZ[to])===2; // clear: no opponent made the shot tight
+  const why=!clear?PLAYMSG.tight:sc.kind==="hard"?PLAYMSG.hard:from[1]>PLAYFAR?PLAYMSG.far:PLAYMSG.side; // so the tip names what did: a hard scene, the distance, the keeper beside
+  const miss=(line,m)=>({goal:false,t:line,msg:m.join(" "),tip:m[1]});
+  if(t==="pass")return miss(`${cn}の パスは あいてに カットされた…`,r.q?PLAYMSG.tight:PLAYMSG.cut);
+  if(t==="drib")return miss(`${cn}の ドリブルは あいてに とめられた…`,r.q?PLAYMSG.tight:PLAYMSG.stop);
+  if(!r.goal)return miss(r.q?`${cn}の シュートは おしくも はずれた…`:to===sc.k?`${cn}の シュートは キーパーの しょうめん…`:`${cn}の シュートは あいてに ブロックされた…`,r.q?why:to===sc.k?PLAYMSG.keeper:PLAYMSG.block);
+  const wl=wazaList(lastG).filter(x=>x.lv>0), sco=sc.who[S.st.car], pas=S.from?sc.who[S.from]:null; let line="";
+  if(pas&&pas.hero){const c=wl.filter(x=>own(WAZAAST,x.id)); if(c.length&&Math.random()<WAZAUSE)line=WAZAAST[rnd(c).id];}
+  else if(pas&&sco.hero){const c=wl.filter(x=>own(WAZAGOAL,x.id)); if(c.length&&Math.random()<WAZAUSE)line=WAZAGOAL[rnd(c).id];}
+  const text=line?line.replace(/\{([ahs])\}/g,(m,k)=>k==="h"?heroName():k==="a"?pas.n:sco.n):pas?`${pas.n}の パスから ${sco.n}が ゴール!!`:S.drib?`${sco.n}が ドリブルから シュート! ゴール!!`:`${sco.n}が おもいきって シュート! ゴール!!`;
+  return {goal:true,t:text,waza:!!line,msg:r.q===2?PLAYMSG.goal:PLAYMSG.goalTight};}
+// the scene is over: its line goes into the match and the clock runs again
+const playApply=(e,o)=>{e.t=o.t; e.side="me"; e.played=1; if(o.goal)e.goal=1; else delete e.goal; if(o.waza)e.waza=1; else delete e.waza;};
+const playFresh=S=>!S.busy&&!S.over&&!S.lost&&!S.tries&&!S.st.moves; // a scene he has not started: 「けっかまで スキップ」 leaves it as the match had it
+const skipOk=L=>!L.scene||playFresh(L.scene);
+function playEnd(){const L=live, S=L&&!L.done?L.scene:null; if(!S)return; clearTimeout(L.ptimer); const e=L.res.ev[S.ei];
+  if(S.over){playApply(e,S.over); liveSettle();} // saved at once: closing the page keeps what he played, and a PK line that no longer fits is gone
+  e.play.done=true; L.scene=null; L.shown=S.ei; L.timer=setInterval(liveTick,1200); if(tab==="match")renderView();}
+// the pitch of the scene being played
+const OPPFIG=c=>`<svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="#14141c" d="M2 0h4v1h1v3h1v4H0V4h1V1h1z"/><path fill="#e8b48c" d="M2 1h4v3H2z"/><path fill="${c}" d="M1 5h6v3H1z"/><path fill="#14141c" d="M3 2h1v1H3zM5 2h1v1H5z"/></svg>`;
+function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.pos[st.car], ops=S.over||S.busy||S.lost?[]:playOptions(sc,st);
+  const xy=p=>`left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%`;
+  const face=k=>{const w=sc.who[k]; return w.hero?heroBust(lastG,"pp"+k):w.mate?pixSVG(mateOpts(w.mate),"pp"+k):`<div class="helper">?</div>`;};
+  const pl=["h","a","b"].map(k=>{const w=sc.who[k], inner=`<span class="ava">${face(k)}</span><span class="pn">${esc(w.n)}</span>`;
+    return ops.some(o=>o.t==="pass"&&o.to===k)?`<button type="button" class="pt mine" id="pp-${k}" data-pp="${k}" style="${xy(st.pos[k])}" aria-label="${esc(w.n)}に パス">${inner}</button>`
+      :`<span class="pt mine${st.car===k?" has":""}" style="${xy(st.pos[k])}">${inner}</span>`;}).join("");
+  const rings=sc.d.map(p=>`<i class="reach" style="${xy(p)}"></i><i class="reach in" style="${xy(p)}"></i>`).join("");
+  const opp=sc.d.map(p=>`<span class="pt opp" style="${xy(p)}">${OPPFIG("#c8372d")}</span>`).join("")+`<span class="pt opp gk" style="left:${PKX[sc.k]}%">${OPPFIG("#e8c21a")}<span class="pn">キーパー</span></span>`;
+  const zones=["L","C","R"].map(z=>`<button type="button" class="pz" id="pz-${z}" data-pz="${z}"${ops.length?"":" disabled"} aria-label="ゴールの ${PZN[z]}へ シュート">${PZN[z]}</button>`).join("");
+  const dr=ops.some(o=>o.t==="drib")?`<button type="button" class="pd" id="pd-s" data-pd="s" style="${xy(sc.s)}" aria-label="あいた ところへ ドリブル">ドリブル</button>`:"";
+  const bp=S.ball||[at[0],at[1]+PLAYFEET];
+  return `<div class="pitchbox" id="pitchBox"><p class="ptitle"><b>${sc.kind==="hard"?"むずかしい チャンス!":"だいチャンス!"}</b>${S.over||S.lost?"":`<span>${sc.coach?`${esc(sc.who.h.n)}が ボールを もった! キーパーの きみが こえで おしえよう。`:"きみが ボールを もった! どうする?"}</span>`}</p>
+    <div class="ppitch" id="pitch"><svg class="plines" viewBox="0 0 100 115" preserveAspectRatio="none" aria-hidden="true"><path d="M14 0v36h72V0M0 113h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 36a12 9 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/></svg>
+    <div class="pgoal">${zones}</div>${rings}${opp}${dr}${pl}<span class="pball" id="pball" style="${xy(bp)}"></span></div>
+    <p class="pmsg" id="pmsg">${esc(S.msg||(at[1]>PLAYFAR?PLAYMSG.startFar:PLAYMSG.start))}</p>
+    <p class="plhint">みかたを タップで パス、ゴールを タップで シュート。 あかい まるは あいての あしが とどく ところ。</p>
+    </div>`;}
 
 /* events */
 document.querySelector("nav.tabs").addEventListener("click",e=>{
@@ -3019,8 +3197,12 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.mname){if(!loaded()||!profReady){flash("よみこみ中です。すこし まってから もういちど おしてね。");return;}mateEdit=b.dataset.mname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}return;}
   if(b.id==="mnCancel"){const id=mateEdit;mateEdit=null;render();const f=document.querySelector(`[data-mname="${id}"]`);if(f)f.focus();return;}
   if(b.id==="mnReset"){await setMateName(mateEdit,"");return;}
-  if(b.id==="kick"){kickoff();return;}
-  if(b.id==="skipLive"){finishLive();return;}
+  if(b.id==="kick"){kickoff(false);return;}
+  if(b.id==="kickAuto"){kickoff(true);return;} // v17: a match that is only watched, as before
+  if(b.dataset.pp){playTap("pass",b.dataset.pp);return;}
+  if(b.dataset.pd){playTap("drib","s");return;}
+  if(b.dataset.pz){playTap("shot",b.dataset.pz);return;}
+  if(b.id==="skipLive"){if(live&&skipOk(live))finishLive();return;} // v17: not in the middle of a scene he plays
   if(b.id==="closeLive"){live=null;render();window.scrollTo(0,0);return;}
   if(b.id==="bk-file"){bkSaveFile();return;} // share and clipboard calls need the tap itself, so these come before any await
   if(b.id==="bk-copy"){bkCopy();return;}
