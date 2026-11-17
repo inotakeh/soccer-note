@@ -456,6 +456,26 @@ details.wz summary{cursor:pointer;min-height:44px;padding:8px 0;line-height:1.5}
 details.wz p{margin:0 0 8px;line-height:1.6} details.wz p b{display:block;font-size:.85rem;color:var(--muted)}
 #wazaField,#mhWaza,#wazaBook{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 /* v17: the pitch of a chance he plays himself. The pitch is a picture: its colours are the same in light and dark. */
+.pkscore{display:grid;grid-template-columns:minmax(0,1fr) auto 1.4em;gap:2px 10px;align-items:center;font-weight:700;font-size:.9rem;margin:0}
+.pkscore .pkn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .pkscore .pkm{font-size:1.1rem;line-height:1.2;letter-spacing:.12em;white-space:nowrap} .pkscore b{text-align:right;font-size:1.05rem}
+.pkbox .ptitle span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pkview{position:relative;height:0;padding-top:calc(61.29% - 2.45px);border-radius:12px;overflow:hidden;border:2px solid #e9f5ec;touch-action:manipulation;cursor:pointer;
+  background:linear-gradient(#141d33 0,#22304e 76.3%,#2f7a26 76.3%,#256a1e 100%)}
+.pkview:focus-visible{outline:3px solid #ffd34f;outline-offset:2px}
+.pkgoal{position:absolute;box-sizing:content-box;margin:-4px 0 0 -4px;border:4px solid #f4f6fb;border-bottom:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.17) 0,rgba(255,255,255,.17) 1px,transparent 1px,transparent 9px),repeating-linear-gradient(90deg,rgba(255,255,255,.17) 0,rgba(255,255,255,.17) 1px,transparent 1px,transparent 9px),rgba(6,10,22,.5)}
+.pkmouth{position:absolute;overflow:hidden;pointer-events:none} .pkair{position:absolute;left:0;top:0;width:100%;overflow:hidden;pointer-events:none;z-index:2}
+.pkreach,.pkaim{position:absolute;transform:translate(-50%,-50%);height:0;border-radius:50%;pointer-events:none;box-sizing:border-box}
+.pkreach{background:rgba(226,52,36,.34);box-shadow:0 0 0 2px rgba(255,255,255,.7)} .pkreach.in{background:rgba(190,24,16,.62);box-shadow:none}
+.pkaim{background:radial-gradient(circle,#ffd34f 0,#ffd34f 3px,rgba(255,211,79,.4) 3.5px);box-shadow:0 0 0 2px #ffd34f;z-index:2} .pkaim.was{opacity:.45}
+.pkview.kicked .pkreach{opacity:0}
+.pkkeeper{position:absolute;transform:translate(-50%,-50%);z-index:3;pointer-events:none}
+.pkkeeper .ava{display:block;box-sizing:content-box;width:32px;height:32px;border-radius:8px;border:2px solid #e8c21a;background:linear-gradient(170deg,#8a4a44,#47201d);overflow:hidden} .pkkeeper .mx{width:100%;height:100%}
+.pkfx-goal{width:53px;height:53px} .pkfx-save{width:60px;height:36px}
+.pkover{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:6;margin:0;padding:8px 14px;border-radius:12px;background:rgba(8,12,24,.88);color:#fff;font-weight:800;font-size:1.05rem;text-align:center;white-space:nowrap;pointer-events:none}
+.pkover small{display:block;font-size:.8rem;font-weight:700;color:#c9d1e6}
+.pkgo{min-height:48px;cursor:pointer} .pkgo:disabled{opacity:.45;cursor:default}
+@media (prefers-reduced-motion:no-preference){.pkkeeper{transition:left .5s ease-out,top .5s ease-out}.pkreach{transition:opacity .2s}}
 .pth{visibility:hidden}.pth::after{content:attr(data-t)}.pitchbox{display:flex;flex-direction:column;gap:8px;margin:10px auto;width:100%;max-width:480px;max-width:min(480px,max(300px,calc((100vh - 380px)/1.15)));max-width:min(480px,max(300px,calc((100dvh - 380px)/1.15)));scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px);word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .ptitle{margin:0;font-weight:800;font-size:1.05rem} .ptitle span{display:block;font-weight:400;font-size:.9rem;color:var(--muted)}
 .pmsg{margin:0;min-height:3em;font-weight:700} .plhint{margin:0;font-size:.85rem;color:var(--muted)}
@@ -1217,6 +1237,29 @@ const PLAYMSG={cut:["あいてに カットされた…","あかい まるに �
   wzDrib:"「ドリブル」\u2060を タップ! ちかくの あいてを かわせるよ。",wzPass:"パスする みかたを タップ! あかい まるの ちかくでも とおりやすく なるよ。",wzOff:"わざを つかわない ことに したよ。 どうする?",wzUsed:"わざは もう つかったよ。",wzNot:"わざは パスか ドリブルで つかうよ。",start:"あいての いない コースを ねらって シュート!",startFar:"ゴールまで とおいよ。 フリーの みかたに パスするか、ドリブルで ちかづこう!"};
 /* ---------- match simulation ---------- */
 function poisson(l){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random();}while(p>L);return k-1;}
+// v22: the PK shoot-out he plays. The goal is seen from the front; one unit is a hundredth of its width.
+// (0,0) is the top corner inside the left post, (100,PKH) the foot of the right post. Read by p_v22.py and by the checks in node.
+const PKH=44, PKN=5, PKOPP=.7, PKLUCK=.35;          // the goal is 100 wide and PKH high; kicks each; the other team scores this often (as pkShoot had it); a ball inside the outer circle only
+const PKKY=27, PKRIN=17, PKROUT=33, PKOFF=9;       // the keeper: how high his middle is, his two circles (inner: he holds it, outer: he may reach it), how far from the middle he may stand
+const PKS0=22, PKS1=14, PKSB=80;                    // the yellow circle (where the ball may fly): its radius with brave 0, and with brave PKSB or more
+const PKV=[-12,-14,124,76];                         // what the picture shows: left, top, width, height (the goal and some room round it)
+const pkSpread=brave=>PKS0+(PKS1-PKS0)*Math.max(0,Math.min(1,(brave||0)/PKSB));
+const pkKeeper=r=>({x:Math.round(50+(r*2-1)*PKOFF),y:PKKY,ri:PKRIN,ro:PKROUT}); // r: a number from 0 to 1
+const pkClampAim=(x,y)=>[Math.max(0,Math.min(100,Math.round(x))),Math.max(0,Math.min(PKH,Math.round(y)))];
+// where a ball lands: inside the yellow circle (u, v from 0 to 1). A ball cannot go under the ground: it rolls in along it.
+const pkLand=(aim,s,u,v)=>{const d=s*Math.sqrt(u), a=v*2*Math.PI; return [aim[0]+d*Math.cos(a),Math.min(PKH,aim[1]+d*Math.sin(a))];};
+// what a ball at p is: "out" (wide or over), "in" (the keeper holds it), "ring" (he may reach it), "free" (a goal)
+const pkSpot=(p,kp)=>{if(p[0]<0||p[0]>100||p[1]<0)return "out"; const d=Math.hypot(p[0]-kp.x,p[1]-kp.y); return d<=kp.ri?"in":d<=kp.ro?"ring":"free";};
+// how much of the yellow circle is what (the same 331 points every time), and how likely a goal is
+const PKPTS=(()=>{const a=[]; for(let i=0;i<331;i++){const r=Math.sqrt((i+.5)/331), t=i*2.399963229728653; a.push([r*Math.cos(t),r*Math.sin(t)]);} return a;})();
+function pkRate(aim,kp,s){const c={out:0,in:0,ring:0,free:0}; PKPTS.forEach(q=>{c[pkSpot([aim[0]+s*q[0],Math.min(PKH,aim[1]+s*q[1])],kp)]++;});
+  const n=PKPTS.length; return {out:c.out/n,in:c.in/n,ring:c.ring/n,free:c.free/n,p:(c.free+c.ring*PKLUCK)/n};}
+// one kick of his: r = [u, v, luck]. k: "goal" | "graze" (a goal off the keeper's hand) | "tip" (pushed away) | "save" | "out"
+function pkKick(aim,kp,s,r){const p=pkLand(aim,s,r[0],r[1]), w=pkSpot(p,kp); return {p,k:w==="free"?"goal":w==="out"?"out":w==="in"?"save":r[2]<PKLUCK?"graze":"tip",goal:w==="free"||(w==="ring"&&r[2]<PKLUCK)};}
+// is it decided? a, b: the goals so far (true / false for each kick, his team kicks first)
+function pkDecided(a,b){const ga=a.filter(Boolean).length, gb=b.filter(Boolean).length;
+  if(a.length<=PKN&&b.length<=PKN&&(a.length<PKN||b.length<PKN))return ga>gb+(PKN-b.length)||gb>ga+(PKN-a.length)?[ga,gb]:null;
+  return a.length===b.length&&ga!==gb?[ga,gb]:null;}
 // v17: the PK shoot-out of a drawn match (the lines simulate() had, word for word, so the draws come in the same order): draws it,
 // adds its line to ev and returns [pk, win].
 function pkShoot(g,ev){let pk, win;
@@ -2751,9 +2794,9 @@ function viewLive(){
       <button class="primary" id="closeLive" type="button" style="align-self:stretch">つぎへ</button></div>`;
   }
   return `<section class="panel"><h2>${esc(L.cupName)} ${esc(L.roundName)}</h2>
-    <div class="score"><span class="tn">${esc(myTeam())}</span><span class="sc">${sm} - ${so}</span><span class="tn">${esc(L.opp.n)}</span><span class="min">${L.done?"しあい しゅうりょう"+(L.res.pk?`(PK ${L.res.pk[0]} - ${L.res.pk[1]})`:""):minLabel(last.m)||"キックオフ"}</span></div>
+    <div class="score"><span class="tn">${esc(myTeam())}</span><span class="sc">${sm} - ${so}</span><span class="tn">${esc(L.opp.n)}</span><span class="min">${L.done?"しあい しゅうりょう"+(L.res.pk?`(PK ${L.res.pk[0]} - ${L.res.pk[1]})`:""):L.pk?"PKせん":minLabel(last.m)||"キックオフ"}</span></div>
     ${result}
-    ${L.scene&&!L.done?pitchHTML(L):""}
+    ${L.scene&&!L.done?pitchHTML(L):""}${L.pk&&!L.done?pkHTML(L):""}
     ${L.done||!skipOk(L)?"":`<button class="ghost" id="skipLive" type="button">けっかまで スキップ</button>`}
     <div class="feed" aria-live="polite">${feed}</div></section>`;
 }
@@ -3140,7 +3183,7 @@ function kickoff(auto){
     :tp0.hero<tp0.avg?"「じぶんを きたえる」プレーを ノートに かくと、エースの きみが つよくなるよ。":"ノートを つづけると スキルが ふえて、チームが つよくなるよ。";
   // v17: the match as it goes by itself is saved now; base and ctx let finishLive() work the result out again after his plays
   const base=JSON.parse(JSON.stringify(game)), ctx={opp,ex,cupI,round,t:Date.now()}, sv=settle(base,res,ctx), next=sv.next, rewards=sv.rewards, cupWon=sv.cupWon, keep=sv.keep;
-  live={res,opp,base,ctx,scene:null,ptimer:null,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,prevMade:madeCount(game.made),rewards,cupWon,keep,hint,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":roundNames(CUPS[cupI].teams.length)[round],timer:null};
+  live={res,opp,base,ctx,auto:!!auto,pk:null,pkd:false,scene:null,ptimer:null,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,prevMade:madeCount(game.made),rewards,cupWon,keep,hint,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":roundNames(CUPS[cupI].teams.length)[round],timer:null};
   game=next;
   store.setGame().catch(()=>flash("しあいの きろくを ほぞんできませんでした。"));
   shopSheet=null; shopTry=null; gearMenu=null; tab="match"; render(); window.scrollTo(0,0);
@@ -3152,10 +3195,12 @@ function liveTick(){if(!live||live.done)return;
   const nx=live.res.ev[live.shown+1];
   if(nx.play&&!nx.play.done){clearInterval(live.timer);live.timer=null;live.scene={ei:live.shown+1,st:playStart(nx.play),from:"",drib:false,msg:"",over:null,busy:false,lost:false,tries:0,ball:null,wz:"",wzUsed:0,wzd:"",wzp:""};
     say(nx.play.kind==="hard"?"むずかしい チャンス!":"だいチャンス!"); if(tab==="match"){renderView(); playShow();} return;}
+  if(nx.pk&&!live.auto&&!live.pkd){clearInterval(live.timer);live.timer=null;live.pk=pkStart(); // v22: the shoot-out of a match he plays
+    say("どうてん! PKせん!"); if(tab==="match"){renderView(); playShow();} return;}
   live.shown++; if(tab==="match")renderView();}
 function finishLive(){if(!live||live.done)return; clearInterval(live.timer); clearTimeout(live.ptimer); live.timer=null;
   if(live.scene&&live.scene.over)playApply(live.res.ev[live.scene.ei],live.scene.over); // a scene that has ended counts
-  live.scene=null; live.res.ev.forEach(e=>{if(e.play)e.play.done=true;}); // scenes not played to the end stay as the match had them
+  live.scene=null; live.pk=null; live.res.ev.forEach(e=>{if(e.play)e.play.done=true;}); // scenes not played to the end stay as the match had them
   liveSettle(); live.shown=live.res.ev.length-1; live.done=true; render();}
 // v17: his plays changed the number of goals (called when a scene ends and at the final whistle): the result, a PK shoot-out and what
 // the match brings are worked out again from the start of the match and saved. (A note deleted meanwhile may have lowered game.used;
@@ -3174,7 +3219,7 @@ function liveSettle(){const L=live, R=L.res, gm=R.ev.filter(e=>e.goal&&e.side===
 const PLAYWZTAP=350;
 // v21.1: when a chance starts and its box (from the title to the message) does not stand whole between the top of the screen and the
 // tab bar, the box is brought to the top; where the page stood is kept (S.sy) and playEnd goes back there. Nothing is saved.
-function playShow(){const S=live&&live.scene, el=document.querySelector("#pitchBox"), m=document.querySelector("#pmsg"), nav=document.querySelector("nav.tabs"); if(!S||!el||!m)return;
+function playShow(){const pk=!!(live&&live.pk), S=live&&(live.pk||live.scene), el=document.querySelector(pk?"#pkBox":"#pitchBox"), m=document.querySelector(pk?"#pkMsg":"#pmsg"), nav=document.querySelector("nav.tabs"); if(!S||!el||!m)return; // v22: the box of the shoot-out too
   const bot=nav?nav.getBoundingClientRect().top:window.innerHeight, r=el.getBoundingClientRect(); if(r.top>=0&&m.getBoundingClientRect().bottom<=bot)return;
   S.sy=window.pageYOffset; window.scrollTo(0,Math.max(0,Math.round(S.sy+r.top-(parseFloat(getComputedStyle(el).scrollMarginTop)||12))));} // the page's own scroll only (no scrollIntoView: it could move a page around this one)
 function playWaza(sc,S,ops){if(S.wzUsed>=PLAYWAZA||!sc.who[S.st.car].hero)return [];
@@ -3223,7 +3268,7 @@ function playOver(sc,S,t,to,r,cn,wz){const from=S.st.pos[S.st.car], clear=t==="s
 // the scene is over: its line goes into the match and the clock runs again
 const playApply=(e,o)=>{e.t=o.t; e.side="me"; e.played=1; if(o.goal)e.goal=1; else delete e.goal; if(o.waza)e.waza=1; else delete e.waza;};
 const playFresh=S=>!S.busy&&!S.over&&!S.lost&&!S.tries&&!S.st.moves; // a scene he has not started: 「けっかまで スキップ」 leaves it as the match had it
-const skipOk=L=>!L.scene||playFresh(L.scene);
+const skipOk=L=>(!L.scene||playFresh(L.scene))&&(!L.pk||!L.pk.started); // v22: not after his first kick of the shoot-out
 function playEnd(){const L=live, S=L&&!L.done?L.scene:null; if(!S)return; clearTimeout(L.ptimer); const e=L.res.ev[S.ei];
   if(S.over){playApply(e,S.over); liveSettle();} // saved at once: closing the page keeps what he played, and a PK line that no longer fits is gone
   e.play.done=true; L.scene=null; L.shown=S.ei; L.timer=setInterval(liveTick,1200); if(tab==="match"){renderView(); if(typeof S.sy==="number")window.scrollTo(0,S.sy);}}
@@ -3261,6 +3306,78 @@ function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.po
     <div class="pgoal">${zones}</div>${rings}${opp}${dr}${pl}<span class="pball" id="pball" style="${xy(bp)}"></span>${fx}</div>
     <p class="pmsg" id="pmsg">${esc(S.msg||(at[1]>PLAYFAR?PLAYMSG.startFar:PLAYMSG.start))}</p>
     <p class="plhint">みかたを タップで パス、ゴールを タップで シュート。 あかい まるは あいての あしが とどく ところ。 パスや ドリブルの あとは、みんなが うごくよ。</p>
+    </div>`;}
+
+// v22: the PK shoot-out he plays (the rules: pkSpread, pkKeeper, pkRate, pkKick, pkDecided above, from v22/pk.js).
+// live.pk: a, b the kicks so far (true: a goal; his team kicks first), who: the kickers in turn (he first, then FW, MF, DF, GK),
+// s: the radius of the yellow circle, kp: the keeper of this kick, aim: where he aims, phase: "aim" | "fly" | "mine" (his kick is
+// shown) | "opp" (the other team's kick is shown) | "over", land / k: where his ball went and what it was, kd: where the keeper ended,
+// started: he has kicked (no skip any more). Nothing of it is saved but the result (pkSettle).
+const PKWAIT=1600, PKFLY=650;
+const PKMSG={start:"ねらう ところを タップ! きいろい まるの どこかに ボールが とぶよ。",clear:"ばっちり! とても いい コースだよ。",good:"いい コース!",soso:"まあまあの コース。",bad:"あぶない コース…",
+  wKeep:"あかい まるに かかって いるよ。",wOut:"ゴールから はみでて いるよ。",
+  goal:"ゴール!! キーパーの とどかない コースに きまった!",graze:"ゴール!! キーパーの てを かすめて はいった!",tip:"キーパーに はじかれた… あかい まるから なるべく はなして ねらおう。",
+  save:"キーパーに とめられた… あかい まるから なるべく はなして ねらおう。",out:"おしい! ゴールの そとへ はずれた… きいろい まるが なるべく はみでない ように ねらおう。",
+  oppGoal:"あいての キックは ゴール…",oppMiss:"あいての キックは はずれた! チャンス!",oppMissEnd:"あいての キックは はずれた!",win:"かった!! よく ねらったね!",lose:"まけた… さいごまで よく ねらったね。",
+  hint:"ゴールを タップして ねらいを きめて、「ける!」\u2060を おしてね。 こい あかは キーパーに とめられる、うすい あかは はいる ことも あるよ。 ゴールの わくから はみでると はずれるよ。"};
+function pkStart(){const g=lastG, hero=heroName(), O={FW:0,MF:1,DF:2,GK:3};
+  const who=teamPower(g).lu.map((x,i)=>({n:x.who.hero?hero:x.who.mate?x.who.mate.n:"すけっと",o:(x.who.hero?-1:O[x.pos]===undefined?2:O[x.pos])*100+i})).sort((p,q)=>p.o-q.o).map(x=>x.n);
+  return {a:[],b:[],who:who.length?who:[hero],s:pkSpread((g.stats||{}).brave),kp:pkKeeper(Math.random()),aim:null,phase:"aim",msg:"",land:null,k:"",kd:null,started:false,fxOld:false};}
+// the words of an aim: how likely a goal is (PKTIER), and for the two lower steps what is in the way (a part of PKWARN or more of the yellow circle)
+const PKTIER=[.8,.62,.45], PKWARN=.15;
+const pkWords=r=>r.p>=PKTIER[0]?PKMSG.clear:r.p>=PKTIER[1]?PKMSG.good:(r.p>=PKTIER[2]?PKMSG.soso:PKMSG.bad)+[r.in+r.ring>=PKWARN?" "+PKMSG.wKeep:"",r.out>=PKWARN?" "+PKMSG.wOut:""].join("");
+// he aims (a tap in the picture, or the arrow keys): the point is kept inside the goal, and the words say how the yellow circle lies
+function pkAim(x,y){const L=live, P=L&&!L.done?L.pk:null; if(!P||P.phase!=="aim"||!isFinite(x)||!isFinite(y))return;
+  P.aim=pkClampAim(x,y); P.msg=pkWords(pkRate(P.aim,P.kp,P.s)); say(P.msg); if(tab==="match")renderView();}
+// 「ける!」: the ball flies (PKFLY), then the kick is shown, then the other team's kick or the next of his (pkNext)
+function pkGo(){const L=live, P=L&&!L.done?L.pk:null; if(!P||P.phase!=="aim"||!P.aim)return;
+  const r=pkKick(P.aim,P.kp,P.s,[Math.random(),Math.random(),Math.random()]), kp=P.kp, dx=r.p[0]-kp.x, dy=r.p[1]-kp.y, d=Math.hypot(dx,dy)||1, f=r.k==="goal"||r.k==="out"?Math.min(1,kp.ri/d):1;
+  const far=5, ox=r.k!=="out"?r.p[0]:r.p[0]<0?Math.min(r.p[0],-far):r.p[0]>100?Math.max(r.p[0],100+far):r.p[0], oy=r.k==="out"&&r.p[1]<0?Math.min(r.p[1],-far):r.p[1]; // a ball that is out is drawn clear of the post or the bar
+  const ae=document.activeElement; P.kb=!!ae&&(ae.id==="pkGo"||ae.id==="pkView");
+  P.started=true; P.phase="fly"; P.land=[clamp(ox,PKV[0]+3,PKV[0]+PKV[2]-3),clamp(oy,PKV[1]+3,PKH)]; P.k=r.k; P.kd=[kp.x+dx*f,Math.min(PKH-4,kp.y+dy*f)]; P.fxOld=false;
+  const px=x=>((x-PKV[0])/PKV[2]*100).toFixed(2)+"%", py=y=>((y-PKV[1])/PKV[3]*100).toFixed(2)+"%";
+  const v=document.getElementById("pkView"), ball=document.getElementById("pkBall"), ke=document.getElementById("pkKeeper");
+  if(v)v.classList.add("kicked"); if(ball){ball.style.left=px(P.land[0]); ball.style.top=py(P.land[1]);} if(ke){ke.style.left=px(P.kd[0]); ke.style.top=py(P.kd[1]);}
+  document.querySelectorAll("#pkBox button,#skipLive").forEach(x=>{x.disabled=true;});
+  clearTimeout(L.ptimer); L.ptimer=setTimeout(()=>{if(live!==L||L.pk!==P||L.done)return;
+    P.a.push(r.goal); P.phase="mine"; P.msg=PKMSG[r.k]; say(P.msg); if(tab==="match")renderView(); pkNext(L,P);},PKFLY);}
+// after a kick has been shown: the end, the other team's kick (as the match that is only watched draws it), or his next kick
+function pkNext(L,P){const d=pkDecided(P.a,P.b); if(d&&!P.saved){P.saved=true; pkSettle(d[0],d[1]);} // saved as soon as it is decided (he may close the page on the last goal)
+  L.ptimer=setTimeout(()=>{if(live!==L||L.pk!==P||L.done)return;
+    if(d){P.phase="over"; P.msg=`PKせん ${d[0]} - ${d[1]}! ${d[0]>d[1]?PKMSG.win:PKMSG.lose}`; say(P.msg); if(tab==="match")renderView();
+      L.ptimer=setTimeout(()=>{if(live===L&&L.pk===P)pkEnd();},PKWAIT+600); return;}
+    if(P.b.length<P.a.length){const g=Math.random()<PKOPP; P.b.push(g); P.phase="opp"; P.msg=g?PKMSG.oppGoal:pkDecided(P.a,P.b)?PKMSG.oppMissEnd:PKMSG.oppMiss; say(P.msg); if(tab==="match")renderView(); pkNext(L,P); return;}
+    P.phase="aim"; P.aim=null; P.land=null; P.k=""; P.kd=null; P.kp=pkKeeper(Math.random()); P.msg=""; say(PKMSG.start); if(tab==="match"){renderView(); // after a kick by the keyboard the picture has the focus again
+      if(P.kb&&(!document.activeElement||document.activeElement===document.body)){const v=document.getElementById("pkView"); if(v)v.focus({preventScroll:true});}}},PKWAIT);}
+// his shoot-out is over: its result takes the place of the one the match had drawn, and is saved (as liveSettle does)
+function pkSettle(a,b){const L=live, R=L.res, win=a>b, ev=R.ev.map(e=>e.pk?Object.assign({},e,{t:["どうてん! PKせん…",a,"-",b,"で",win?"かった!":"まけた…"].join(" ")}):e); // the line as pkShoot writes it
+  L.res=Object.assign({},R,{win,pk:[a,b],ev});
+  const sv=settle(L.base,L.res,L.ctx); sv.next.used=game.used;
+  game=sv.next; L.rewards=sv.rewards; L.cupWon=sv.cupWon; L.keep=sv.keep;
+  store.setGame().catch(()=>flash("しあいの きろくを ほぞんできませんでした。"));}
+function pkEnd(){const L=live, P=L&&!L.done?L.pk:null; if(!P)return; clearTimeout(L.ptimer); const ei=L.res.ev.findIndex(e=>e.pk);
+  L.pk=null; L.pkd=true; L.shown=ei>=0?ei:L.res.ev.length-1; L.timer=setInterval(liveTick,1200); if(tab==="match"){renderView(); if(typeof P.sy==="number")window.scrollTo(0,P.sy);}}
+// the box of the shoot-out: the kicks so far, the goal from the front, 「ける!」 and the words
+function pkHTML(L){const P=L.pk, V=PKV, n=P.a.length, ga=P.a.filter(Boolean).length, gb=P.b.filter(Boolean).length;
+  const px=x=>((x-V[0])/V[2]*100).toFixed(2), py=y=>((y-V[1])/V[3]*100).toFixed(2), at=p=>`left:${px(p[0])}%;top:${py(p[1])}%`, circ=r=>{const w=(2*r/V[2]*100).toFixed(2); return `width:${w}%;padding-top:${w}%`;};
+  const cols=Math.max(PKN,P.a.length,P.b.length), marks=l=>{let t=""; for(let i=0;i<cols;i++)t+=i<l.length?(l[i]?"○":"×"):"・"; return cols>7?"…"+t.slice(cols-6):t;}; // a long sudden death: the last six
+  const aiming=P.phase==="aim", shown=P.phase==="fly"||P.phase==="mine", kn=aiming||P.phase==="fly"?n+1:n, who=P.who[(Math.max(1,kn)-1)%P.who.length];
+  const sub=P.phase==="over"?"しゅうりょう!":P.phase==="opp"?`あいての ${P.b.length}本目`:`${kn>PKN?"サドンデス ":""}${kn}本目: ${esc(who)}の キック`;
+  const fxk=P.phase==="mine"?(P.k==="goal"||P.k==="graze"?"goal":P.k==="save"||P.k==="tip"?"save":""):"";
+  const fx=fxk?`<i class="pfx pkfx-${fxk} mx mx-fx_${fxk}${P.fxOld?" old":""}" id="pkFx" style="${at(P.land)}" aria-hidden="true"></i>`:""; if(fxk)P.fxOld=true;
+  const mat=`left:${P.kp.x}%;top:${(P.kp.y/PKH*100).toFixed(2)}%`, mc=r=>`width:${2*r}%;padding-top:${2*r}%`; // inside the mouth of the goal (100 wide): the red circles are cut at the posts, the bar and the ground
+  const inner=aiming||shown?`${aiming?`<div class="pkmouth" style="left:${px(0)}%;top:${py(0)}%;width:${(100/V[2]*100).toFixed(2)}%;height:${(PKH/V[3]*100).toFixed(2)}%"><i class="pkreach" style="${mat};${mc(P.kp.ro)}"></i><i class="pkreach in" style="${mat};${mc(P.kp.ri)}"></i></div>`:""}
+      ${P.aim?`<div class="pkair" style="height:${((PKH-V[1])/V[3]*100).toFixed(2)}%"><i class="pkaim${aiming?"":" was"}" id="pkAim" style="left:${px(P.aim[0])}%;top:${((P.aim[1]-V[1])/(PKH-V[1])*100).toFixed(2)}%;${circ(P.s)}"></i></div>`:""}
+      <span class="pkkeeper" id="pkKeeper" style="${at(shown&&P.kd?P.kd:[P.kp.x,P.kp.y])}">${OPPFIG("gk")}</span>
+      <span class="pball" id="pkBall" style="${at(shown&&P.land?P.land:[50,PKH+12])}"></span>${fx}`
+    :`<p class="pkover">${P.phase==="over"?`PKせん ${ga} - ${gb}<small>${ga>gb?"かった!!":"まけた…"}</small>`:`あいての キック<small>${P.b[P.b.length-1]?"ゴール…":"はずれた!"}</small>`}</p>`;
+  return `<div class="pitchbox pkbox" id="pkBox"><p class="ptitle"><b>PKせん!</b><span>${sub}</span></p>
+    <div class="pkscore" id="pkScore" role="img" aria-label="${esc(myTeam())} ${ga}てん、${esc(L.opp.n)} ${gb}てん"><span class="pkn">${esc(myTeam())}</span><span class="pkm">${marks(P.a)}</span><b>${ga}</b><span class="pkn">${esc(L.opp.n)}</span><span class="pkm">${marks(P.b)}</span><b>${gb}</b></div>
+    <div class="pkview${shown?" kicked":""}" id="pkView" tabindex="0" role="group" aria-label="ゴール。 タップか やじるしキーで ねらう ところを きめる"><div class="pkgoal" style="left:${px(0)}%;top:${py(0)}%;width:${(100/V[2]*100).toFixed(2)}%;height:${(PKH/V[3]*100).toFixed(2)}%"></div>
+      ${inner}</div>
+    <button type="button" class="primary pkgo" id="pkGo"${aiming&&P.aim?"":" disabled"}>ける!</button>
+    <p class="pmsg" id="pkMsg">${esc(P.msg||PKMSG.start)}</p>
+    <p class="plhint">${PKMSG.hint}</p>
     </div>`;}
 
 /* events */
@@ -3320,6 +3437,12 @@ function sideShow(){const f=$("#s-sidef"); if(!f)return; const on=SIDEPOS.includ
   document.querySelectorAll("#s-side button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.side===sdraft.side)));
   $("#s-role").innerHTML=roleLine(sdraft.pos,sdraft.side,TEAMSHAPE);}
 const pressOnly=(sel,b)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+// v22: a tap in the picture of the goal aims there; the arrow keys move the aim, Enter or the space bar kicks
+$("#view").addEventListener("click",e=>{const v=e.target.closest("#pkView"); if(!v||Date.now()<holdUntil)return; const q=v.getBoundingClientRect(), w=v.clientWidth, h=v.clientHeight; if(!w||!h)return; // the picture inside its border
+  pkAim(PKV[0]+(e.clientX-q.left-v.clientLeft)/w*PKV[2],PKV[1]+(e.clientY-q.top-v.clientTop)/h*PKV[3]);});
+$("#view").addEventListener("keydown",e=>{if(e.target.id!=="pkView")return; const d={ArrowLeft:[-4,0],ArrowRight:[4,0],ArrowUp:[0,-4],ArrowDown:[0,4]}[e.key];
+  if(d){e.preventDefault(); const P=live&&live.pk, a=P&&P.aim?P.aim:[50,PKH/2]; pkAim(a[0]+d[0],a[1]+d[1]);}
+  else if(e.key==="Enter"||e.key===" "){e.preventDefault(); pkGo();}});
 $("#view").addEventListener("click",async e=>{
   const b=e.target.closest("button"); if(!b)return; if(Date.now()<holdUntil)return;
   if(b.dataset.mic){toggleMic(b.dataset.mic);return;} // before any await
@@ -3346,6 +3469,7 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.pd){playTap("drib","s");return;}
   if(b.dataset.wz){playArm(b.dataset.wz);return;} // v21
   if(b.dataset.pz){playTap("shot",b.dataset.pz);return;}
+  if(b.id==="pkGo"){pkGo();return;} // v22
   if(b.id==="skipLive"){if(live&&skipOk(live))finishLive();return;} // v17: not in the middle of a scene he plays
   if(b.id==="closeLive"){live=null;render();window.scrollTo(0,0);return;}
   if(b.id==="bk-file"){bkSaveFile();return;} // share and clipboard calls need the tap itself, so these come before any await
