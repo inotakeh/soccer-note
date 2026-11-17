@@ -456,7 +456,7 @@ details.wz summary{cursor:pointer;min-height:44px;padding:8px 0;line-height:1.5}
 details.wz p{margin:0 0 8px;line-height:1.6} details.wz p b{display:block;font-size:.85rem;color:var(--muted)}
 #wazaField,#mhWaza,#wazaBook{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 /* v17: the pitch of a chance he plays himself. The pitch is a picture: its colours are the same in light and dark. */
-.pitchbox{display:flex;flex-direction:column;gap:8px;margin:10px auto;width:100%;max-width:480px;word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+.pth{visibility:hidden}.pth::after{content:attr(data-t)}.pitchbox{display:flex;flex-direction:column;gap:8px;margin:10px auto;width:100%;max-width:480px;max-width:min(480px,max(300px,calc((100vh - 380px)/1.15)));max-width:min(480px,max(300px,calc((100dvh - 380px)/1.15)));scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px);word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .ptitle{margin:0;font-weight:800;font-size:1.05rem} .ptitle span{display:block;font-weight:400;font-size:.9rem;color:var(--muted)}
 .pmsg{margin:0;min-height:3em;font-weight:700} .plhint{margin:0;font-size:.85rem;color:var(--muted)}
 .pwzbox{display:flex;flex-direction:column;gap:6px} .pwzt{margin:0;font-size:.85rem;font-weight:700;color:var(--muted)}
@@ -1214,7 +1214,7 @@ const PLAYMSG={cut:["あいてに カットされた…","あかい まるに �
   side:["おしい!","キーパーの すぐ よこ だった。 キーパーから とおい ほうを ねらおう。"],hard:["おしい!","むずかしい チャンスは、うまく いかない ことも あるよ。 ナイス チャレンジ!"],
   goal:"ゴール!! あいての いない コースを よく みつけたね!",goalTight:"ゴール!! むずかしい コースを きめた!",again:"こぼれだまを ひろった! もう いちど チャンス!",
   last:"さいごは シュート! ゴールの どこを ねらう?",moved:"あいても みかたも うごいたよ。 つぎは どうする?",
-  wzDrib:"「ドリブル」\u2060を タップ! ちかくの あいてを かわせるよ。",wzPass:"パスする みかたを タップ! あかい まるの ちかくでも とおりやすく なるよ。",wzOff:"わざを つかわない ことに したよ。 どうする?",start:"あいての いない コースを ねらって シュート!",startFar:"ゴールまで とおいよ。 フリーの みかたに パスするか、ドリブルで ちかづこう!"};
+  wzDrib:"「ドリブル」\u2060を タップ! ちかくの あいてを かわせるよ。",wzPass:"パスする みかたを タップ! あかい まるの ちかくでも とおりやすく なるよ。",wzOff:"わざを つかわない ことに したよ。 どうする?",wzUsed:"わざは もう つかったよ。",wzNot:"わざは パスか ドリブルで つかうよ。",start:"あいての いない コースを ねらって シュート!",startFar:"ゴールまで とおいよ。 フリーの みかたに パスするか、ドリブルで ちかづこう!"};
 /* ---------- match simulation ---------- */
 function poisson(l){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random();}while(p>L);return k-1;}
 // v17: the PK shoot-out of a drawn match (the lines simulate() had, word for word, so the draws come in the same order): draws it,
@@ -3106,7 +3106,7 @@ function flash(msg){flashMsg=msg;clearTimeout(flashT);flashT=setTimeout(()=>{fla
 let formAsk=false;
 function formMsg(msg,ask){formNote=msg; formAsk=!!(ask&&msg); const el=$("#saveMsg"); if(el){el.textContent=msg; el.hidden=!msg; el.classList.toggle("ask",formAsk);} else if(msg)flash(msg);
   const jb=$("#jugBack"); if(jb)jb.hidden=!formAsk;} // v14: 「かずを みる」 shows with the big-jump question only
-function go(t){stopVoice();const mk=missionOpen;closeMission();liftNote="";if(t==="notes"){stampSeen();calM="";}chalOpen=false;mateEdit=null;shopSheet=null;shopTry=null;gearMenu=null;craftNote=null;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);
+function go(t){stopVoice();const mk=missionOpen;closeMission();liftNote="";if(t==="notes"){stampSeen();calM="";}chalOpen=false;mateEdit=null;shopSheet=null;shopTry=null;gearMenu=null;craftNote=null;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);if(t==="match")playShow(); // v21.1: back on the しあい tab during a chance, its box is on the screen again
   if(mk&&t==="home"){const b=document.getElementById("msgo-"+mk);if(b)b.focus();}}
 
 /* match flow: the result is decided and saved at kick-off, then played back line by line */
@@ -3151,7 +3151,7 @@ function liveTick(){if(!live||live.done)return;
   if(live.shown>=live.res.ev.length-1){finishLive();return;}
   const nx=live.res.ev[live.shown+1];
   if(nx.play&&!nx.play.done){clearInterval(live.timer);live.timer=null;live.scene={ei:live.shown+1,st:playStart(nx.play),from:"",drib:false,msg:"",over:null,busy:false,lost:false,tries:0,ball:null,wz:"",wzUsed:0,wzd:"",wzp:""};
-    say(nx.play.kind==="hard"?"むずかしい チャンス!":"だいチャンス!"); if(tab==="match")renderView(); return;}
+    say(nx.play.kind==="hard"?"むずかしい チャンス!":"だいチャンス!"); if(tab==="match"){renderView(); playShow();} return;}
   live.shown++; if(tab==="match")renderView();}
 function finishLive(){if(!live||live.done)return; clearInterval(live.timer); clearTimeout(live.ptimer); live.timer=null;
   if(live.scene&&live.scene.over)playApply(live.res.ev[live.scene.ei],live.scene.over); // a scene that has ended counts
@@ -3172,6 +3172,11 @@ function liveSettle(){const L=live, R=L.res, gm=R.ev.filter(e=>e.goal&&e.side===
 // v21 the わざ he can choose: learned ones (ドリブル while the dribble is open, パス・トラップ while a pass is), only while he himself has the ball
 // and while he has used fewer than PLAYWAZA in this chance. S.wz: the one chosen ("" none), S.wzd / S.wzp: the one a dribble / the last pass worked with.
 const PLAYWZTAP=350;
+// v21.1: when a chance starts and its box (from the title to the message) does not stand whole between the top of the screen and the
+// tab bar, the box is brought to the top; where the page stood is kept (S.sy) and playEnd goes back there. Nothing is saved.
+function playShow(){const S=live&&live.scene, el=document.querySelector("#pitchBox"), m=document.querySelector("#pmsg"), nav=document.querySelector("nav.tabs"); if(!S||!el||!m)return;
+  const bot=nav?nav.getBoundingClientRect().top:window.innerHeight, r=el.getBoundingClientRect(); if(r.top>=0&&m.getBoundingClientRect().bottom<=bot)return;
+  S.sy=window.pageYOffset; window.scrollTo(0,Math.max(0,Math.round(S.sy+r.top-(parseFloat(getComputedStyle(el).scrollMarginTop)||12))));} // the page's own scroll only (no scrollIntoView: it could move a page around this one)
 function playWaza(sc,S,ops){if(S.wzUsed>=PLAYWAZA||!sc.who[S.st.car].hero)return [];
   const d=ops.some(o=>o.t==="drib"), p=ops.some(o=>o.t==="pass"); return wazaList(lastG).filter(x=>x.lv>0&&((x.grp==="drib"&&d)||(x.grp==="pass"&&p)));}
 function playArm(id){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over||S.lost)return;
@@ -3221,7 +3226,7 @@ const playFresh=S=>!S.busy&&!S.over&&!S.lost&&!S.tries&&!S.st.moves; // a scene 
 const skipOk=L=>!L.scene||playFresh(L.scene);
 function playEnd(){const L=live, S=L&&!L.done?L.scene:null; if(!S)return; clearTimeout(L.ptimer); const e=L.res.ev[S.ei];
   if(S.over){playApply(e,S.over); liveSettle();} // saved at once: closing the page keeps what he played, and a PK line that no longer fits is gone
-  e.play.done=true; L.scene=null; L.shown=S.ei; L.timer=setInterval(liveTick,1200); if(tab==="match")renderView();}
+  e.play.done=true; L.scene=null; L.shown=S.ei; L.timer=setInterval(liveTick,1200); if(tab==="match"){renderView(); if(typeof S.sy==="number")window.scrollTo(0,S.sy);}}
 // the pitch of the scene being played
 // v19: the other team's faces are pictures (MXOPP: one for each of up to four players, "gk" their keeper), as are the ball, the goal,
 // the grass and the small picture that shows where a play ended (S.fx = {k: goal | save | block | dribble, at: the spot, m: mirrored}).
@@ -3241,15 +3246,19 @@ function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.po
   const zones=["L","C","R"].map(z=>`<button type="button" class="pz" id="pz-${z}" data-pz="${z}"${ops.length?"":" disabled"} aria-label="ゴールの ${PZN[z]}へ シュート">${PZN[z]}</button>`).join("");
   const dr=ops.some(o=>o.t==="drib")?`<button type="button" class="pd" id="pd-s" data-pd="s" style="${xy(sc.s)}" aria-label="あいた ところへ ドリブル">ドリブル</button>`:"";
   const bp=S.ball||[at[0],at[1]+PLAYFEET];
-  // v21 わざ: the chips (kept, disabled, while the ball is on its way), or one line when he has used his or has none yet
-  const mine=!sc.coach&&!S.over&&!S.lost&&sc.who[st.car].hero, wops=S.busy?playOptions(sc,st):ops, wl=mine?playWaza(sc,S,wops):[], can=wops.some(o=>o.t!=="shot");
-  const wzbox=!mine||!can?"":S.wzUsed>=PLAYWAZA?`<p class="pwzt" id="pwzNote">わざは この チャンスで もう つかったよ。</p>`
-    :wl.length?`<div class="pwzbox" id="pwz"><p class="pwzt">わざを つかう(1つの チャンスで ${PLAYWAZA}回)</p><div class="chips pwz">${wl.map(x=>`<button type="button" data-wz="${x.id}" aria-pressed="${x.id===S.wz}"${S.busy?" disabled":""} aria-label="${x.grp==="drib"?"ドリブル":"パス"}の わざ ${esc(x.n)}${x.lv===2?" ゴールド":""}"><small>${x.grp==="drib"?"ドリブル":"パス"}</small>${esc(x.n)}${x.lv===2?" ★":""}</button>`).join("")}</div></div>`
-    :wazaList(lastG).some(x=>x.lv>0&&x.grp!=="shoot")?"":`<p class="pwzt" id="pwzNote">ドリブルや パスの わざを おぼえると、ここで つかえるよ。</p>`;
-  return `<div class="pitchbox" id="pitchBox"><p class="ptitle"><b>${sc.kind==="hard"?"むずかしい チャンス!":"だいチャンス!"}</b>${S.over||S.lost?"":`<span>${sc.coach?`${MXICON("voice")}${esc(sc.who.h.n)}が ボールを もった! キーパーの きみが こえで おしえよう。`:"きみが ボールを もった! どうする?"}</span>`}</p>
+  // v21.1 わざ: above the pitch. The same chips through the whole chance (every ドリブル and パス わざ he has learned), so that the pitch
+  // never moves under his finger: the ones he cannot use now are disabled, and the line above them says where he stands.
+  const mine=!sc.coach&&!S.over&&!S.lost&&sc.who[st.car].hero, wops=S.busy?playOptions(sc,st):ops, wl=mine?playWaza(sc,S,wops):[];
+  const wall=sc.coach?[]:wazaList(lastG).filter(x=>x.lv>0&&x.grp!=="shoot");
+  const ptsub=sc.coach?`${esc(sc.who.h.n)}が ボールを もった! キーパーの きみが こえで おしえよう。`:"きみが ボールを もった! どうする?"; // the title's second half: its room is kept (.pth) when the ball is lost or the chance is over
+  const wzt=S.wzUsed>=PLAYWAZA?PLAYMSG.wzUsed:wl.length||S.over||S.lost?`わざを つかう(1つの チャンスで ${PLAYWAZA}回)`:PLAYMSG.wzNot;
+  const wzbox=sc.coach?"":wall.length?`<div class="pwzbox" id="pwz"><p class="pwzt" id="pwzt">${wzt}</p><div class="chips pwz">${wall.map(x=>{const on=!S.busy&&wl.some(y=>y.id===x.id);
+      return `<button type="button" data-wz="${x.id}" aria-pressed="${on&&x.id===S.wz}"${on?"":" disabled"} aria-label="${x.grp==="drib"?"ドリブル":"パス"}の わざ ${esc(x.n)}${x.lv===2?" ゴールド":""}"><small>${x.grp==="drib"?"ドリブル":"パス"}</small>${esc(x.n)}${x.lv===2?" ★":""}</button>`;}).join("")}</div></div>`
+    :`<p class="pwzt" id="pwzNote">ドリブルや パスの わざを おぼえると、ここで つかえるよ。</p>`;
+  return `<div class="pitchbox" id="pitchBox"><p class="ptitle"><b>${sc.kind==="hard"?"むずかしい チャンス!":"だいチャンス!"}</b>${S.over||S.lost?`<span class="pth" aria-hidden="true" data-t="${ptsub}">${sc.coach?MXICON("voice"):""}</span>`:`<span>${sc.coach?MXICON("voice"):""}${ptsub}</span>`}</p>
+    ${wzbox}
     <div class="ppitch" id="pitch"><svg class="plines" viewBox="0 0 100 115" preserveAspectRatio="none" aria-hidden="true"><path d="M14 0v36h72V0M0 113h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 36a12 9 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/></svg>
     <div class="pgoal">${zones}</div>${rings}${opp}${dr}${pl}<span class="pball" id="pball" style="${xy(bp)}"></span>${fx}</div>
-    ${wzbox}
     <p class="pmsg" id="pmsg">${esc(S.msg||(at[1]>PLAYFAR?PLAYMSG.startFar:PLAYMSG.start))}</p>
     <p class="plhint">みかたを タップで パス、ゴールを タップで シュート。 あかい まるは あいての あしが とどく ところ。 パスや ドリブルの あとは、みんなが うごくよ。</p>
     </div>`;}
