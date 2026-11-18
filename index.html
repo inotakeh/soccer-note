@@ -476,7 +476,9 @@ details.wz p{margin:0 0 8px;line-height:1.6} details.wz p b{display:block;font-s
 .pkover small{display:block;font-size:.8rem;font-weight:700;color:#c9d1e6}
 .pkgo{min-height:48px;cursor:pointer} .pkgo:disabled{opacity:.45;cursor:default}
 @media (prefers-reduced-motion:no-preference){.pkkeeper{transition:left .5s ease-out,top .5s ease-out}.pkreach{transition:opacity .2s}}
-.pth{visibility:hidden}.pth::after{content:attr(data-t)}.pitchbox{display:flex;flex-direction:column;gap:8px;margin:10px auto;width:100%;max-width:480px;max-width:min(480px,max(300px,calc((100vh - 380px)/1.15)));max-width:min(480px,max(300px,calc((100dvh - 380px)/1.15)));scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px);word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+.pth{visibility:hidden}
+.ms .mstk{margin:-4px 0 0;font-size:.85rem}
+.ticket .muted{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict} /* its longer line breaks at a space, never inside a word */.pth::after{content:attr(data-t)}.pitchbox{display:flex;flex-direction:column;gap:8px;margin:10px auto;width:100%;max-width:480px;max-width:min(480px,max(300px,calc((100vh - 380px)/1.15)));max-width:min(480px,max(300px,calc((100dvh - 380px)/1.15)));scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px);word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .ptitle{margin:0;font-weight:800;font-size:1.05rem} .ptitle span{display:block;font-weight:400;font-size:.9rem;color:var(--muted)}
 .pmsg{margin:0;min-height:3em;font-weight:700} .plhint{margin:0;font-size:.85rem;color:var(--muted)}
 .pwzbox{display:flex;flex-direction:column;gap:6px} .pwzt{margin:0;font-size:.85rem;font-weight:700;color:var(--muted)}
@@ -916,13 +918,14 @@ const mateName=m=>(profile.mnames&&Object.prototype.hasOwnProperty.call(profile.
 // roughly 35 notes; a full 3+3 note (v13.2) about three in four and 31-32 notes, 2+1 about 43; one who never picks team chips (no teammates)
 // needs about 56 (sim132.js, with the workshop gear).
 const roundNames=n=>n===3?["1かいせん","じゅんけっしょう","けっしょう"]:n===4?["1かいせん","2かいせん","じゅんけっしょう","けっしょう"]:["1かいせん","2かいせん","3かいせん","じゅんけっしょう","けっしょう"];
+// v22.1: every team is a tenth weaker than the ratings fitted above (the matches were lost too often): a match that was even is won six times in ten.
 const CUPS=[
-  {n:"ちびっこカップ",teams:[["ひまわりFC",12],["みどりキッカーズ",16],["あおぞらSC",20]],sf:"w_white",f:"h_red"},
-  {n:"まちのカップ",teams:[["川ぞいファイターズ",22],["えきまえユナイテッド",27],["山のてFC",33]],sf:"h_blue",f:"b_fire"},
-  {n:"市たいかい",teams:[["北小ウイングス",33],["みなとシーガルズ",36],["サンダーキッズ",40],["中央ブレイブス",45]],sf:"w_black",f:"b_thunder"},
-  {n:"県たいかい",teams:[["ストームライダーズ",43],["レッドコメッツ",47],["ブラックウルブズ",52],["スカイファルコンズ",58]],sf:"h_white",f:"b_ice"},
-  {n:"ぜんこく大会",teams:[["ドラゴンフレイム",55],["シルバーシャークス",58],["ファントムエイト",61],["ライジングサンズ",64],["キングレオーネ",70]],sf:"w_gold",f:"b_gold"},
-  {n:"せかい大会",teams:[["ギャラクシースターズ",65],["アイアンバイキングス",68],["サンバキングス",71],["タイタンズ",74],["ゼウスFC",80]],sf:"h_gold",f:"b_legend"}
+  {n:"ちびっこカップ",teams:[["ひまわりFC",11],["みどりキッカーズ",14],["あおぞらSC",18]],sf:"w_white",f:"h_red"},
+  {n:"まちのカップ",teams:[["川ぞいファイターズ",20],["えきまえユナイテッド",24],["山のてFC",30]],sf:"h_blue",f:"b_fire"},
+  {n:"市たいかい",teams:[["北小ウイングス",30],["みなとシーガルズ",32],["サンダーキッズ",36],["中央ブレイブス",41]],sf:"w_black",f:"b_thunder"},
+  {n:"県たいかい",teams:[["ストームライダーズ",39],["レッドコメッツ",42],["ブラックウルブズ",47],["スカイファルコンズ",52]],sf:"h_white",f:"b_ice"},
+  {n:"ぜんこく大会",teams:[["ドラゴンフレイム",50],["シルバーシャークス",52],["ファントムエイト",55],["ライジングサンズ",58],["キングレオーネ",63]],sf:"w_gold",f:"b_gold"},
+  {n:"せかい大会",teams:[["ギャラクシースターズ",59],["アイアンバイキングス",61],["サンバキングス",64],["タイタンズ",67],["ゼウスFC",72]],sf:"h_gold",f:"b_legend"}
 ];
 const ITEMS={
   w_white:{n:"しろい リストバンド",slot:"wrist",c:"#f2f4f8"},
@@ -1042,7 +1045,7 @@ function missionPass(ms){
     if(String(m.parent||"").trim()){parts.push(["おうちの人のコメント",10]); pn++;} // as on notes (entryXP)
     const vd=mday(m); if(m.kind==="video"&&!vpar[vd]&&missionDone(m)&&String(m.parent||"").trim()){vpar[vd]=m.id; parts.push([VPART,VIDEOPARENT,"msn"]); hoshi+=HOSHIPARENT;} // v14.1 👪 (v14.2 ⭐ +2)
     per[m.id]={parts,sum:parts.reduce((a,p)=>a+p[1],0),mat:{hane:0,ishi:0,ito:0,hoshi}};});
-  return {list,per,pn};
+  return {list,per,pn,tk:Object.keys(won).length}; // v22.1 tk: the missions cleared (a kind once a day), each one match ticket
 }
 // v14.1 👪: true when a parent's comment on record id (a finished 🎬 record) would bring the 👪 part: no 🎬 record of its day has it yet.
 function vparOpen(g,id){const m=g.ms.find(x=>x.id===id); if(!m||m.kind!=="video"||!missionDone(m))return false; const d=mday(m);
@@ -1102,10 +1105,10 @@ function compute(list,ms){
   });
   // v14.1 a finished record's day is a writing day too, so the first thing written on a day may be a record: the bonus then goes on it.
   for(const id in sp.rec){const r=mp.per[id], s=sp.rec[id]; if(!r)continue; r.stk=s; if(s.xp){r.parts=r.parts.concat(stkPart(s)); r.sum+=s.xp;}}
-  for(const id in mp.per){xp+=mp.per[id].sum; const mm=mp.per[id].mat; for(const k in mm)mat[k]+=mm[k];} parentN+=mp.pn; // v14.2: a 🎬 record's ⭐ // v14 records add XP (and a parent's comment counts for おうえんパワー): no ticket, stats, materials or こまめに かいた (つづけてかいた before v14.1)
+  for(const id in mp.per){xp+=mp.per[id].sum; const mm=mp.per[id].mat; for(const k in mm)mat[k]+=mm[k];} parentN+=mp.pn; // v14.2: a 🎬 record's ⭐ // v14 records add XP (and a parent's comment counts for おうえんパワー): no stats, materials or こまめに かいた (つづけてかいた before v14.1)
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
-  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,waza:wazaPass(es,mp.list),stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
+  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,mtk:mp.tk,waza:wazaPass(es,mp.list),stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
 }
 const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
 
@@ -1149,7 +1152,15 @@ function teamPower(g){
   const wz=wazaList(g).reduce((a,x)=>a+(x.lv===2?WAZAPOW[1]:x.lv===1?WAZAPOW[0]:0),0); // v16: learned techniques
   return {lu,hero,avg,sk,it,mk,wz,fire,total:0.3*hero+0.7*avg+sk+it+mk+wz+fire};
 }
-const tickets=g=>Math.max(0,g.es.length-(game.used||0));
+// v22.1: a note is one ticket, and so is a cleared mission (g.mtk, counted from the records: the earlier ones count as well)
+const tickets=g=>Math.max(0,g.es.length+(g.mtk||0)-(game.used||0));
+const ticketCap=()=>entries.length+missionPass(missions).tk; // every ticket there has been: game.used is never more
+// After a record is deleted game.used comes down to it, so that the deleted record's used ticket does not cost the next one its ticket.
+// Not while the mission records are unknown (not read yet, or unreadable now): the tickets of those records would be handed back.
+function ticketTrim(){if(!gameReady||!msReady||msErr)return; const cap=ticketCap(); if((game.used||0)>cap){game.used=cap;store.setGame().catch(()=>{});}}
+// The same count for a restore, with the file's notes and records that are coming in (bkGame runs before the records are written).
+const bkCap=p=>{const he=new Set(entries.map(e=>e.id)), hm=new Set(missions.map(m=>m.id));
+  return entries.length+(p.add||[]).filter(e=>!he.has(e.id)).length+missionPass(missions.concat((p.addM||[]).filter(m=>!hm.has(m.id)))).tk;};
 
 // v17 ピッチ: the chances he plays himself. A scene is a still picture of the attack seen from above (x 0-100 across, y 0-115 from the
 // goal line down, one unit both ways): the player with the ball (h), two teammates (a, b), the other team's players (d), their keeper
@@ -1159,6 +1170,7 @@ const tickets=g=>Math.max(0,g.es.length-(game.used||0));
 // best. Open moves and open shots work; a tight move works with the chance PLAYTIGHT.move, a tight shot with PLAYTIGHT.shot; blocked
 // ones fail. "sure" scenes (a goal the match already had) hold a fully open way; "hard" scenes (one extra chance a match) hold none.
 // In a sure scene the ball comes back PLAYRETRY time after a mistake (こぼれだま), so one slip does not cost the goal.
+// v22.1: nor does a second one: then a mate puts the loose ball in (playRescue). Only a hard scene changes the score (one goal more).
 // v21 うごく ピッチ: after a pass or a dribble that worked the picture moves. The other team's players step towards the ball (PLAYSTEP at
 // most, never nearer to it than PLAYKEEP, so the player with the ball is not inside a red circle because of a step) and the two mates
 // without the ball run PLAYRUN: away from the opponent nearest to them and towards the goal ("pass and go"). The lanes of the next tap
@@ -1232,7 +1244,7 @@ const PLAYMSG={cut:["あいてに カットされた…","あかい まるに �
   keeper:["キーパーの しょうめん だった…","キーパーの いない ほうを ねらおう。"],block:["あいてに ブロックされた…","あかい まるに かからない コースを ねらおう。"],
   tight:["おしい!","あかい まるの ちかくは、うまく いかない ことも あるよ。"],far:["おしい!","とおくからの シュートは むずかしい。 パスや ドリブルで ゴールに ちかづいて みよう。"],
   side:["おしい!","キーパーの すぐ よこ だった。 キーパーから とおい ほうを ねらおう。"],hard:["おしい!","むずかしい チャンスは、うまく いかない ことも あるよ。 ナイス チャレンジ!"],
-  goal:"ゴール!! あいての いない コースを よく みつけたね!",goalTight:"ゴール!! むずかしい コースを きめた!",again:"こぼれだまを ひろった! もう いちど チャンス!",
+  goal:"ゴール!! あいての いない コースを よく みつけたね!",goalTight:"ゴール!! むずかしい コースを きめた!",again:"こぼれだまを ひろった! もう いちど チャンス!",rescue:"なかまが たすけて くれたね! ナイス チャレンジ!",
   last:"さいごは シュート! ゴールの どこを ねらう?",moved:"あいても みかたも うごいたよ。 つぎは どうする?",
   wzDrib:"「ドリブル」\u2060を タップ! ちかくの あいてを かわせるよ。",wzPass:"パスする みかたを タップ! あかい まるの ちかくでも とおりやすく なるよ。",wzOff:"わざを つかわない ことに したよ。 どうする?",wzUsed:"わざは もう つかったよ。",wzNot:"わざは パスか ドリブルで つかうよ。",start:"あいての いない コースを ねらって シュート!",startFar:"ゴールまで とおいよ。 フリーの みかたに パスするか、ドリブルで ちかづこう!"};
 /* ---------- match simulation ---------- */
@@ -1241,7 +1253,7 @@ function poisson(l){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=Math.random();}wh
 // (0,0) is the top corner inside the left post, (100,PKH) the foot of the right post. Read by p_v22.py and by the checks in node.
 const PKH=44, PKN=5, PKOPP=.7, PKLUCK=.35;          // the goal is 100 wide and PKH high; kicks each; the other team scores this often (as pkShoot had it); a ball inside the outer circle only
 const PKKY=27, PKRIN=17, PKROUT=33, PKOFF=9;       // the keeper: how high his middle is, his two circles (inner: he holds it, outer: he may reach it), how far from the middle he may stand
-const PKS0=22, PKS1=14, PKSB=80;                    // the yellow circle (where the ball may fly): its radius with brave 0, and with brave PKSB or more
+const PKS0=15, PKS1=10, PKSB=80;                    // the yellow circle (where the ball may fly): its radius with brave 0, and with brave PKSB or more
 const PKV=[-12,-14,124,76];                         // what the picture shows: left, top, width, height (the goal and some room round it)
 const pkSpread=brave=>PKS0+(PKS1-PKS0)*Math.max(0,Math.min(1,(brave||0)/PKSB));
 const pkKeeper=r=>({x:Math.round(50+(r*2-1)*PKOFF),y:PKKY,ri:PKRIN,ro:PKROUT}); // r: a number from 0 to 1
@@ -1260,6 +1272,7 @@ function pkKick(aim,kp,s,r){const p=pkLand(aim,s,r[0],r[1]), w=pkSpot(p,kp); ret
 function pkDecided(a,b){const ga=a.filter(Boolean).length, gb=b.filter(Boolean).length;
   if(a.length<=PKN&&b.length<=PKN&&(a.length<PKN||b.length<PKN))return ga>gb+(PKN-b.length)||gb>ga+(PKN-a.length)?[ga,gb]:null;
   return a.length===b.length&&ga!==gb?[ga,gb]:null;}
+// v22.1: PKS0 and PKS1 were 22 and 14 (v22/pk.js): with 15 and 10 an aim at a top corner is about as good as a kick that goes by itself (v221/pace221.out)
 // v17: the PK shoot-out of a drawn match (the lines simulate() had, word for word, so the draws come in the same order): draws it,
 // adds its line to ev and returns [pk, win].
 function pkShoot(g,ev){let pk, win;
@@ -1679,7 +1692,7 @@ const bkAfter=p=>compute(withJug(entries,p.fixJ).concat(p.add),missions.concat(p
 // The game after a restore: the backup's when it got further, with this device's made pieces copied over it (its colours win), else this one with the backup's missing pieces.
 function bkGame(p,d){
   const g=JSON.parse(JSON.stringify(p.useGame?d.game:game)), mine=JSON.parse(JSON.stringify(game.made||{}));
-  if(p.useGame){g.used=Math.min(g.used,entries.length); g.made=Object.assign({},g.made,mine);}
+  if(p.useGame){if(!msErr)g.used=Math.min(g.used,bkCap(p)); g.made=Object.assign({},g.made,mine);}
   else{g.made=Object.assign({},g.made); p.addMade.forEach(id=>{if(!own(g.made,id))g.made[id]=Object.assign({},d.game.made[id]);});}
   return g;
 }
@@ -2197,7 +2210,7 @@ function mformMsg(msg,focusId,why){msNote=msg; msWhy=!!(why&&msg); const el=$("#
 let msFocus=false;
 function msSaving(v){msaving=v; const b=$("#msSave"); if(!b)return; if(v)msFocus=document.activeElement===b; b.disabled=v; b.textContent=v?"ほぞん中…":"かけた!";
   if(!v){const lost=!document.activeElement||document.activeElement===document.body; if(msFocus&&lost){try{b.focus({preventScroll:true});}catch(e){b.focus();}} msFocus=false;}}
-// かけた!: the checks of §6.2 in order, then the record is written to its own store (never a note: no ticket). One id and one save time
+// かけた!: the checks of §6.2 in order, then the record is written to its own store (never a note; v22.1: the first of its kind that day is a match ticket, missionPass). One id and one save time
 // per draft, so pressing again after a slow save rewrites the same record.
 async function saveMission(kind){
   const d=mdraft[kind]; if(msaving||!d)return;
@@ -2217,7 +2230,7 @@ async function saveMission(kind){
   msaving=false; if(db)missions=missions.filter(x=>x.id!==m.id).concat([m]); // until the snapshot lands
   mdraft[kind]=null; keepMission(); missionOpen=null; msNote=""; handSet(m.id); tab="home"; render(); window.scrollTo(0,0);
   const gain=stkGain(lastG.mper[m.id],before,true); // the records are in: saveMission() waits for them
-  if(gain&&gain.sum)celebrate(before,gain,lastG,false,m.id,{mk:kind,plan:m.next,focus:"#ms-"+kind});
+  if(gain&&gain.sum)celebrate(before,gain,lastG,(lastG.mtk||0)>(before.mtk||0),m.id,{mk:kind,plan:m.next,focus:"#ms-"+kind}); // v22.1: with its ticket
   else if(wazaList(lastG).some((x,i)=>x.lv>wazaList(before)[i].lv)){ // v16: a record without XP can still teach a わざ
     flash("あたらしい わざを おぼえたよ! わざ ずかんを みてね。"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
   else{flash(kind==="video"&&vparOpen(lastG,m.id)?`かけたね! おうちの人に コメントを もらうと +${VIDEOPARENT}\u00a0XP!`:"かけたね! きょうの XP は もう もらって いるよ。 また あした!"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
@@ -2272,6 +2285,7 @@ function missionPanel(g){
   if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
   const fresh=msReady&&!g.ms.length&&!g.es.some(e=>Object.keys(jugOf(e)).length);
   return `<section class="panel ms" id="missions" aria-labelledby="msH"><h2 id="msH">ミッション${fresh?`<span class="msnew">NEW!</span>`:""}</h2>
+  <p class="muted mstk" id="msTk">ミッションを クリアすると、しあいチケットも 1まい もらえるよ! リフティングは ノートの チケットだよ。</p>
   <div class="ms-grid">${mCard(g,"video")}${mCard(g,"learn")}${mCard(g,"pro")}${mCard(g,"home")}${liftTiles(g)}</div></section>`;
 }
 // One writing card. Whether it is done today is worked out on every render, so it opens again after midnight with no message.
@@ -2583,6 +2597,7 @@ async function bkApply(){
     }
     // v14: the records last, on their own: a failure there never undoes the notes, the match record, the look, the made pieces or the names.
     mFail=await bkApplyMissions(p);
+    if(mFail)ticketTrim(); // v22.1: the records did not come in, so their tickets do not count as used
     if(d.at)bkMark(d.at);
     stampSeen(p.add.concat(mFail?[]:p.addM)); // old stamps and comments brought back are not news
     // The open settings show the player brought back, not the choices made or the words typed before it (render keeps typed words).
@@ -2818,7 +2833,7 @@ function viewMatch(g){
     ${steps}
     <div class="vs"><span>${esc(myTeam())}</span><span class="b"><i style="width:${Math.round(me/mx*100)}%"></i></span><em>${me}</em>
       <span>${esc(opp.n)}</span><span class="b opp"><i style="width:${Math.round(opp.r/mx*100)}%"></i></span><em>${opp.r}</em></div>
-    <div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><span class="muted">ノートを 1かい かくと 1まい もらえる</span></div>
+    <div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><span class="muted">ノートを かくか、ミッションを クリアすると 1まい もらえる</span></div>
     ${tk?`<div class="kickrow"><button class="primary" id="kick" type="button">${MXICON("whistle")}キックオフ!</button><p class="muted" id="playHint">チャンスが きたら、きみが ピッチで プレーするよ。</p><button class="ghost" id="kickAuto" type="button">みるだけで しあいを する</button></div>`:`<button class="primary" data-go="write" type="button">ノートを かいて チケットを もらう</button>`}
   </section>
   <section class="panel"><h2>トロフィー</h2><div class="cups">${cups}</div></section>
@@ -3229,7 +3244,7 @@ function playArm(id){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.o
   const now=Date.now(); if(S.wz===id&&S.wzAt&&now-S.wzAt<PLAYWZTAP)return; S.wzAt=now; // a second tap right after the first is a double tap, not a change of mind
   S.wz=S.wz===id?"":id; S.msg=S.wz?`${w.n}を つかうよ! ${w.grp==="drib"?PLAYMSG.wzDrib:PLAYMSG.wzPass}`:PLAYMSG.wzOff; say(S.msg);
   if(tab==="match"){renderView(); const b=document.querySelector(`#pwz [data-wz="${id}"]`); if(b)b.focus({preventScroll:true});}}
-function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over)return;
+function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over||S.lost)return; // v22.1 S.lost: no move while he looks at a mistake (no button is on then)
   const sc=L.res.ev[S.ei].play, st=S.st, wz=t!=="shot"&&S.wz?playWaza(sc,S,playOptions(sc,st)).find(x=>x.id===S.wz&&x.grp===t)||null:null; // the chosen one, when it fits this tap
   const r=playAct(sc,st,t,to,Math.random(),wz?wz.lv:0); if(!r)return;
   if(wz){S.wzUsed++; S.wz="";} else if(t==="pass"&&S.wz&&WZ[S.wz]&&WZ[S.wz][1]==="drib")S.wz=""; // a ドリブル わざ chosen, then a pass: the dribble is gone with the first move
@@ -3251,8 +3266,18 @@ function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S
       S.tries++; S.lost=true; say(S.msg); if(tab==="match")renderView();
       L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.lost=false; S.st=playStart(sc); S.from=""; S.drib=false; S.ball=null; S.fx=null; S.wz=""; S.wzUsed=0; S.wzd=""; S.wzp=""; S.msg=PLAYMSG.again+" "+o.tip; say(S.msg); if(tab==="match")renderView();},1800);
       return;}
+    if(!o.goal&&sc.kind==="sure"){ // v22.1: the second mistake: he sees what went wrong, then a mate scores (playRescue)
+      S.lost=true; say(S.msg); if(tab==="match")renderView();
+      L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; const q=playRescue(sc,S.st); S.lost=false; S.ball=PZ[q.z]; S.fx={k:"goal",at:[PZ[q.z][0],9]}; S.over=q.over; S.msg=q.over.msg; say(S.msg); if(tab==="match")renderView();
+        L.ptimer=setTimeout(()=>{if(live===L&&L.scene===S)playEnd();},1800);},1800);
+      return;}
     S.over=o; say(S.msg); if(tab==="match")renderView();
     L.ptimer=setTimeout(()=>{if(live===L&&L.scene===S)playEnd();},1800);},650);}
+// v22.1: a sure chance is a goal the match already had. When his second try fails too, a mate (not the one who lost the ball; a mate
+// with a name rather than a すけっと, when there is one) puts the loose ball in on the side away from the keeper: playing a chance
+// never costs his team a goal.
+function playRescue(sc,st){const ks=["a","b","h"].filter(k=>!sc.who[k].hero&&k!==st.car), k=ks.find(x=>sc.who[x].mate)||ks[0], n=sc.who[k].n;
+  return {z:sc.k==="L"?"R":"L",over:{goal:true,t:`こぼれだまを ${n}が おしこんだ! ゴール!!`,msg:`${n}が こぼれだまを おしこんだ! ゴール!! ${PLAYMSG.rescue}`}};}
 // how a play ended: the line for the match and the words for him
 function playOver(sc,S,t,to,r,cn,wz){const from=S.st.pos[S.st.car], clear=t==="shot"&&laneOf(S.st,from,PZ[to])===2; // clear: no opponent made the shot tight
   const why=!clear?PLAYMSG.tight:sc.kind==="hard"?PLAYMSG.hard:from[1]>PLAYFAR?PLAYMSG.far:PLAYMSG.side; // so the tip names what did: a hard scene, the distance, the keeper beside
@@ -3571,9 +3596,8 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.delno!==undefined){confirmDel=null;render();return;}
   if(b.dataset.delyes){const id=b.dataset.delyes; if(dictTarget==="pc-"+id)stopVoice();
     if(handoff===id)handoff=null; if(stampOpen===id)stampOpen=null; if(editingParent===id)editingParent=null; delete pcText[id];
-    try{if(isMission(id))await mstore.remove(id); // v14: a mission record holds no ticket, so game.used stays as it is
-      else{await store.remove(b.dataset.delyes);
-        if(gameReady&&(game.used||0)>entries.length){game.used=entries.length;store.setGame().catch(()=>{});}} // a deleted note's used ticket should not cost the next note its ticket
+    try{if(isMission(id))await mstore.remove(id); else await store.remove(b.dataset.delyes);
+      ticketTrim(); // v22.1: a cleared mission holds a ticket as a note does
     }catch(err){flash("けせませんでした。");}
     confirmDel=null;render();return;}
 });
