@@ -478,6 +478,28 @@ details.wz p{margin:0 0 8px;line-height:1.6} details.wz p b{display:block;font-s
 @media (prefers-reduced-motion:no-preference){.pkkeeper{transition:left .5s ease-out,top .5s ease-out}.pkreach{transition:opacity .2s}}
 .pth{visibility:hidden}
 .ms .mstk{margin:-4px 0 0;font-size:.85rem}
+/* v22.4 the week's review on the notes page, and the note that starts from 🏠 */
+.week h3{margin:0 0 4px;font-size:1rem} .week p{margin:0;line-height:1.6}
+.wk-head{display:flex;justify-content:space-between;align-items:center;gap:8px} .wk-head b{font-family:var(--display);font-size:1rem;text-align:center} .wk-head button[disabled]{opacity:.35}
+.wk-head button{min-height:44px;min-width:44px;margin:0} #week{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px)}
+.wk-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.wk-grid .wkd{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:3.9em;min-width:0;border-radius:10px;font-size:.85rem;padding:3px 0;color:var(--muted);border:1.5px solid transparent}
+.wk-grid .wkd small{font-size:.7rem;font-weight:800;color:var(--muted)} .wk-grid .wkd.fut{opacity:.7}
+.wk-grid button.wkd{border-color:var(--rule);background:var(--soft);color:var(--ink);font:inherit;font-size:.85rem;font-weight:800;cursor:pointer;margin:0}
+.wk-grid .wkd.today{box-shadow:inset 0 0 0 2px var(--accent-text)} .wk-grid .wkd i{display:flex;gap:3px;height:9px;align-items:center}
+.wm{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-text)} .wm.k-match{background:var(--kick);border-radius:1px;transform:rotate(45deg)} .wm.k-self{background:var(--good);border-radius:1px} .wm.k-msn{width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:0 4px 8px;border-color:transparent transparent var(--msn)}
+.wk-nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.wk-t{background:var(--chip);border:1px solid var(--rule);border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-width:0}
+.wk-t span{font-size:.75rem;font-weight:800;color:var(--muted)} .wk-t b{font-family:var(--display);font-size:1.35rem;line-height:1.15;color:var(--ink)} .wk-t b small{font-size:.75rem;margin-left:2px}
+@media (max-width:420px){.wk-nums{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.week .wk-b{background:var(--chip);border:1px solid var(--rule);border-radius:14px;padding:10px 12px} .week .wk-b b{color:var(--ink);font-size:1.08em}
+.week ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px} .week li .date{color:var(--muted);font-size:.85rem;margin-right:8px}
+.wk-st{display:flex;flex-wrap:wrap;gap:2px 14px}
+.week .wk-par{border-top:2px dashed var(--rule);padding-top:12px;display:flex;flex-direction:column;gap:4px;font-size:.92rem;color:var(--muted)} .week .wk-par h3{font-size:.9rem;color:var(--ink)}
+.fromhome{margin:0;background:var(--chip);border:1px solid var(--rule);border-radius:14px;padding:10px 12px;line-height:1.6;display:flex;flex-direction:column;gap:2px}
+.fromhome span.fh-w,.fromhome span.fh-h{font-size:.9rem;color:var(--muted)}
+.growcard .row{display:flex;flex-wrap:wrap;gap:8px}
+.week,.fromhome,.ms-note,#weekGo{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .revbox{display:flex;flex-direction:column;gap:6px;align-items:stretch;padding:10px 12px;border-radius:12px;border:2px solid #e8590c;background:rgba(232,89,12,.10);margin:6px 0}
 .revbox b{color:#e8590c;font-size:1.05rem}.revtag{display:inline-block;padding:1px 8px;border-radius:8px;background:#e8590c;color:#fff;font-size:.8rem;vertical-align:middle}
 .meal .mealrow{display:flex;gap:8px;flex-wrap:wrap}.meal .mealrow button{flex:1;min-width:130px;min-height:48px}
@@ -1940,11 +1962,30 @@ function curGoal(){
 function newDraft(){const es=sortEntries(entries), last=es[es.length-1], lp=es.slice().reverse().find(e=>typeof e.place==="string"&&e.place.trim()), g0=loaded()&&profReady?curGoal():"";
   return {id:uid(),date:today(),kind:"practice",goal:g0,goalFrom:g0,goalResult:"",chips:[],fun:0,good:"",next:"",parent:"",
     weather:"",temp:null,place:lp?lp.place.trim().slice(0,20):"",menu:[],games:[{opp:"",gf:null,ga:null}],npos:profile.pos||"",nside:profile.side||"",nshape:TEAMSHAPE,focus:[],hard:"",coach:"",jug:{},wxHand:false,wxFor:""};}
+// v22.4 a note that starts from today's 🏠 ボールあそび: the write page opens with じしゅれん and what he played already in it, so the
+// note is half written (he still adds one thing of his own, as every note needs). HOME2MENU: the note's menu for a play (none for two).
+const HOME2MENU={touch:"dribble",drib:"dribble",wall:"pass",trap:"trap",lift:"lift",duel:"duel",pass:"pass"};
+const homeWords=m=>{const n=homeMins(m.mins), w=homeMenu(m).map(id=>HOMEMENU.find(c=>c[0]===id)[1]).join("、"); return w?w+(n===5||n===10?` (${HOMEMINS.find(c=>c[0]===n)[1]})`:""):"";}; // the plays; the time when it is a number
+const dayFull=()=>entries.filter(e=>e.date===today()).length>=MAXPERDAY; // today has its notes
+// today's finished 🏠 record, while no note was written after it and today still has room for one
+function homeForNote(g){const t=today(); if(dayFull())return null;
+  const m=g.ms.filter(x=>x.kind==="home"&&missionDone(x)&&mday(x)===t).pop(); if(!m)return null;
+  return g.es.some(e=>isoOr(e.createdAt,"")>isoOr(m.createdAt,""))?null:m;}
+const draftEmpty=d=>!d.chips.length&&!d.goalResult&&!d.fun&&!d.menu.length&&!d.focus.length&&!Object.keys(cleanJug(d.jug)).length&&!wazaOf(d).length
+  &&![d.good,d.next,d.hard,d.coach].some(x=>String(x||"").trim())&&!d.games.some(gameUsed);
+function noteFromHome(id){const t=today(), m=missions.find(x=>x.id===id&&x.kind==="home"&&mday(x)===t);
+  if(draft&&!saving&&draft.date!==t&&touchedId!==draft.id){if(keptIs(draft))dropKept(); draft=null;} // a form left open on another day and never changed: today's note starts anew
+  go("write"); const d=draft; if(!m||!d||d.date!==t||d.kind==="match")return; // a note he is writing for another day, or of a match, is left as it is
+  if(d.kind==="practice"&&touchedId!==d.id&&draftEmpty(d))d.kind="self"; // a note he had begun keeps its kind
+  homeMenu(m).forEach(h=>{const k=HOME2MENU[h]; if(k&&!d.menu.includes(k))d.menu.push(k);});
+  d.fromHome=m.id; draftChanged(); render(); window.scrollTo(0,0); const h=document.getElementById("fromHome"); if(h)h.focus();}
+function fromHomeLine(d){const t=today(), m=d.fromHome&&d.date===t&&d.kind!=="match"&&missions.find(x=>x.id===d.fromHome&&mday(x)===t); if(!m)return ""; const w=homeWords(m);
+  return `<p class="fromhome" id="fromHome" tabindex="-1"><b><span aria-hidden="true">🏠 </span>きょうの ボールあそびを ノートに しよう!</b>${w?`<span class="fh-w">やった あそび: ${esc(w)}</span>`:""}<span class="fh-h">「がんばったこと」\u2060を えらぶか、 「うまくいったこと」\u2060を かけば OK!</span></p>`;}
 // v14 the note as save() stores it; the XP preview scores exactly this, so the two never differ. at: its save time.
 function noteOf(d,at){const e=Object.assign({},d,{createdAt:at,chips:d.chips.slice(0,MAXCHIPS),goal:d.goal.trim(),good:d.good.trim(),next:d.next.trim(),parent:d.parent.trim(),
     place:d.place.trim(),hard:d.hard.trim(),coach:d.coach.trim(),focus:focusOf(d),nside:sideOf(d.npos,d.nside,d.nshape),nshape:isShape(d.nshape)?d.nshape:"",
     menu:d.kind==="match"?[]:d.menu.slice(),games:d.kind==="match"?d.games.map(g=>({opp:g.opp.trim(),gf:g.gf,ga:g.ga})).filter(gameUsed):[],jug:cleanJug(d.jug)});
-  delete e.wxHand; delete e.wxFor; delete e.goalFrom; delete e.jugAsk; // only the form needs these
+  delete e.wxHand; delete e.wxFor; delete e.goalFrom; delete e.jugAsk; delete e.fromHome; // only the form needs these
   const wz=wazaOf(d); if(wz.length)e.waza=wz; else delete e.waza; return e;} // v16
 // v14: reads a count box. ０-９ become 0-9, and かい, 回 or spaces at the ends are taken off. Then 0-4 digits are a count ("" = none),
 // 5 digits or more are "big" (the box is emptied, so 10000 never turns into 1000), and anything else is "nan" (v:null: the last count is put back).
@@ -1961,7 +2002,7 @@ function draftExtras(base,d){
 }
 // The note being written is also kept in this browser, so a reload does not lose it. The copy is used only on the day it was last changed (an older one would bring back an old date unnoticed), and it is dropped when the note is saved.
 const DRAFT="soccer-note-draft"; let keptPending=false;
-function keepDraft(){try{if(draft)localStorage.setItem(DRAFT,JSON.stringify({day:today(),d:draft}));}catch(e){}}
+function keepDraft(){try{if(draft)localStorage.setItem(DRAFT,JSON.stringify({day:today(),d:draft},(k,v)=>k==="fromHome"?undefined:v));}catch(e){}} // v22.4: fromHome is of the open form only
 function dropKept(){try{localStorage.removeItem(DRAFT);}catch(e){}}
 // Reads the kept copy back as a clean draft: only known choices and texts of the lengths the form allows.
 function keptDraft(){
@@ -2325,13 +2366,13 @@ function growthLine(g){const G=growth(g), o=[];
   if(G.home.win)o.push(`この ${GROWDAYS}日で ${G.home.win}日、 おうちで ボールあそびを したよ!`);
   if(!o.length)return ""; const n=dayNo(today()); return o[((n%o.length)+o.length)%o.length];}
 function growthCard(g){if(!loaded()||!profReady||g.es.length<3)return ""; const l=growthLine(g); if(!l)return "";
-  return `<section class="panel growcard" id="growCard" aria-labelledby="gcH"><span class="label" id="gcH"><span aria-hidden="true">📈 </span>せいちょう きろく</span><b>${esc(l)}</b><button class="ghost mini" id="growGo" type="button">もっと みる</button></section>`;}
+  return `<section class="panel growcard" id="growCard" aria-labelledby="gcH"><span class="label" id="gcH"><span aria-hidden="true">📈 </span>せいちょう きろく</span><b>${esc(l)}</b><div class="row"><button class="ghost mini" id="growGo" type="button">もっと みる</button><button class="ghost mini" id="weekGo" type="button">こんしゅうの ふりかえり</button></div></section>`;}
 // The ミッション panel on home, under the goal card's own condition. NEW! until the first record or count.
 function missionPanel(g){
   if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
   const fresh=msReady&&!g.ms.length&&!g.es.some(e=>Object.keys(jugOf(e)).length);
   return `<section class="panel ms" id="missions" aria-labelledby="msH"><h2 id="msH">ミッション${fresh?`<span class="msnew">NEW!</span>`:""}</h2>
-  ${msReady&&!msErr?`<p class="muted mstk" id="msTk">${g.mleft>0?`ミッションを クリアすると、しあいチケットを あと ${g.mleft}まい もらえるよ! (ノートを かくと ${TKPERNOTE}まいに もどるよ)`:`ノートを かくと、ミッションで また しあいチケットを もらえるよ! (ノート 1さつで ${TKPERNOTE}まいまで)`}</p>`:""}
+  ${msReady&&!msErr?`<p class="muted mstk" id="msTk">${g.mleft>0?`ミッションを クリアすると、しあいチケットを あと ${g.mleft}まい もらえるよ! (ノートを かくと ${TKPERNOTE}まいに もどるよ)`:`${dayFull()?"あした ":""}ノートを かくと、ミッションで また しあいチケットを もらえるよ! (ノート 1さつで ${TKPERNOTE}まいまで)`}</p>`:""}
   <div class="ms-grid">${mCard(g,"video")}${mCard(g,"learn")}${mCard(g,"pro")}${mCard(g,"home")}${liftTiles(g)}</div></section>`;
 }
 // One writing card. Whether it is done today is worked out on every render, so it opens again after midnight with no message.
@@ -2342,7 +2383,8 @@ function mCard(g,kind){
   const [ic,nm]=MTITLE[kind], n=g.ms.filter(m=>m.kind===kind).length, xp=MKINDS.find(k=>k[0]===kind)[2], c="msc"+(kind==="pro"?" pro":kind==="home"?" home":"");
   const head=pill=>`<div class="msc-h"><h3><span aria-hidden="true">${ic} </span>${nm}</h3>${pill}</div>`;
   if(!msReady||msErr)return `<div class="${c}" id="ms-${kind}" tabindex="-1">${head("")}<p class="muted">${msReady?"いまは ミッションを ひらけないよ。 あとで もういちど ためしてね。":"よみこみ中…"}</p></div>`;
-  if(!missionLeft(kind))return `<div class="${c} done" id="ms-${kind}" tabindex="-1">${head(`<span class="ms-pill">✓ クリア!</span>`)}<p>${MDONE[kind]} (これまで ${n}かい)</p></div>`;
+  const hn=kind==="home"&&!missionLeft(kind)?homeForNote(g):null; // v22.4
+  if(!missionLeft(kind))return `<div class="${c} done" id="ms-${kind}" tabindex="-1">${head(`<span class="ms-pill">✓ クリア!</span>`)}<p>${MDONE[kind]} (これまで ${n}かい)</p>${hn?`<div class="msc-f"><button class="ms-go ms-note" id="msnote-home" data-homenote="${esc(hn.id)}" type="button">この あそびを ノートに かく</button></div>`:""}</div>`;
   const body=kind==="video"?`<p>じぶんの しあいの どうがを みて かこう。</p><p class="muted vpar"><span aria-hidden="true">👪 </span>おうちの人の コメントで +${VIDEOPARENT}\u00a0XP!</p>`
     :kind==="learn"?`<p><span class="label">きょうの ヒント</span> ${esc(hintsFor(today())[0])}</p><p class="muted"><span aria-hidden="true">👪 </span>ネットで しらべる ときは おうちの人と いっしょに。<br>どうがを みる ときも、 おうちの人と いっしょに。</p>`
     :kind==="home"?`<p>おうちで 5ふん〜10ぷん、 ボールで あそぼう。 すきな あそびを えらべるよ。</p><p><span class="label">きょうの おすすめ</span> ${esc(homePick(today())[1])}</p><p class="muted"><span aria-hidden="true">👪 </span>${HOMERULE}</p>`
@@ -2762,7 +2804,7 @@ function viewWrite(){
   if(draftStale&&loaded()&&profReady){draftStale=false;const t=curGoal();if(!d.goalResult&&d.goal===d.goalFrom&&t&&t!==d.goal){d.goal=d.goalFrom=t;keepDraft();}}
   if(!d.npos&&profile.pos){d.npos=profile.pos;d.nside=profile.side||"";d.nshape=TEAMSHAPE;} // a position cannot be unpicked, so "" means none was chosen yet
   const presets=goalPresets(d.npos,d.nside,d.nshape), places=recentPlaces(), ask=askFor(d);
-  return `<section class="panel write"><h2>きょうのノート</h2>${voiceHint()}
+  return `<section class="panel write"><h2>きょうのノート</h2>${fromHomeLine(d)}${voiceHint()}
   <h3 class="sec">きょうの きろく</h3>
   <div class="field"><label class="q" for="f-date">いつ?</label><input type="date" id="f-date" max="${today()}" value="${esc(d.date)}"></div>
   ${wxField(d)}
@@ -3062,7 +3104,7 @@ function viewNotes(g){
   }).join("");
   const credit=g.es.some(e=>Number.isFinite(e.temp))?`<p class="muted">きおんと てんきの データ:${WXCREDIT}(CC BY 4.0)</p>`:"";
   const hd=g.ms.length?(g.es.length?`${g.es.length}さつめ・ミッション ${g.ms.length}かい`:`ミッション ${g.ms.length}かい`):`${g.es.length}さつめ`;
-  return `${calView(g)}${growthPanel(g)}<section class="panel"><h2>ノート <span class="muted">${hd}</span></h2>${items}${credit}</section>`;
+  return `${calView(g)}${weekPanel(g)}${growthPanel(g)}<section class="panel"><h2>ノート <span class="muted">${hd}</span></h2>${items}${credit}</section>`;
 }
 // v14 the newest video review of each match day (g.ms is in writing order, so the last one wins), for the line on that day's match notes.
 function revByDate(g){const r=Object.create(null); g.ms.forEach(m=>{if(m.kind==="video"&&isDay(m.vdate))r[m.vdate]=m;}); return r;}
@@ -3139,6 +3181,69 @@ async function toggleStamp(nid,x){
   const patch={stamps:next}; if(!cur.includes(x))patch.stampAt=new Date().toISOString(); // only a new stamp brings the banner on home
   try{await st.update(nid,patch);render();}catch(err){flash("ほぞんできませんでした。");}
 }
+// v22.4 📅 こんしゅうの ふりかえり: one week (Monday to Sunday) of his own growth on the notes page, for him and the family to look at
+// together. Worked out on every render from the notes, the records and the last matches; nothing is stored. Only what grew is
+// shown (never "less than the week before"), as in the growth record. weekOff: 0 this week, -1 the one before, back to WEEKMAX.
+let weekOff=0; const WEEKMAX=26, WEEKDAYS=["げつ","か","すい","もく","きん","ど","にち"];
+const dayNum=d=>Date.parse(d+"T00:00:00Z"), realDay=d=>isDay(d)&&Number.isFinite(dayNum(d)); // isDay lets a day like Feb 31 through; some browsers cannot read it
+const dayAdd=(d,n)=>{const t=dayNum(d)+n*864e5; return Number.isFinite(t)?new Date(t).toISOString().slice(0,10):d;};
+const weekStart=d=>dayAdd(d,-((new Date(dayNum(d)).getUTCDay()+6)%7)); // the Monday of its week
+// What grew is the difference between two counts: B from everything before the week, A from everything up to its end (this week: g).
+// A record without a readable day is an old one. A note counts on its own day (as in the calendar), a record on the day it was written.
+function weekData(g,off){
+  const t=today(), a=dayAdd(weekStart(t),7*off), z=dayAdd(a,6), inW=d=>isDay(d)&&d>=a&&d<=z, old=d=>!(isDay(d)&&d>=a), upto=d=>!(isDay(d)&&d>z);
+  const es=g.es.filter(e=>inW(e.date)), ms=g.ms.filter(m=>missionDone(m)&&inW(mday(m)));
+  const B=compute(entries.filter(e=>old(e.date)),missions.filter(m=>old(mday(m)))), A=off<0?compute(entries.filter(e=>upto(e.date)),missions.filter(m=>upto(mday(m)))):g;
+  const days=[0,1,2,3,4,5,6].map(i=>{const d=dayAdd(a,i); return {d,es:es.filter(e=>e.date===d),ms:ms.filter(m=>mday(m)===d)};});
+  const qb=squad(B), sb=skillList(B), wb=wazaList(B), star=x=>[x.n,x.lv], cn=Object.create(null);
+  es.forEach(e=>(Array.isArray(e.chips)?e.chips:[]).slice(0,MAXCHIPS).filter((id,i,x)=>typeof id==="string"&&own(CHIP,id)&&x.indexOf(id)===i).forEach(id=>{cn[id]=(cn[id]||0)+1;}));
+  const tried=es.filter(e=>!!String(e.goal||"").trim()&&(e.goalResult==="done"||e.goalResult==="half")), recs=es.concat(ms);
+  const log=(Array.isArray(game.log)?game.log:[]).filter(l=>l.t>0&&inW(localDay(l.t)));
+  const first=g.es.map(e=>e.date).concat(g.ms.map(mday)).filter(realDay).sort()[0]||t;
+  const cm=cleanMeal(profile.meal), mpt=f=>Math.min(MEALCAP,Object.keys(cm).filter(f).reduce((n,d)=>n+MEALPT[cm[d]],0)); // v22.3 ごはん: the days of this week, and the stamina they brought
+  return {a,z,off,days,notes:es.length,miss:ms.length,wdays:days.filter(x=>x.es.length||x.ms.length).length,xp:Math.max(0,A.xp-B.xp),lv:[B.level,A.level],
+    stats:STATS.map(([k,n])=>[n,(A.stats[k]||0)-(B.stats[k]||0)]).filter(x=>x[1]>0),
+    mates:squad(A).filter((m,i)=>m.joined&&!qb[i].joined).map(m=>m.n),skills:skillList(A).filter((x,i)=>x.lv>sb[i].lv).map(star),waza:wazaList(A).filter((x,i)=>x.lv>wb[i].lv).map(star),
+    jug:JUGS.map(([k,nm])=>({nm,from:B.jug[k]?B.jug[k].n:0,to:A.jug[k]?A.jug[k].n:0})).filter(j=>j.to>j.from),
+    chips:Object.keys(cn).map(id=>[CHIP[id].t,cn[id]]).sort((x,y)=>y[1]-x[1]).slice(0,3),tries:{n:tried.length,done:tried.filter(e=>e.goalResult==="done").length},
+    goods:sortEntries(es).reverse().filter(e=>written(e.good)).slice(0,3).map(e=>[e.date,String(e.good).trim()]),
+    kinds:MKINDS.map(k=>[MTITLE[k[0]][0],ms.filter(m=>m.kind===k[0]).length]).filter(x=>x[1]),
+    win:log.filter(l=>l.win).length,lose:log.filter(l=>!l.win).length,said:recs.filter(r=>String(r.parent||"").trim()).length,recs:recs.length,
+    meal:{days:Object.keys(cm).filter(inW).length,pt:mpt(d=>d<=z)-mpt(d=>d<a)},
+    canPrev:off>-WEEKMAX&&a>weekStart(first)};
+}
+function weekPanel(g){
+  if(!(weekOff<=0&&weekOff>=-WEEKMAX))weekOff=0;
+  const W=weekData(g,weekOff), now=W.off===0, t=today(), wk=now?"こんしゅう":"この しゅう", b=[], up=[];
+  const cells=W.days.map((x,i)=>{const n=+x.d.slice(8), td=x.d===t?" today":"", lab=[x.es.length?`ノート ${x.es.length}さつ`:"",x.ms.length?`ミッション ${x.ms.length}かい`:""].filter(Boolean).join("・");
+    const mk=`<i>${x.es.slice(0,2).map(e=>`<b class="wm k-${KINDS.some(k=>k[0]===e.kind)?e.kind:"practice"}"></b>`).join("")}${x.ms.length?`<b class="wm k-msn"></b>`:""}</i>`;
+    return lab?`<button type="button" class="wkd on${td}" data-weekday="${x.d}" aria-label="${WEEKDAYS[i]}ようび ${n}にち ${lab}"><small>${WEEKDAYS[i]}</small><span>${n}</span>${mk}</button>`
+      :`<span class="wkd${td}${x.d>t?" fut":""}"><small>${WEEKDAYS[i]}</small><span>${n}</span>${mk}</span>`;}).join("");
+  const tile=(id,l,v,u)=>`<div class="wk-t" id="wk-${id}"><span>${l}</span><b>${v}<small>${u}</small></b></div>`;
+  if(W.lv[1]>W.lv[0])up.push(`<p>レベル: Lv.${W.lv[0]} → <b>Lv.${W.lv[1]}</b></p>`);
+  if(W.stats.length)up.push(`<p class="wk-st">${W.stats.map(([n,v])=>`<span>${n} <b>+${v}</b></span>`).join("")}</p>`);
+  if(W.meal.days)up.push(`<p id="wk-meal"><span aria-hidden="true">🍚 </span>ごはんを いっぱい たべた 日: <b>${W.meal.days}日</b>${W.meal.pt>0?` (スタミナ +${W.meal.pt})`:""}</p>`);
+  if(W.mates.length)up.push(`<p>なかまが ふえたよ: <b>${W.mates.map(esc).join("、")}</b></p>`);
+  const two=(xs,a,z)=>{const l=xs.filter(x=>x[1]<2).map(x=>esc(x[0])), gd=xs.filter(x=>x[1]>=2).map(x=>"★"+esc(x[0])); // learned, and turned gold
+    if(l.length)up.push(`<p>${a}: <b>${l.join("、")}</b></p>`); if(gd.length)up.push(`<p>${z}: <b>${gd.join("、")}</b></p>`);};
+  two(W.skills,"スキルを おぼえたよ","ゴールドスキルに なったよ"); two(W.waza,"わざを おぼえたよ","わざが ゴールドに なったよ");
+  W.jug.forEach(j=>up.push(`<p>リフティング(${j.nm}): ${j.from?`${j.from}かい → `:""}<b>${j.to}かい</b></p>`));
+  if(up.length)b.push(`<div class="wk-b" id="wk-up"><h3><span aria-hidden="true">💪 </span>${wk} のびた ちから</h3>${up.join("")}</div>`);
+  if(W.chips.length)b.push(`<div class="wk-b" id="wk-chip"><h3><span aria-hidden="true">⭐ </span>${wk} がんばった こと</h3>${W.chips.map(([l,n])=>`<p>${esc(l)} <b>${n}かい</b></p>`).join("")}</div>`);
+  if(W.tries.n)b.push(`<div class="wk-b" id="wk-goal"><h3><span aria-hidden="true">🎯 </span>めあてに チャレンジ</h3><p><b>${W.tries.n}かい</b> チャレンジ したよ!${W.tries.done?` 「できた!」\u2060は ${W.tries.done}かい。`:""}</p></div>`);
+  if(W.goods.length)b.push(`<div class="wk-b" id="wk-good"><h3><span aria-hidden="true">✨ </span>うまく いった こと</h3><ul>${W.goods.map(([d,x])=>`<li><span class="date">${esc(fmtShort(d))}</span>${esc(x)}</li>`).join("")}</ul></div>`);
+  const par=[];
+  if(W.recs)par.push(`<p>ノート ${W.notes}さつ・ミッション ${W.miss}かい${W.kinds.length?`(${W.kinds.map(([ic,n])=>`${ic} ${n}`).join("・")})`:""}</p>`);
+  if(W.win+W.lose)par.push(`<p>ゲームの しあい: かち ${W.win}・まけ ${W.lose}</p>`);
+  if(W.recs)par.push(`<p>おうちの人の コメント: ${W.said}かい (ひとことで +10\u00a0XP)</p>`);
+  if(now&&!W.notes&&W.miss)par.push(`<p>ボールあそびの あとは、 「この あそびを ノートに かく」\u2060を いっしょに おして みて ください。</p>`);
+  return `<section class="panel week" id="week" aria-labelledby="wkH"><h2 id="wkH" tabindex="-1"><span aria-hidden="true">📅 </span>${now?"こんしゅうの ふりかえり":"1しゅうかんの ふりかえり"}</h2>
+  <div class="wk-head"><button class="ghost mini" id="weekPrev" data-weekoff="${W.off-1}" type="button" aria-label="まえの しゅう"${W.canPrev?"":" disabled"}>◀</button><b>${fmtShort(W.a)}〜${fmtShort(W.z)}</b><button class="ghost mini" id="weekNext" data-weekoff="${W.off+1}" type="button" aria-label="つぎの しゅう"${now?" disabled":""}>▶</button></div>
+  <div class="wk-grid">${cells}</div>
+  ${W.recs?`<div class="wk-nums">${tile("notes","ノート",W.notes,"さつ")}${tile("miss","ミッション",W.miss,"かい")}${tile("days","かいた 日",W.wdays,"日")}${tile("xp","もらった XP","+"+W.xp,"")}</div>`
+    :`<p class="muted" id="wk-none">${now?"こんしゅうは これから! ノートを かくと、 ここに たまって いくよ。":"この しゅうは おやすみ だったね。"}</p>`}
+  ${b.join("")}${par.length?`<div class="wk-par" id="wkParent"><h3><span aria-hidden="true">👪 </span>おうちの人へ</h3>${par.join("")}</div>`:""}</section>`;
+}
 // The notes calendar: a mark on each day with a note (shape and colour by kind), the month's counts, and a tap that goes to that day's note.
 let calM="";
 function calView(g){
@@ -3214,7 +3319,7 @@ function flash(msg){flashMsg=msg;clearTimeout(flashT);flashT=setTimeout(()=>{fla
 let formAsk=false;
 function formMsg(msg,ask){formNote=msg; formAsk=!!(ask&&msg); const el=$("#saveMsg"); if(el){el.textContent=msg; el.hidden=!msg; el.classList.toggle("ask",formAsk);} else if(msg)flash(msg);
   const jb=$("#jugBack"); if(jb)jb.hidden=!formAsk;} // v14: 「かずを みる」 shows with the big-jump question only
-function go(t){stopVoice();const mk=missionOpen;closeMission();liftNote="";if(t==="notes"){stampSeen();calM="";}chalOpen=false;mateEdit=null;shopSheet=null;shopTry=null;gearMenu=null;craftNote=null;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);if(t==="match")playShow(); // v21.1: back on the しあい tab during a chance, its box is on the screen again
+function go(t){stopVoice();const mk=missionOpen;closeMission();liftNote="";if(t==="notes"){stampSeen();calM="";weekOff=0;}chalOpen=false;mateEdit=null;shopSheet=null;shopTry=null;gearMenu=null;craftNote=null;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);if(t==="match")playShow(); // v21.1: back on the しあい tab during a chance, its box is on the screen again
   if(mk&&t==="home"){const b=document.getElementById("msgo-"+mk);if(b)b.focus();}}
 
 /* match flow: the result is decided and saved at kick-off, then played back line by line */
@@ -3536,6 +3641,10 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.calm){const kb=document.activeElement===b&&b.id;calM=b.dataset.calm;render();const f=kb&&document.getElementById(kb);
     if(f&&f.disabled){const o=document.getElementById(kb==="calPrev"?"calNext":"calPrev");if(o&&!o.disabled)o.focus();}return;}
   if(b.dataset.calday){const d=b.dataset.calday;showNote(a=>a.dataset.date===d);return;}
+  if(b.dataset.weekoff!==undefined){const kb=document.activeElement===b&&b.id;weekOff=+b.dataset.weekoff||0;render();const f=kb&&document.getElementById(kb); // v22.4
+    if(f&&f.disabled){const h=document.getElementById("wkH");if(h)h.focus();}return;}
+  if(b.dataset.weekday){const d=b.dataset.weekday;showNote(a=>a.dataset.date===d);return;}
+  if(b.dataset.homenote){noteFromHome(b.dataset.homenote);return;}
   if(b.id==="openSettings"){openSettings();return;}
   if(b.dataset.meal){await setMeal(+b.dataset.meal);return;} // v22.3
   if(b.dataset.mname){if(!loaded()||!profReady){flash("よみこみ中です。すこし まってから もういちど おしてね。");return;}mateEdit=b.dataset.mname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}return;}
@@ -3575,6 +3684,7 @@ $("#view").addEventListener("click",async e=>{
     render();store.setGame().catch(()=>flash("ほぞんできませんでした。"));return;}
   // v14 missions: the cards on home, the three forms (each chip ends with missionChanged, so the draft is kept at once), the links in the list
   if(b.dataset.mopen){openMission(b.dataset.mopen);return;}
+  if(b.id==="weekGo"){holdUntil=Date.now()+400;go("notes");const h=$("#wkH");if(h){const p=$("#week");if(p&&p.scrollIntoView)p.scrollIntoView({block:"start"});try{h.focus({preventScroll:true});}catch(err){h.focus();}}return;} // v22.4 📅
   if(b.id==="growGo"){holdUntil=Date.now()+400;go("notes");const h=$("#grH");if(h){const p=$("#growth");if(p&&p.scrollIntoView)p.scrollIntoView({block:"start"});try{h.focus({preventScroll:true});}catch(err){h.focus();}}return;} // v15 📈
   if(b.id==="jugBack"){const k=((draft&&jugBig(draft,lastG)[0])||["r"])[0], f=$("#f-jug-"+k); if(f){f.scrollIntoView({block:"center"});try{f.focus({preventScroll:true});}catch(err){f.focus();}}return;} // v14
   if(b.id==="msgo-lift"){go("write");const f=$("#f-jug-r");if(f){f.scrollIntoView({block:"center"});try{f.focus({preventScroll:true});}catch(err){f.focus();}}return;}
@@ -3728,10 +3838,10 @@ function celebrate(before,gain,after,ticket,handoff,opt){
     ${newMates.map(m=>`<div class="newmate"><div class="ava">${pixSVG(mateOpts(m),"n"+m.id)}</div><div><b>${esc(m.n)}(${m.pos})が なかまに なった!</b><br><span class="muted">${esc(m.cat)}</span><br><button class="ghost mini" type="button" data-ovmname="${m.id}" style="margin:6px 0 0">なまえを かえる</button></div></div>`).join("")}
     ${ticket?`<div><b>しあいチケット +1</b> <span class="muted">(いま ${tickets(after)}まい)</span></div>`:""}
     ${ticket&&o.note&&(before.mleft||0)<TKPERNOTE?`<div class="muted tkask" id="ovtkm">ミッションを クリアしても、しあいチケットを もらえるよ! (${TKPERNOTE}まいまで)</div>`:""}
-    ${o.noTk?`<div class="tkask" id="ovtkn"><b>ノートを かくと、ミッションで また しあいチケットを もらえるよ!</b></div>`:""}
+    ${o.noTk?`<div class="tkask" id="ovtkn"><b>${dayFull()?"あした ":""}ノートを かくと、ミッションで また しあいチケットを もらえるよ!</b></div>`:""}
     ${newMake.length?`<div class="craft-ask"><b>🔨 ${esc(GEAR[newMake[0]].n)}${newMake.length>1?" など":""}が つくれるよ!</b><button class="ghost" type="button" id="ovcraft">こうぼうへ</button></div>`:""}
     ${handoff?`<div class="handoff-ask"><b>${o.mk==="learn"?"👪 おうちの人に おしえて あげよう!":o.mk==="pro"?"👪 みた プレーを おうちの人と はなそう!":o.mk==="home"?"👪 やった あそびを おうちの人に はなそう!":o.mk==="video"&&vparOpen(after,handoff)?`👪 おうちの人と いっしょに ふりかえろう! コメントで +${VIDEOPARENT}\u00a0XP`:"👪 つぎは おうちの人の ばん!"}</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
-    <div class="row" style="justify-content:center">${ticket?`<button class="ghost" type="button" id="ovmatch">しあいに いく</button>`:o.noTk?`<button class="ghost" type="button" id="ovwrite">ノートを かく</button>`:""}<button class="primary" type="button" id="ovok" style="flex:1">やったね!</button></div></div>`;
+    <div class="row" style="justify-content:center">${ticket?`<button class="ghost" type="button" id="ovmatch">しあいに いく</button>`:o.noTk&&!dayFull()?`<button class="ghost" type="button" id="ovwrite">ノートを かく</button>`:""}<button class="primary" type="button" id="ovok" style="flex:1">やったね!</button></div></div>`;
   document.body.appendChild(ov);
   // The second tap of a double tap on the save button lands on the reward, so for half a second it ignores taps: it must not vanish before it has been seen.
   // v14: やったね! (or a tap beside the reward) goes back to the card of what was cleared, when it is on screen
@@ -3742,7 +3852,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
     if(ok){gb.textContent="✓ めあてに したよ"; gb.setAttribute("aria-disabled","true"); say("めあてに したよ! 「せんしゅ」で みられるよ");}
     else{const n=document.createElement("span"); n.className="muted"; n.textContent="ほぞんできませんでした。"; gb.replaceWith(n); say("ほぞんできませんでした。"); const k=ov.querySelector("#ovok"); if(k)k.focus({preventScroll:true});}});
   const mb=ov.querySelector("#ovmatch"); if(mb)mb.addEventListener("click",()=>{if(early())return;close();go("match");});
-  const nb=ov.querySelector("#ovwrite"); if(nb)nb.addEventListener("click",()=>{if(early())return;close();go("write");}); // v22.2
+  const nb=ov.querySelector("#ovwrite"); if(nb)nb.addEventListener("click",()=>{if(early())return;close();if(o.mk==="home")noteFromHome(handoff);else go("write");}); // v22.2; v22.4: from 🏠 with what he played
   const pb=ov.querySelector("#ovpar"); if(pb)pb.addEventListener("click",()=>{if(early())return;close();openParent(handoff);});
   const cb=ov.querySelector("#ovcraft"); if(cb)cb.addEventListener("click",()=>{if(early())return;close();toCraft();});
   ov.querySelectorAll("[data-ovmname]").forEach(x=>x.addEventListener("click",()=>{if(early())return;close();go("team");mateEdit=x.dataset.ovmname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}}));
