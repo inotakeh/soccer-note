@@ -478,6 +478,10 @@ details.wz p{margin:0 0 8px;line-height:1.6} details.wz p b{display:block;font-s
 @media (prefers-reduced-motion:no-preference){.pkkeeper{transition:left .5s ease-out,top .5s ease-out}.pkreach{transition:opacity .2s}}
 .pth{visibility:hidden}
 .ms .mstk{margin:-4px 0 0;font-size:.85rem}
+.revbox{display:flex;flex-direction:column;gap:6px;align-items:stretch;padding:10px 12px;border-radius:12px;border:2px solid #e8590c;background:rgba(232,89,12,.10);margin:6px 0}
+.revbox b{color:#e8590c;font-size:1.05rem}.revtag{display:inline-block;padding:1px 8px;border-radius:8px;background:#e8590c;color:#fff;font-size:.8rem;vertical-align:middle}
+.meal .mealrow{display:flex;gap:8px;flex-wrap:wrap}.meal .mealrow button{flex:1;min-width:130px;min-height:48px}
+.meal .mealrow button[aria-pressed="true"]{border-color:#2f9e44;background:rgba(47,158,68,.14);font-weight:700}
 .reward .tkask{margin:8px 0 0;word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .ticket .muted{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict} /* its longer line breaks at a space, never inside a word */.pth::after{content:attr(data-t)}.pitchbox{display:flex;flex-direction:column;gap:8px;margin:10px auto;width:100%;max-width:480px;max-width:min(480px,max(300px,calc((100vh - 380px)/1.15)));max-width:min(480px,max(300px,calc((100dvh - 380px)/1.15)));scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px);word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .ptitle{margin:0;font-weight:800;font-size:1.05rem} .ptitle span{display:block;font-weight:400;font-size:.9rem;color:var(--muted)}
@@ -657,6 +661,12 @@ const WAZA=[
   ["first","pass","まえを むく トラップ","ボールを もらう ときに、さいしょの タッチで まえを むく。","ボールを つぎに すすみたい ほうへ おこう。","{h}が さいしょの タッチで まえを むいた!"]
 ];
 const WAZAMAX=3, WAZATH=[3,10], WAZAPOW=[.3,.6], WAZAUSE=.7, WAZALINES=2;
+// v22.3 ごはん: profile.meal {"YYYY-MM-DD": 1 いっぱい たべた | 2 おかわり した}, today only, once a day. Each day brings MEALPT[n] stamina,
+// MEALCAP in all (counted every time, nothing else is saved). The last MEALKEEP days are kept.
+const MEALPT=[0,1,2], MEALCAP=100, MEALKEEP=400;
+function cleanMeal(x){const out={}; if(!x||typeof x!=="object"||Array.isArray(x))return out;
+  Object.keys(x).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&(x[d]===1||x[d]===2)).sort().slice(-MEALKEEP).forEach(d=>out[d]=x[d]); return out;}
+function mealPass(m){const c=cleanMeal(m); let pt=0, days=0; Object.keys(c).forEach(d=>{pt+=MEALPT[c[d]]; days++;}); return {pt:Math.min(MEALCAP,pt),raw:pt,days};}
 const WZ=Object.create(null); WAZA.forEach(w=>{WZ[w[0]]=w;});
 // the hero's goal with a learned シュート ({a} the passer) and the hero's assist with a learned パス ({s} the scorer)
 const WAZAGOAL={direct:"{a}の パスを {h}が ダイレクトシュート! ゴール!!",corner:"{a}の パスから {h}が ゴールの すみへ! ゴール!!",loop:"{a}の パスから {h}が ループシュート! ゴール!!"};
@@ -1121,9 +1131,10 @@ function compute(list,ms){
   // v14.1 a finished record's day is a writing day too, so the first thing written on a day may be a record: the bonus then goes on it.
   for(const id in sp.rec){const r=mp.per[id], s=sp.rec[id]; if(!r)continue; r.stk=s; if(s.xp){r.parts=r.parts.concat(stkPart(s)); r.sum+=s.xp;}}
   for(const id in mp.per){xp+=mp.per[id].sum; const mm=mp.per[id].mat; for(const k in mm)mat[k]+=mm[k];} parentN+=mp.pn; // v14.2: a 🎬 record's ⭐ // v14 records add XP (and a parent's comment counts for おうえんパワー): no stats, materials or こまめに かいた (つづけてかいた before v14.1)
+  const ml=mealPass(typeof profile==="object"&&profile?profile.meal:null); stats.stamina+=ml.pt; // v22.3 ごはん
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
-  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,mtk:tp.tk,mleft:tp.left,waza:wazaPass(es,mp.list),stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
+  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,mtk:tp.tk,mleft:tp.left,waza:wazaPass(es,mp.list),meal:ml,stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
 }
 const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
 
@@ -1579,6 +1590,7 @@ function cleanProfile(p){const pick=(v,n)=>Number.isInteger(v)&&v>=0&&v<n?v:0;
   const mn=p.mnames, names={};
   if(mn&&typeof mn==="object")MATES.forEach(m=>{const v=Object.prototype.hasOwnProperty.call(mn,m.id)?cleanMateName(mn[m.id]):""; if(v&&v!==m.n)names[m.id]=v;});
   if(Object.keys(names).length)p.mnames=names; else delete p.mnames;
+  const ml=cleanMeal(p.meal); if(Object.keys(ml).length)p.meal=ml; else delete p.meal; // v22.3
   return p;}
 function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");entries=d.entries||[];if(d.profile)profile=cleanProfile(Object.assign(profile,d.profile));if(d.game){game=Object.assign(newGame(),d.game);game.made=cleanMade(game.made);}}catch(e){}}
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify({entries,profile,game}));return true;}catch(e){return false;}}
@@ -1674,7 +1686,7 @@ function cleanGame(x){
   return g;
 }
 function cleanBackupProfile(x){const s=(v,n)=>typeof v==="string"?v.trim().slice(0,n):"";
-  return cleanProfile({name:s(x.name,12),number:x.number,team:s(x.team,12),color:x.color,pos:x.pos,side:x.side,hair:x.hair,hairColor:x.hairColor,skin:x.skin,wx:x.wx,chal:x.chal,mnames:x.mnames});}
+  return cleanProfile({name:s(x.name,12),number:x.number,team:s(x.team,12),color:x.color,pos:x.pos,side:x.side,hair:x.hair,hairColor:x.hairColor,skin:x.skin,wx:x.wx,chal:x.chal,mnames:x.mnames,meal:x.meal});}
 function bkParse(text){
   let d; try{d=JSON.parse(String(text||"").trim());}catch(e){return null;}
   if(!d||typeof d!=="object"||d.app!=="soccer-note"||!Array.isArray(d.entries))return null;
@@ -1701,7 +1713,8 @@ function bkPlan(d){
   // note came here in that older page's own backup), whose copy in the file has counts. A note is never edited, so only a drop makes them differ.
   const mine=new Map(entries.map(e=>[e.id,e]));
   const fixJ=d.entries.filter(e=>{const x=mine.get(e.id); return !!x&&!Object.keys(cleanJug(x.jug)).length&&Object.keys(cleanJug(e.jug)).length>0;});
-  return {add,addM,fixJ,addMade,addNames,names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+  const bm=d.profile&&d.profile.meal||{}, pm=profile.meal||{}, addMeal=Object.keys(bm).filter(k=>!own(pm,k)); // v22.3
+  return {add,addM,fixJ,addMade,addNames,addMeal,meal:cleanMeal(Object.assign({},bm,pm)),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
 }
 // v14 the notes with the file's counts put back on the notes in fixJ (only {jug} changes), and what the device would hold after a restore.
 const withJug=(list,fixJ)=>{const f=new Map(fixJ.map(e=>[e.id,e])); return list.map(e=>f.has(e.id)?Object.assign({},e,{jug:cleanJug(f.get(e.id).jug)}):e);};
@@ -2048,16 +2061,32 @@ function viewHome(g){
   const hp=handGet(), he=hp&&(g.es.find(e=>e.id===hp.id)||g.ms.find(m=>m.id===hp.id)), hm=he&&g.ms.includes(he)?he.kind:"", hb=he&&!stampsOf(he).length&&!String(he.parent||"").trim()
     ?`<button class="stampnews handnote" id="handBtn" data-note="${esc(he.id)}" type="button">${hm==="video"?"👪 きょうの どうが ふりかえりを おうちの人に みせよう!":hm==="learn"?"👪 しらべた ことを おうちの人に おしえよう!":hm==="pro"?"👪 プロの しあいで みつけた ことを おうちの人に みせよう!":hm==="home"?"👪 きょうの ボールあそびを おうちの人に はなそう!":"👪 きょうの ノートを おうちの人に みせよう!"}<small>タップで おうちの人の ばんに なるよ</small></button>`:"";
   const ng=goalCard(g), nw=stampNews(g), sn=nw?`<button class="stampnews" id="newsBtn" data-note="${esc(nw.id)}" type="button">🎉 おうちの人から ${nw.stamp&&nw.comment?"コメントと スタンプが":nw.comment?"コメントが":"スタンプが"} とどいたよ!<small>タップで みてね</small></button>`:"";
-  const tkb=tk?`<div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><button class="ghost" data-go="match" type="button">しあいに いく</button></div>`:"";
+  const rv=gameReady&&!live&&revOpen(game), tkb=tk||rv?`<div class="ticket"><div><span class="label">${rv?"🔥 リベンジ チャンス":"しあいチケット"}</span><b>${rv?(tk?`+ チケット × ${tk}`:""):`× ${tk}`}</b></div><button class="ghost" data-go="match" type="button">しあいに いく</button></div>`:"";
   const max=Math.max(10,...Object.values(g.stats));
   const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
   const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに だいじ。</p>`:"";
-  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${tkb}${shopNews(g)}
+  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${tkb}${shopNews(g)}
   <section class="panel"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
+  <p class="muted" id="mealHint">🍚 ごはんを いっぱい たべても、スタミナが のびるよ。</p>
   <p class="muted">「がんばったこと」を えらぶと のうりょくが のびるよ。</p>${pw}</section>
   ${posPanel(g)}${skillsPanel(g)}${wazaPanel(g)}${looksPanel(g)}`;
 }
 
+// v22.3 ごはん: today's meal, once a day. A second tap on the chosen one takes it back (today only).
+let mealBusy=false;
+function mealCard(g){if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
+  const m=cleanMeal(profile.meal), t=m[today()]||0, ml=g.meal||{pt:0};
+  const btn=(n,ic,w)=>`<button type="button" class="ghost" data-meal="${n}" aria-pressed="${t===n}"${mealBusy?" disabled":""}>${ic} ${w}<br><small>スタミナ +${MEALPT[n]}</small></button>`;
+  return `<section class="panel meal" id="mealCard"><h2>🍚 きょうの ごはん</h2>
+  <p class="muted">${t?`${t===2?"おかわり した":"いっぱい たべた"}! スタミナが ${MEALPT[t]} あがったよ。からだが つよく なるね!`:"ごはんを いっぱい たべたら おしてね(1日 1かい)。"}</p>
+  <div class="mealrow">${btn(1,"🍚","いっぱい たべた")}${btn(2,"🍜","おかわり した")}</div>
+  <p class="muted" id="mealSum">ごはんで ふえた スタミナ: ${ml.pt} / ${MEALCAP}${ml.pt>=MEALCAP?"(いっぱい! これからも しっかり たべよう)":""}</p></section>`;}
+async function setMeal(n){if(mealBusy||!loaded()||!profReady)return; n=n===1||n===2?n:0;
+  const m=cleanMeal(profile.meal), d=today(); if(m[d]===n)delete m[d]; else m[d]=n;
+  mealBusy=true; render();
+  try{await store.setProfile({meal:m});}catch(e){mealBusy=false;flash("ほぞんできませんでした。");render();return;}
+  mealBusy=false; render(); if(m[d])say(n===2?"おかわり した! スタミナ +2":"いっぱい たべた! スタミナ +1");
+  const f=document.querySelector(`[data-meal="${n}"]`); if(f)f.focus();}
 // v13 ways into the workshop from home: a one-time NEW note on each device, then a reminder while a piece can be made.
 const SHOPINTRO="soccer-note-shop-intro";
 function introSeen(){if(introClosed)return true;try{return localStorage.getItem(SHOPINTRO)==="1";}catch(e){return false;}}
@@ -2600,16 +2629,16 @@ async function bkApply(){
       for(let i=0;i<p.add.length;i++){await db.collection("entries").doc(p.add[i].id).set(p.add[i]);const m=$("#bkmsg");if(m)m.textContent=`もどしています… ${i+1} / ${p.add.length}`;}
       await bkApplyNotesDb(p); // v14: the counts an older page dropped go back on those notes ({jug} only); the notes stay here until the snapshot lands
       {const add=p.add, addM=p.addM, fixJ=p.fixJ; p=bkPlan(d); p.add=add; p.addM=addM; p.fixJ=fixJ;} // a name changed or a match record that came in meanwhile is not overwritten
-      if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names}));
-      else if(p.addNames.length)await store.setProfile({mnames:p.names});
+      if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names,meal:p.meal}));
+      else if(p.addNames.length||p.addMeal.length)await store.setProfile({mnames:p.names,meal:p.meal});
       {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade;} // and the match record as it is after that write
       if(p.useGame||p.addMade.length){game=bkGame(p,d);await store.setGame();}
     }else{
       const before=[entries,game,profile];
       entries=withJug(entries,p.fixJ).concat(p.add); // v14: a new array (and new objects for the counts put back), so the roll-back below still holds
       if(p.useGame||p.addMade.length)game=bkGame(p,d);
-      if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names}));
-      else if(p.addNames.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names}));
+      if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names,meal:p.meal}));
+      else if(p.addNames.length||p.addMeal.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names,meal:p.meal}));
       if(!lsSave()){[entries,game,profile]=before;throw new Error("local");}
     }
     // v14: the records last, on their own: a failure there never undoes the notes, the match record, the look, the made pieces or the names.
@@ -2823,9 +2852,11 @@ function viewLive(){
       ${L.cupWon?`<div class="got">${trophyIcon(L.ctx?L.ctx.cupI:4).replace("<svg",'<svg style="width:36px;height:36px"')}${esc(L.cupName)}の トロフィー</div>`:""}${got}
       <p class="muted">${L.res.win?(L.cupWon?"つぎの たいかいに すすめるよ。":"つぎの しあいに すすめるよ。"):"まけても だいじょうぶ。つぎは「くやしさパワー」で すこし つよくなるよ。"}</p>
       ${L.res.win?"":`<p><b>${esc(L.hint)}</b></p>`}
+      ${L.res.win?"":revOpen(game)?`<div class="revbox" id="revBox"><b>🔥 リベンジ チャンス!</b><span>チケット なしで、もう いちど できるよ!</span>
+        <button class="primary" id="revGo" type="button">${MXICON("whistle")}リベンジする!</button></div>`:`<p class="muted" id="revDone">きょうの リベンジは もう つかったよ(1日 1かい)。ノートを かいて また ちょうせんしよう!</p>`}
       <button class="primary" id="closeLive" type="button" style="align-self:stretch">つぎへ</button></div>`;
   }
-  return `<section class="panel"><h2>${esc(L.cupName)} ${esc(L.roundName)}</h2>
+  return `<section class="panel"><h2>${L.rev?`<span class="revtag">リベンジ</span> `:""}${esc(L.cupName)} ${esc(L.roundName)}</h2>
     <div class="score"><span class="tn">${esc(myTeam())}</span><span class="sc">${sm} - ${so}</span><span class="tn">${esc(L.opp.n)}</span><span class="min">${L.done?"しあい しゅうりょう"+(L.res.pk?`(PK ${L.res.pk[0]} - ${L.res.pk[1]})`:""):L.pk?"PKせん":minLabel(last.m)||"キックオフ"}</span></div>
     ${result}
     ${L.scene&&!L.done?pitchHTML(L):""}${L.pk&&!L.done?pkHTML(L):""}
@@ -2851,7 +2882,9 @@ function viewMatch(g){
     <div class="vs"><span>${esc(myTeam())}</span><span class="b"><i style="width:${Math.round(me/mx*100)}%"></i></span><em>${me}</em>
       <span>${esc(opp.n)}</span><span class="b opp"><i style="width:${Math.round(opp.r/mx*100)}%"></i></span><em>${opp.r}</em></div>
     <div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><span class="muted">ノートを かくと 1まい。ミッションは ノート 1さつで ${TKPERNOTE}まいまで もらえる</span></div>
-    ${tk?`<div class="kickrow"><button class="primary" id="kick" type="button">${MXICON("whistle")}キックオフ!</button><p class="muted" id="playHint">チャンスが きたら、きみが ピッチで プレーするよ。</p><button class="ghost" id="kickAuto" type="button">みるだけで しあいを する</button></div>`:`<button class="primary" data-go="write" type="button">ノートを かいて チケットを もらう</button>`}
+    ${revOpen(game)?`<div class="revbox" id="revWait"><b>🔥 リベンジ チャンス!</b><span>つぎの しあいは チケット なしで できるよ!</span>
+      <div class="kickrow"><button class="primary" id="kick" type="button">${MXICON("whistle")}リベンジ キックオフ!</button><button class="ghost" id="kickAuto" type="button">みるだけで リベンジ する</button></div></div>`
+    :tk?`<div class="kickrow"><button class="primary" id="kick" type="button">${MXICON("whistle")}キックオフ!</button><p class="muted" id="playHint">チャンスが きたら、きみが ピッチで プレーするよ。</p><button class="ghost" id="kickAuto" type="button">みるだけで しあいを する</button></div>`:`<button class="primary" data-go="write" type="button">ノートを かいて チケットを もらう</button>`}
   </section>
   <section class="panel"><h2>トロフィー</h2><div class="cups">${cups}</div></section>
   <section class="panel"><h2>そうび</h2><p class="muted">タップして つけたり はずしたり できるよ。もっているだけで チームが すこし つよくなるよ。</p><div class="items">${items}</div></section>
@@ -3187,8 +3220,10 @@ function go(t){stopVoice();const mk=missionOpen;closeMission();liftNote="";if(t=
 /* match flow: the result is decided and saved at kick-off, then played back line by line */
 // v17: what a result does to the game: the ticket, the round, the prizes and the log (the lines kickoff() had, word for word).
 // base: the game before the match, c: {opp, ex, cupI, round, t}.
+// v22.3 リベンジ: the newest match was lost and was the first loss of its day (read from the log, nothing saved)
+function revOpen(g){const L=g&&Array.isArray(g.log)?g.log:[], l=L[0]; if(!l||l.win)return false; const d=localDay(l.t); return !L.slice(1).some(x=>!x.win&&localDay(x.t)===d);}
 function settle(base,res,c){const opp=c.opp, ex=c.ex, cupI=c.cupI, round=c.round, rewards=[]; let cupWon=false, keep=false;
-  const next=JSON.parse(JSON.stringify(base)); next.used=(next.used||0)+1;
+  const next=JSON.parse(JSON.stringify(base)); next.used=(next.used||0)+(c.rev?0:1);
   if(res.win){
     next.lossStreak=0;
     if(ex)next.exWins=(next.exWins||0)+1;
@@ -3206,7 +3241,7 @@ function settle(base,res,c){const opp=c.opp, ex=c.ex, cupI=c.cupI, round=c.round
   next.log=[{t:c.t,opp:opp.n,gm:res.gm,go:res.go,pk:res.pk,win:res.win}].concat(next.log||[]).slice(0,12);
   return {next,rewards,cupWon,keep};}
 function kickoff(auto){
-  const g=lastG; if(live||!gameReady||!loaded()||tickets(g)<1)return;
+  const g=lastG, rv=revOpen(game); if(live||!gameReady||!loaded()||tickets(g)<1&&!rv)return;
   if(crafting||bkBusy){flash(crafting?SAVEWAIT:BKWAIT);const st=$("#status");if(st&&st.scrollIntoView)st.scrollIntoView({block:"nearest"});return;}
   const opp=currentOpp(), ex=!!opp.ex, cupI=game.cup, round=game.round, res=simulate(g,opp,!auto);
   const prevEquip=Object.assign({},game.equip||{});
@@ -3214,8 +3249,8 @@ function kickoff(auto){
   const hint=joined<7?"「なかまと つながる」プレーを ノートに かくと、なかまが ふえて チームが ぐっと つよくなるよ。"
     :tp0.hero<tp0.avg?"「じぶんを きたえる」プレーを ノートに かくと、エースの きみが つよくなるよ。":"ノートを つづけると スキルが ふえて、チームが つよくなるよ。";
   // v17: the match as it goes by itself is saved now; base and ctx let finishLive() work the result out again after his plays
-  const base=JSON.parse(JSON.stringify(game)), ctx={opp,ex,cupI,round,t:Date.now()}, sv=settle(base,res,ctx), next=sv.next, rewards=sv.rewards, cupWon=sv.cupWon, keep=sv.keep;
-  live={res,opp,base,ctx,auto:!!auto,pk:null,pkd:false,scene:null,ptimer:null,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,prevMade:madeCount(game.made),rewards,cupWon,keep,hint,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":roundNames(CUPS[cupI].teams.length)[round],timer:null};
+  const base=JSON.parse(JSON.stringify(game)), ctx={opp,ex,cupI,round,t:Date.now(),rev:rv}, sv=settle(base,res,ctx), next=sv.next, rewards=sv.rewards, cupWon=sv.cupWon, keep=sv.keep;
+  live={res,opp,base,ctx,auto:!!auto,pk:null,pkd:false,scene:null,ptimer:null,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,prevMade:madeCount(game.made),rewards,cupWon,keep,hint,rev:rv,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":roundNames(CUPS[cupI].teams.length)[round],timer:null};
   game=next;
   store.setGame().catch(()=>flash("しあいの きろくを ほぞんできませんでした。"));
   shopSheet=null; shopTry=null; gearMenu=null; tab="match"; render(); window.scrollTo(0,0);
@@ -3502,6 +3537,7 @@ $("#view").addEventListener("click",async e=>{
     if(f&&f.disabled){const o=document.getElementById(kb==="calPrev"?"calNext":"calPrev");if(o&&!o.disabled)o.focus();}return;}
   if(b.dataset.calday){const d=b.dataset.calday;showNote(a=>a.dataset.date===d);return;}
   if(b.id==="openSettings"){openSettings();return;}
+  if(b.dataset.meal){await setMeal(+b.dataset.meal);return;} // v22.3
   if(b.dataset.mname){if(!loaded()||!profReady){flash("よみこみ中です。すこし まってから もういちど おしてね。");return;}mateEdit=b.dataset.mname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}return;}
   if(b.id==="mnCancel"){const id=mateEdit;mateEdit=null;render();const f=document.querySelector(`[data-mname="${id}"]`);if(f)f.focus();return;}
   if(b.id==="mnReset"){await setMateName(mateEdit,"");return;}
@@ -3514,6 +3550,7 @@ $("#view").addEventListener("click",async e=>{
   if(b.id==="pkGo"){pkGo();return;} // v22
   if(b.id==="skipLive"){if(live&&skipOk(live))finishLive();return;} // v17: not in the middle of a scene he plays
   if(b.id==="closeLive"){live=null;render();window.scrollTo(0,0);return;}
+  if(b.id==="revGo"){if(!live||!live.done||!revOpen(game))return; live=null; kickoff(false); return;} // v22.3
   if(b.id==="bk-file"){bkSaveFile();return;} // share and clipboard calls need the tap itself, so these come before any await
   if(b.id==="bk-copy"){bkCopy();return;}
   if(b.id==="bk-paste"){bkPaste=!bkPaste;bkMsg="";render();const t=$("#bk-code");if(t)t.focus();return;}
@@ -3728,7 +3765,7 @@ Promise.resolve(use).then(d=>{
   db.collection("entries").onSnapshot(snap=>{clearTimeout(timer);mode="db";entries=snap.docs.map(x=>Object.assign({id:x.id},x.data()));render();},
     err=>{clearTimeout(timer);mode="error";render();});
   msListen(); // v14: the mission records, apart from the notes (a failure there never sets mode)
-  db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists){const d=s.data()||{};profile=cleanProfile(Object.assign({},profile,d,{mnames:d.mnames}));}if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
+  db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists){const d=s.data()||{};profile=cleanProfile(Object.assign({},profile,d,{mnames:d.mnames,meal:d.meal}));}if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
   // Skip echoes of our own writes while one is queued or a match is being played back: the local state is already ahead.
   db.doc("game/main").onSnapshot(s=>{if(gameBusy||(live&&!live.done))return;gameReady=true;if(s.exists){game=Object.assign(newGame(),s.data());game.made=cleanMade(game.made);}render();},()=>{});
 }).catch(()=>{goLocal();});
