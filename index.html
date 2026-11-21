@@ -449,6 +449,23 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-t
 .growcard{display:flex;flex-direction:column;gap:6px} .growcard b{font-size:1.05rem;line-height:1.5} .growcard .ghost{align-self:flex-start;min-height:44px}
 #mhTip{margin:8px 0 0} #growth{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px)}
 .ptip,.pstart,#forParents,.growth,.growcard{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
+/* v23 練習ポイント and スペシャル のうりょく */
+.ptbox{margin:12px 0 4px;display:flex;flex-direction:column;gap:8px} .ptbox h3{margin:10px 0 0}
+.ptbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;background:var(--soft);border-radius:12px;padding:8px 12px;font-weight:700;scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px)}
+.ptbar .label{flex:1 1 100%} .ptk{display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums} .ptk b{font-size:1.15rem}
+.ptrows{display:flex;flex-direction:column;gap:6px}
+.ptrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto 44px 44px;gap:6px;align-items:center;font-size:.95rem}
+.ptn{font-weight:700} .ptstar{color:var(--accent);margin-right:2px} .ptv{font-variant-numeric:tabular-nums;text-align:right} .ptc{font-size:.85rem;min-width:2.6em;text-align:right}
+.ptpm{min-height:44px;min-width:44px;padding:0;margin:0;font-size:1.3rem;font-weight:800}
+.ptpm:disabled,.sppick:disabled,#ptGo:disabled{opacity:.4}
+.sprows{display:flex;flex-direction:column;gap:8px}
+.sprow{display:flex;flex-direction:column;gap:2px;border-left:4px solid var(--rule);padding-left:8px;line-height:1.5}
+.sprow.on{border-color:var(--good)} .sprow.gold{border-color:var(--accent)}
+.sppick{align-self:flex-start;min-height:44px;margin:4px 0 0} .sppick[aria-pressed="true"]{border-color:var(--good);background:var(--soft)}
+.ptfoot{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 70px);z-index:1;background:var(--paper);padding:8px 0;border-top:1px solid var(--rule)} /* above the fixed tab bar (70 tall) */
+.ptleft{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 6px;font-weight:700} .ptleft b{font-variant-numeric:tabular-nums}
+.ptgot .ghost.mini{min-height:36px}
+.ptbox,#spBook{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 /* v16: わざ (the chips in the note and the 🏠 form, the book on home) */
 .wzgrp{display:block;font-size:.85rem;font-weight:700;color:var(--muted);margin:8px 0 4px}
 .wzlist{display:flex;flex-direction:column;gap:6px;margin:0 0 10px}
@@ -666,6 +683,35 @@ const CHIPS=[
   {id:"listen",t:"コーチの話をよく聞いた",s:{pass:1,defense:1},team:1,skill:"せんじゅつがん",line:"コーチの さくせんどおりに 動けた!"}
 ];
 const CHIP={};CHIPS.forEach(c=>CHIP[c.id]=c);
+// v23 練習ポイント: the chips of a note saved from PTGATE on (createdAt) give points of three kinds instead of abilities. Each ability is
+// bought with its own kind (PTOF); one step costs ptCost(its value now): 1, and 1 more for every PTSTEP it already has.
+const PTGATE="2026-11-21T15:00:00.000Z"; // 2026-11-22 00:00 in Japan
+const PTKINDS=[["b","体","🏃"],["o","ボール","⚽"],["h","心","💛"]];
+const PTOF={stamina:"b",defense:"b",dribble:"o",pass:"o",shoot:"o",brave:"h"};
+const PTSTEP=100, ptCost=v=>1+Math.floor(Math.max(0,v)/PTSTEP);
+// v23 スペシャル のうりょく: [id, name, what it does, cost of step 1, cost of 金色, what 金色 needs, match line]. Ids are never reused.
+// 金色 needs a skill (chip id, learned) or so many learned わざ of a group. Each step gives the team SPPOW (金色 the second number).
+const SPPOW=[.4,.8];
+const SPECIALS=[
+  ["hustle","さいごまで 走りぬく","しあいの さいごまで 足が 止まらない。",{b:12,h:4},{b:20,h:8},{skill:"run"},"{h}は さいごまで 走りぬく! 足が 止まらない!"],
+  ["loose","こぼれ球に 一番のり","こぼれた ボールに だれより 早く 行く。",{b:8,h:8},{b:14,h:14},{skill:"chase"},"こぼれ球に {h}が 一番のり!"],
+  ["drib","ドリブル 名人","ドリブルで 相手を ぬきさる。",{o:16},{o:28},{waza:"drib",n:2},"{h}の ドリブル! 相手が ついて こられない!"],
+  ["eye","フリーの 味方を 見つける 目","パスを 出す 前に、フリーの 味方が 見える。",{o:12,h:4},{o:20,h:8},{waza:"pass",n:2},"{h}が フリーの 味方を 見つけて パス!"],
+  ["calm","ゴール前で あわてない","ゴールの 前でも おちついて ねらえる。",{o:12,h:4},{o:20,h:8},{waza:"shoot",n:2},"ゴール前でも {h}は おちついて いる!"],
+  ["wall","1対1の かべ","1対1で 相手を 前に 行かせない。",{b:12,h:4},{b:20,h:8},{skill:"steal"},"{h}が 1対1で 相手を 止めた!"],
+  ["leader","声で チームを 動かす","声で 味方に 教えて、チームが まとまる。",{h:16},{h:28},{skill:"voice"},"{h}の 声で チーム みんなが 動いた!"],
+  ["never","ミスしても へっちゃら","ミスしても すぐ 次の プレーへ。",{h:16},{h:28},{skill:"retry"},"ミスしても {h}は すぐ 次の プレーへ!"]
+];
+const SPEC={}; SPECIALS.forEach(x=>{SPEC[x[0]]=x;});
+// v23 what he chose, read from the game as it is (an older page may have saved it without these, then all is 0 and the points come back)
+const ptState=()=>ptStateOf(typeof game==="object"&&game?game:{}), ptSpentOf=x=>{const s=ptStateOf(x).spent; return s.b+s.o+s.h;};
+// a game gets the three fields only when he chose something (a game without them is as before)
+function ptPut(g,ps){if(STATS.some(([k])=>ps.pt[k])||Object.keys(ps.sp).length||PTKINDS.some(([t])=>ps.spent[t])){g.pt=ps.pt; g.sp=ps.sp; g.spent=ps.spent;} else{delete g.pt; delete g.sp; delete g.spent;}}
+function ptStateOf(x){x=x&&typeof x==="object"?x:{}; const n=(v,hi)=>Number.isInteger(v)&&v>=0&&v<=hi?v:0, pt={}, sp={}, spent={};
+  STATS.forEach(([k])=>{pt[k]=n(x.pt&&x.pt[k],1e5);});
+  SPECIALS.forEach(([id])=>{const v=x.sp&&x.sp[id]; if(v===1||v===2)sp[id]=v;});
+  PTKINDS.forEach(([t])=>{spent[t]=n(x.spent&&x.spent[t],1e7);});
+  return {pt,sp,spent};}
 // v16 わざ: techniques he practises for real. [id, group, name, how it is done, tip (about the ball or the target), match line]. Ids are
 // never reused; names and words may change. Learned after WAZATH[0] different days of practice, gold after WAZATH[1]. A note or a 🏠
 // record holds WAZAMAX at most, and a day counts WAZAMAX at most. In a match a learned one gives the team WAZAPOW[0] (gold WAZAPOW[1]); the hero's goal or assist uses
@@ -1259,11 +1305,12 @@ function wazaPass(es,ms){
   return n;}
 function compute(list,ms){
   const es=sortEntries(list), jp=jugPass(es), mp=missionPass(ms), tp=ticketPass(es,mp), sp=streakPass(es,mp.list); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
-  const per={}, chipCount={}, mat={hane:0,ishi:0,ito:0,hoshi:0}; let kizuna=0, done=0, parentN=0;
+  const per={}, chipCount={}, mat={hane:0,ishi:0,ito:0,hoshi:0}, pts={b:0,o:0,h:0}; let kizuna=0, done=0, parentN=0;
   es.forEach((e,i)=>{
     const j=jp.per[e.id], s=sp.note[e.id]||null, parts=entryXP(e,es[i-1]).concat(j?j.parts:[],stkPart(s)); const sum=parts.reduce((a,p)=>a+p[1],0);
     const nm=noteMat(e); per[e.id]={parts,sum,mat:nm,jug:j?j.info:null,stk:s}; xp+=sum; for(const k in nm)mat[k]+=nm[k];
-    (e.chips||[]).slice(0,MAXCHIPS).forEach(id=>{const c=CHIP[id]; if(!c)return; chipCount[id]=(chipCount[id]||0)+1; for(const k in c.s)stats[k]+=c.s[k]; if(c.team)kizuna++;});
+    const post=isoOr(e.createdAt,"")>=PTGATE, np={b:0,o:0,h:0}; per[e.id].pts=post?np:null; // v23: a note from the gate on gives points
+    (e.chips||[]).slice(0,MAXCHIPS).forEach(id=>{const c=CHIP[id]; if(!c)return; chipCount[id]=(chipCount[id]||0)+1; for(const k in c.s){if(post){np[PTOF[k]]+=c.s[k]; pts[PTOF[k]]+=c.s[k];} else stats[k]+=c.s[k];} if(c.team)kizuna++;});
     if(e.goalResult==="done")done++;
     if((e.parent||"").trim())parentN++;
   });
@@ -1271,9 +1318,10 @@ function compute(list,ms){
   for(const id in sp.rec){const r=mp.per[id], s=sp.rec[id]; if(!r)continue; r.stk=s; if(s.xp){r.parts=r.parts.concat(stkPart(s)); r.sum+=s.xp;}}
   for(const id in mp.per){xp+=mp.per[id].sum; const mm=mp.per[id].mat; for(const k in mm)mat[k]+=mm[k];} parentN+=mp.pn; // v14.2: a 🎬 record's ⭐ // v14 records add XP (and a parent's comment counts for おうえんパワー): no stats, materials or こまめに 書いた (つづけて書いた before v14.1)
   const ml=mealPass(typeof profile==="object"&&profile?profile.meal:null); stats.stamina+=ml.pt; // v22.3 ごはん
+  const ps=ptState(), base=Object.assign({},stats), left={}; STATS.forEach(([k])=>{stats[k]+=ps.pt[k];}); PTKINDS.forEach(([t])=>{left[t]=pts[t]-ps.spent[t];}); // v23 what he raised
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
-  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,mtk:tp.tk,mleft:tp.left,waza:wazaPass(es,mp.list),meal:ml,stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
+  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,mtk:tp.tk,mleft:tp.left,waza:wazaPass(es,mp.list),meal:ml,pts,left,base,sp:ps.sp,stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
 }
 const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
 
@@ -1290,6 +1338,20 @@ function skillList(g){
 function wazaList(g){const c=g.waza||{};
   return WAZA.map(w=>{const count=c[w[0]]||0, lv=count>=WAZATH[1]?2:count>=WAZATH[0]?1:0;
     return {id:w[0],grp:w[1],n:w[2],how:w[3],tip:w[4],line:w[5],count,lv,next:lv===0?WAZATH[0]:lv===1?WAZATH[1]:null};});}
+// v23 each special with its step (0, 1, 2 金色), whether 金色 is open (what it needs is there) and what that is, in words
+function spList(g){const sl=skillList(g), wl=wazaList(g);
+  return SPECIALS.map(([id,n,what,c1,c2,need,line])=>{const lv=(g.sp||{})[id]||0;
+    const ok=need.skill?sl.some(x=>x.id===need.skill&&x.lv>0):wl.filter(x=>x.grp===need.waza&&x.lv>0).length>=need.n;
+    const nw=need.skill?`スキル「${(sl.find(x=>x.id===need.skill)||{}).n||""}」`:`${(WAZAGROUPS.find(x=>x[0]===need.waza)||["",""])[1]}の わざ ${need.n}つ`;
+    return {id,n,what,cost:[c1,c2],lv,ok,nw,line};});}
+const ptTxt=c=>PTKINDS.filter(([t])=>c[t]).map(([t,n,i])=>`${i}${n} ${c[t]}`).join("・");
+// v23 the points a plan takes: the steps of each ability, one by one from its value now, and the specials' steps
+function ptPlanCost(g,plan){const c={b:0,o:0,h:0};
+  STATS.forEach(([k])=>{for(let i=0;i<(plan.pt[k]||0);i++)c[PTOF[k]]+=ptCost(g.stats[k]+i);});
+  Object.keys(plan.sp).forEach(id=>{const x=SPEC[id], have=(g.sp||{})[id]||0, to=plan.sp[id]; if(!x)return; for(let l=have+1;l<=to;l++){const q=x[2+l]; for(const t in q)c[t]+=q[t];}});
+  return c;}
+const ptFree=(g,plan)=>{const c=ptPlanCost(g,plan), o={}; PTKINDS.forEach(([t])=>{o[t]=Math.max(0,g.left[t])-c[t];}); return o;};
+const ptFits=(g,plan)=>{const f=ptFree(g,plan); return PTKINDS.every(([t])=>f[t]>=0);};
 function squad(g){
   return MATES.map((m,i)=>{const th=KIZUNA[i], joined=g.kizuna>=th;
     return Object.assign({},m,{n:mateName(m),th,joined,power:joined?m.base+Math.min(40,Math.round(4*Math.sqrt(g.kizuna-th))):0});});
@@ -1315,7 +1377,8 @@ function teamPower(g){
   const held=live&&!live.done, it=(held?live.prevItems:(game.items||[]).length)*.5, fire=Math.min(9,((held?live.prevLoss:game.lossStreak)||0)*3);
   const mk=(held?live.prevMade||0:madeCount(game.made))*.5; // v13: each made piece, worn or not
   const wz=wazaList(g).reduce((a,x)=>a+(x.lv===2?WAZAPOW[1]:x.lv===1?WAZAPOW[0]:0),0); // v16: learned techniques
-  return {lu,hero,avg,sk,it,mk,wz,fire,total:0.3*hero+0.7*avg+sk+it+mk+wz+fire};
+  const sp=Object.keys(g.sp||{}).reduce((a,id)=>a+(g.sp[id]===2?SPPOW[1]:g.sp[id]===1?SPPOW[0]:0),0); // v23 スペシャル
+  return {lu,hero,avg,sk,it,mk,wz,sp,fire,total:0.3*hero+0.7*avg+sk+it+mk+wz+sp+fire};
 }
 // v22.1: a note is one ticket, and so is a cleared mission (g.mtk, counted from the records: the earlier ones count as well)
 // v22.2: of the missions cleared after a note only TKPERNOTE are tickets (ticketPass): g.mtk counts those, g.mleft is how many are open
@@ -1468,6 +1531,7 @@ function simulate(g,opp,play){
   const sk=skillList(g).filter(s=>s.lv>0&&s.line);
   shuffle(sk).slice(0,3).forEach(s=>add(minute(),`【${s.n}】${s.line.replace(/\{h\}/g,hero)}`,{skill:1}));
   shuffle(wzAll).slice(0,WAZALINES).forEach(x=>add(minute(),`【${x.n}】${x.line.replace(/\{h\}/g,()=>hero)}`,{skill:1,waza:1})); // v16
+  shuffle(spList(g).filter(x=>x.lv>0)).slice(0,2).forEach(x=>add(minute(),`【${x.lv===2?"★":""}${x.n}】${x.line.replace(/\{h\}/g,()=>hero)}`,{skill:1})); // v23 スペシャル
   // v13: each made piece being worn has its own line.
   ["boots","shin","ball"].forEach(k=>{const id=(game.equip||{})[k], x=own(GEAR,id)?gearOf(id):null; if(x&&x.slot===k)add(minute(),GEAR[id].L.say.replace(/\{h\}/g,hero).replace(/\{n\}/g,x.n),{skill:1});});
   shuffle(players.filter(p=>p.mate)).slice(0,2).forEach(p=>add(minute(),`${p.n}の【${p.mate.skill}】 ${p.mate.line}`,{mate:1}));
@@ -1818,6 +1882,7 @@ function cleanGame(x){
   g.used=n(x.used,1e6); g.lossStreak=n(x.lossStreak,1e6); g.exWins=n(x.exWins,1e6);
   g.items=(Array.isArray(x.items)?x.items:[]).filter((id,i,a)=>typeof id==="string"&&own(ITEMS,id)&&a.indexOf(id)===i);
   g.made=cleanMade(x.made);
+  ptPut(g,ptStateOf(x)); // v23
   if(x.equip&&typeof x.equip==="object")Object.keys(x.equip).forEach(k=>{const id=x.equip[k];if(g.items.includes(id)||(typeof id==="string"&&own(GEAR,id)&&own(g.made,id)))g.equip[slotOf(id)]=id;});
   g.trophies=(Array.isArray(x.trophies)?x.trophies:[]).filter((t,i,a)=>Number.isInteger(t)&&t>=0&&t<CUPS.length&&a.indexOf(t)===i);
   g.log=(Array.isArray(x.log)?x.log:[]).filter(l=>l&&typeof l==="object").slice(0,12).map(l=>{const k=v=>Number.isInteger(v)&&v>=0&&v<100?v:0;
@@ -1853,7 +1918,7 @@ function bkPlan(d){
   const mine=new Map(entries.map(e=>[e.id,e]));
   const fixJ=d.entries.filter(e=>{const x=mine.get(e.id); return !!x&&!Object.keys(cleanJug(x.jug)).length&&Object.keys(cleanJug(e.jug)).length>0;});
   const bm=d.profile&&d.profile.meal||{}, pm=profile.meal||{}, addMeal=Object.keys(bm).filter(k=>!own(pm,k)); // v22.3
-  return {add,addM,fixJ,addMade,addNames,addMeal,meal:cleanMeal(Object.assign({},bm,pm)),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+  return {add,addM,fixJ,addMade,addNames,addMeal,meal:cleanMeal(Object.assign({},bm,pm)),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),usePt:!!d.game&&ptSpentOf(d.game)>ptSpentOf(game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
 }
 // v14 the notes with the file's counts put back on the notes in fixJ (only {jug} changes), and what the device would hold after a restore.
 const withJug=(list,fixJ)=>{const f=new Map(fixJ.map(e=>[e.id,e])); return list.map(e=>f.has(e.id)?Object.assign({},e,{jug:cleanJug(f.get(e.id).jug)}):e);};
@@ -1863,6 +1928,7 @@ function bkGame(p,d){
   const g=JSON.parse(JSON.stringify(p.useGame?d.game:game)), mine=JSON.parse(JSON.stringify(game.made||{}));
   if(p.useGame){if(!msErr)g.used=Math.min(g.used,bkCap(p)); g.made=Object.assign({},g.made,mine);}
   else{g.made=Object.assign({},g.made); p.addMade.forEach(id=>{if(!own(g.made,id))g.made[id]=Object.assign({},d.game.made[id]);});}
+  ptPut(g,ptStateOf(p.usePt?d.game:game)); // v23
   return g;
 }
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -2224,12 +2290,55 @@ function viewHome(g){
   const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
   const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに 大事。</p>`:"";
   return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${tkb}${shopNews(g)}
-  <section class="panel"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
+  <section class="panel" id="ability"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
+  ${ptBox(g)}
   <p class="muted" id="mealHint">🍚 ごはんを いっぱい 食べても、スタミナが のびるよ。</p>
-  <p class="muted">「がんばったこと」を えらぶと のうりょくが のびるよ。</p>${pw}</section>
-  ${posPanel(g)}${skillsPanel(g)}${wazaPanel(g)}${looksPanel(g)}`;
+  <p class="muted">「がんばったこと」\u2060を えらぶと、練習ポイントが たまるよ。 ポイントで のうりょくを 上げたり、スペシャル のうりょくを 取ったり しよう!</p>${pw}</section>
+  ${posPanel(g)}${spPanel(g)}${skillsPanel(g)}${wazaPanel(g)}${looksPanel(g)}`;
 }
 
+// v23 練習ポイント: the points left and, when open (ptPlan), the plan he is making: +/- for each ability, the specials, then 決める.
+let ptPlan=null, ptBusy=false;
+const ptNum=n=>Math.max(0,n);
+function ptBox(g){const L=g.left, any=PTKINDS.some(([t])=>L[t]>0), hold=live&&!live.done;
+  const bar=`<div class="ptbar" id="ptBar"><span class="label">練習ポイント</span>${PTKINDS.map(([t,n,i])=>`<span class="ptk"><span aria-hidden="true">${i}</span>${n} <b>${ptNum(L[t])}</b></span>`).join("")}</div>`;
+  if(!ptPlan||hold)return `<div class="ptbox">${bar}${hold?`<p class="muted">しあいが 終わったら 使えるよ。</p>`:any?`<button class="primary" id="ptOpen" type="button">ポイントを 使う</button>`:`<p class="muted">ノートで「がんばったこと」\u2060を えらぶと たまるよ。</p>`}</div>`;
+  const f=ptFree(g,ptPlan), top=profile.pos?Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>x[0]):[];
+  const rows=STATS.map(([k,n])=>{const add=ptPlan.pt[k]||0, v=g.stats[k], nx=ptCost(v+add), t=PTOF[k], ki=PTKINDS.find(x=>x[0]===t);
+    return `<div class="ptrow"><span class="ptn">${top.includes(k)?`<span class="ptstar" aria-label="大事">★</span>`:""}${n}</span><span class="ptv">${v}${add?` <b>→ ${v+add}</b>`:""}</span>
+      <span class="muted ptc">${ki[2]}${nx}</span>
+      <button class="ghost ptpm" type="button" data-ptm="${k}" aria-label="${n}を へらす"${add?"":" disabled"}>−</button><button class="ghost ptpm" type="button" data-ptp="${k}" aria-label="${n}を 上げる、 ${ki[1]} ${nx}"${f[t]>=nx?"":" disabled"}>+</button></div>`;}).join("");
+  const sps=spList(g).map(x=>{const want=ptPlan.sp[x.id]||0, next=x.lv+1, c=next<=2?x.cost[next-1]:null, on=want>x.lv;
+    const fits=c&&PTKINDS.every(([t])=>(f[t]+(on?c[t]||0:0))>=(c[t]||0)), gate=next===2&&!x.ok;
+    const st=x.lv===2?`<span class="muted">金色に なった!</span>`:gate?`<span class="muted">金色には ${esc(x.nw)}が いるよ</span>`
+      :`<button class="ghost sppick" type="button" data-spp="${x.id}" aria-pressed="${on}"${on||fits?"":" disabled"}>${on?"✓ ":""}${next===2?"金色に する":"取る"} <span class="muted">${ptTxt(c)}</span></button>`;
+    return `<div class="sprow${x.lv===2?" gold":x.lv===1?" on":""}"><b>${x.lv===2?"★ ":x.lv===1?"✓ ":""}${esc(x.n)}</b><span class="muted">${esc(x.what)}</span>${st}</div>`;}).join("");
+  const used=ptPlanCost(g,ptPlan), some=PTKINDS.some(([t])=>used[t]>0);
+  return `<div class="ptbox open">${bar}<h3>のうりょくを 上げる</h3><p class="muted">高い のうりょくほど、ポイントが たくさん いるよ。${top.length?" ★は ポジションで 大事な のうりょく。":""}</p>
+  <div class="ptrows">${rows}</div><h3>スペシャル のうりょく</h3><div class="sprows">${sps}</div>
+  <div class="ptfoot"><p class="ptleft">のこり ${PTKINDS.map(([t,n,i])=>`<span>${i}${n} <b>${ptNum(f[t])}</b></span>`).join("")}</p>
+  <div class="row"><button class="ghost" id="ptNo" type="button">やめる</button><button class="primary" id="ptGo" type="button"${some&&!ptBusy?"":" disabled"} style="flex:1">これで 決める</button></div></div></div>`;}
+// the specials he has, with what each does (on home, under the abilities)
+function spPanel(g){const sl=spList(g), got=sl.filter(x=>x.lv>0);
+  return `<section class="panel" id="spBook"><h2>スペシャル のうりょく <span class="muted">${got.length} / ${sl.length}</span></h2>
+  ${got.length?`<div class="skills">${got.map(x=>`<span class="sk${x.lv===2?" gold":""}">${x.lv===2?"★ ":""}${esc(x.n)}</span>`).join("")}</div><p class="muted">しあいで 使えるよ! 金色に すると もっと 強く なる。</p>`
+    :`<p class="muted">練習ポイントで 取ると、しあいで 使えるよ。 金色に すると もっと 強く なる。</p>`}</section>`;}
+async function ptCommit(){if(!ptPlan||ptBusy||!lastG||(live&&!live.done))return; const g=lastG;
+  if(!ptFits(g,ptPlan)){ptPlan=null;render();flash("ポイントが たりなかったよ。 もう一度 えらんでね。");return;}
+  const c=ptPlanCost(g,ptPlan); if(!PTKINDS.some(([t])=>c[t]>0))return;
+  const ps=ptState(), was=JSON.parse(JSON.stringify({pt:game.pt,sp:game.sp,spent:game.spent})), up=[];
+  STATS.forEach(([k,n])=>{const a=ptPlan.pt[k]||0; if(a){ps.pt[k]+=a; up.push(n+" +"+a);}});
+  const okOf=id=>(spList(g).find(y=>y.id===id)||{}).ok;
+  Object.keys(ptPlan.sp).forEach(id=>{const to=ptPlan.sp[id]; if(SPEC[id]&&to===(ps.sp[id]||0)+1&&to<=2&&(to===1||okOf(id))){ps.sp[id]=to; up.push(SPEC[id][1]+(to===2?" 金色":""));}});
+  PTKINDS.forEach(([t])=>{ps.spent[t]+=c[t];});
+  game.pt=ps.pt; game.sp=ps.sp; game.spent=ps.spent; ptPlan=null; ptBusy=true; render();
+  const slow=setTimeout(()=>flash(PTWAIT),10000);
+  try{if(db)await store.setGame();else if(!lsSave())throw new Error("local"); clearTimeout(slow); ptBusy=false; render(); flash("決めたよ! "+up.join("、")); const h=$("#ability"); if(h&&h.scrollIntoView)h.scrollIntoView({block:"start"});}
+  catch(e){clearTimeout(slow); ptBusy=false;
+    if(game.pt===ps.pt&&game.sp===ps.sp&&game.spent===ps.spent){game.pt=was.pt; game.sp=was.sp; game.spent=was.spent; if(!was.pt)delete game.pt; if(!was.sp)delete game.sp; if(!was.spent)delete game.spent;}
+    if(db)store.setGame().catch(()=>{}); // so the store ends as the screen
+    render(); flash("ほぞんできませんでした。 もう一度 ためしてね。");}}
+const PTWAIT="今 練習ポイントを ほぞんして いるよ。 少し 待ってね。";
 // v22.3 ごはん: today's meal, once a day. A second tap on the chosen one takes it back (today only).
 let mealBusy=false;
 function mealCard(g){if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
@@ -2718,6 +2827,7 @@ function bkConfirm(){
   return `<div class="bkbox" id="bkbox"><b>${d.at?`${esc(fmtDate(localDay(d.at)))}の バックアップ`:"この バックアップ"}から もどします。</b><ul>
   <li>ノート:${p.add.length?`${p.add.length}さつ ふえます`:"ふえる ノートは ありません"}${dup&&!p.fixJ.length?`(もう ある ${dup}さつは そのまま)`:""}</li>
   <li>しあいの きろく:${p.useGame?"バックアップの 方が 進んでいるので、そちらに します":"今の まま"}</li>
+  ${p.usePt?`<li>練習ポイントで 上げた のうりょく:バックアップの 方が 多いので、そちらに します</li>`:""}
   <li>せんしゅの 名前と 見た目:${p.useProfile?"バックアップの ものに します":"今の まま"}</li>
   ${p.addMade.length?`<li>作った そうび:${p.addMade.length}こ もどります</li>`:""}
   ${p.addNames.length?`<li>なかまの 名前:${p.addNames.length}人 もどります</li>`:""}${bkConfirmM(d,p)}</ul>
@@ -2769,7 +2879,7 @@ function bkPrepare(text){
 }
 // v14 what to say when a backup brings nothing new (records and counts included), or "" when it does.
 const BKMNOW="ミッションの きろくは 今は 読みこめないので、もどせません。後で もう一度 ためしてください。";
-function bkNothing(d,p){if(p.add.length||p.fixJ.length||p.addM.length||p.useGame||p.useProfile||p.addMade.length||p.addNames.length)return "";
+function bkNothing(d,p){if(p.add.length||p.fixJ.length||p.addM.length||p.useGame||p.useProfile||p.addMade.length||p.addNames.length||p.usePt)return "";
   return !d.entries.length&&!d.missions.length?"この バックアップには ノートが ありません。"
     :d.missions.length&&msErr?(d.entries.length?"この バックアップの ノートは、もう 全部 入っています。":"")+BKMNOW
     :d.missions.length?"この バックアップの ノートと ミッションは、もう 全部 入っています。":"この バックアップの ノートは、もう 全部 入っています。";}
@@ -2791,12 +2901,12 @@ async function bkApply(){
       {const add=p.add, addM=p.addM, fixJ=p.fixJ; p=bkPlan(d); p.add=add; p.addM=addM; p.fixJ=fixJ;} // a name changed or a match record that came in meanwhile is not overwritten
       if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names,meal:p.meal}));
       else if(p.addNames.length||p.addMeal.length)await store.setProfile({mnames:p.names,meal:p.meal});
-      {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade;} // and the match record as it is after that write
-      if(p.useGame||p.addMade.length){game=bkGame(p,d);await store.setGame();}
+      {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade; p.usePt=q.usePt;} // and the match record as it is after that write
+      if(p.useGame||p.addMade.length||p.usePt){game=bkGame(p,d);await store.setGame();}
     }else{
       const before=[entries,game,profile];
       entries=withJug(entries,p.fixJ).concat(p.add); // v14: a new array (and new objects for the counts put back), so the roll-back below still holds
-      if(p.useGame||p.addMade.length)game=bkGame(p,d);
+      if(p.useGame||p.addMade.length||p.usePt)game=bkGame(p,d);
       if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names,meal:p.meal}));
       else if(p.addNames.length||p.addMeal.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names,meal:p.meal}));
       if(!lsSave()){[entries,game,profile]=before;throw new Error("local");}
@@ -2808,7 +2918,7 @@ async function bkApply(){
     stampSeen(p.add.concat(mFail?[]:p.addM)); // old stamps and comments brought back are not news
     // The open settings show the player brought back, not the choices made or the words typed before it (render keeps typed words).
     if(p.useProfile){sdraft=null; [["#s-name",profile.name],["#s-num",profile.number],["#s-team",profile.team||""]].forEach(([k,v])=>{const el=$(k); if(el)el.value=v;});}
-    bkData=null; bkMsg=`ノートを ${p.add.length}さつ もどしました。`+(p.useGame?"しあいの きろくも もどしました。":"")+(p.addMade.length?"作った そうびも もどしました。":"")+(p.addNames.length?"なかまの 名前も もどしました。":"")+bkApplyMsg(p,mFail);
+    bkData=null; bkMsg=`ノートを ${p.add.length}さつ もどしました。`+(p.useGame?"しあいの きろくも もどしました。":"")+(p.addMade.length?"作った そうびも もどしました。":"")+(p.usePt?"練習ポイントで 上げた のうりょくも もどしました。":"")+(p.addNames.length?"なかまの 名前も もどしました。":"")+bkApplyMsg(p,mFail);
     flash(bkMsg);
   }catch(err){bkMsg="とちゅうで うまく いきませんでした。もう一度 ためしてください。(もどせた ノートは そのまま のこります)";}
   bkBusy=false; waitOver("bk",bkMsg); render();
@@ -2942,7 +3052,7 @@ function viewWrite(){
   <h3 class="sec">ふり返り</h3>
   ${focusField(d)}
   <div class="field" id="chipField"><span class="q">がんばったこと<small>${MAXCHIPS}つまで えらべるよ(<span id="chipN">${d.chips.length}</span>/${MAXCHIPS})</small></span>
-    <span class="grp"><i></i><span>自分を きたえる(<span id="gl-self">${grpLeft(d,false)}</span>)→ のうりょくアップ</span></span><div class="chips" data-chips="self">${chipBtns(false,d)}</div>
+    <span class="grp"><i></i><span>自分を きたえる(<span id="gl-self">${grpLeft(d,false)}</span>)→ 練習ポイント</span></span><div class="chips" data-chips="self">${chipBtns(false,d)}</div>
     <span class="grp team"><i></i><span>なかまと つながる(<span id="gl-team">${grpLeft(d,true)}</span>)→ キズナが たまって なかまが ふえる</span></span><div class="chips team" data-chips="team">${chipBtns(true,d)}</div>
     <p class="muted chiphint" id="chipHint"${chipHintOn(d)?"":" hidden"}>${MAXCHIPS}つ えらんだよ。 かえる ときは、えらんだ ものを もう1回 おして 外してね。</p></div>
   <div class="field"><label class="q" for="f-good">うまくいったこと</label><p class="muted hint" id="askHint"${ask?"":" hidden"}>${ask?"考えて みよう:"+esc(ask):""}</p><div class="voice"><textarea id="f-good" maxlength="300" placeholder="れい:〇〇くんに パスが通った">${esc(d.good)}</textarea>${micBtn("f-good")}</div></div>
@@ -2987,6 +3097,7 @@ function viewTeam(g){
     <span>なかまの へいきん</span><em>${r1(tp.avg)}</em>
     <span>スキル ボーナス</span><em>+${r1(tp.sk)}</em>
     ${tp.wz?`<span>わざ ボーナス</span><em>+${r1(tp.wz)}</em>`:""}
+    ${tp.sp?`<span>スペシャル ボーナス</span><em>+${r1(tp.sp)}</em>`:""}
     <span>アイテム ボーナス</span><em>+${tp.it}</em>
     ${tp.mk?`<span>作った そうび</span><em>+${r1(tp.mk)}</em>`:""}
     ${tp.fire?`<span>くやしさパワー</span><em>+${tp.fire}</em>`:""}
@@ -3320,7 +3431,7 @@ function weekData(g,off){
   const first=g.es.map(e=>e.date).concat(g.ms.map(mday)).filter(realDay).sort()[0]||t;
   const cm=cleanMeal(profile.meal), mpt=f=>Math.min(MEALCAP,Object.keys(cm).filter(f).reduce((n,d)=>n+MEALPT[cm[d]],0)); // v22.3 ごはん: the days of this week, and the stamina they brought
   return {a,z,off,days,notes:es.length,miss:ms.length,wdays:days.filter(x=>x.es.length||x.ms.length).length,xp:Math.max(0,A.xp-B.xp),lv:[B.level,A.level],
-    stats:STATS.map(([k,n])=>[n,(A.stats[k]||0)-(B.stats[k]||0)]).filter(x=>x[1]>0),
+    stats:STATS.map(([k,n])=>[n,(A.base[k]||0)-(B.base[k]||0)]).filter(x=>x[1]>0),pts:PTKINDS.map(([t,n,i])=>[i+n,(A.pts[t]||0)-(B.pts[t]||0)]).filter(x=>x[1]>0),
     mates:squad(A).filter((m,i)=>m.joined&&!qb[i].joined).map(m=>m.n),skills:skillList(A).filter((x,i)=>x.lv>sb[i].lv).map(star),waza:wazaList(A).filter((x,i)=>x.lv>wb[i].lv).map(star),
     jug:JUGS.map(([k,nm])=>({nm,from:B.jug[k]?B.jug[k].n:0,to:A.jug[k]?A.jug[k].n:0})).filter(j=>j.to>j.from),
     chips:Object.keys(cn).map(id=>[CHIP[id].t,cn[id]]).sort((x,y)=>y[1]-x[1]).slice(0,3),tries:{n:tried.length,done:tried.filter(e=>e.goalResult==="done").length},
@@ -3340,6 +3451,7 @@ function weekPanel(g){
   const tile=(id,l,v,u)=>`<div class="wk-t" id="wk-${id}"><span>${l}</span><b>${v}<small>${u}</small></b></div>`;
   if(W.lv[1]>W.lv[0])up.push(`<p>レベル: Lv.${W.lv[0]} → <b>Lv.${W.lv[1]}</b></p>`);
   if(W.stats.length)up.push(`<p class="wk-st">${W.stats.map(([n,v])=>`<span>${n} <b>+${v}</b></span>`).join("")}</p>`);
+  if(W.pts.length)up.push(`<p class="wk-st"><span class="label">練習ポイント</span>${W.pts.map(([n,v])=>`<span>${n} <b>+${v}</b></span>`).join("")}</p>`); // v23
   if(W.meal.days)up.push(`<p id="wk-meal"><span aria-hidden="true">🍚 </span>ごはんを いっぱい 食べた 日: <b>${W.meal.days}日</b>${W.meal.pt>0?` (スタミナ +${W.meal.pt})`:""}</p>`);
   if(W.mates.length)up.push(`<p>なかまが ふえたよ: <b>${W.mates.map(esc).join("、")}</b></p>`);
   const two=(xs,a,z)=>{const l=xs.filter(x=>x[1]<2).map(x=>esc(x[0])), gd=xs.filter(x=>x[1]>=2).map(x=>"★"+esc(x[0])); // learned, and turned gold
@@ -3465,7 +3577,7 @@ function settle(base,res,c){const opp=c.opp, ex=c.ex, cupI=c.cupI, round=c.round
   return {next,rewards,cupWon,keep};}
 function kickoff(auto){
   const g=lastG, rv=revOpen(game); if(live||!gameReady||!loaded()||tickets(g)<1&&!rv)return;
-  if(crafting||bkBusy){flash(crafting?SAVEWAIT:BKWAIT);const st=$("#status");if(st&&st.scrollIntoView)st.scrollIntoView({block:"nearest"});return;}
+  if(crafting||bkBusy||ptBusy){flash(crafting?SAVEWAIT:ptBusy?PTWAIT:BKWAIT);const st=$("#status");if(st&&st.scrollIntoView)st.scrollIntoView({block:"nearest"});return;}
   const opp=currentOpp(), ex=!!opp.ex, cupI=game.cup, round=game.round, res=simulate(g,opp,!auto);
   const prevEquip=Object.assign({},game.equip||{});
   const tp0=teamPower(g), joined=squad(g).filter(m=>m.joined).length;
@@ -3791,6 +3903,18 @@ $("#view").addEventListener("click",async e=>{
   if(b.id==="shopIntroGo"){introDone();toCraft();return;}
   if(b.id==="shopIntroNo"){introDone();render();const f=$("#shopGo");if(f)f.focus();return;}
   if(b.id==="shopGo"){toCraft();return;}
+  // v23 練習ポイント
+  if(b.id==="ptOpen"){if(live&&!live.done)return; ptPlan={pt:{},sp:{}}; render(); const h=$("#ptBar"); if(h&&h.scrollIntoView)h.scrollIntoView({block:"start"}); return;}
+  if(b.id==="ptNo"){ptPlan=null; render(); const o=$("#ptOpen"); if(o)o.focus(); return;}
+  if(b.id==="ptGo"){await ptCommit(); return;}
+  if(ptPlan&&lastG&&(b.dataset.ptp||b.dataset.ptm)){const k=b.dataset.ptp||b.dataset.ptm; if(!STATS.some(x=>x[0]===k))return;
+    if(b.dataset.ptm){ptPlan.pt[k]=Math.max(0,(ptPlan.pt[k]||0)-1);}
+    else{const t=PTOF[k], c=ptCost(lastG.stats[k]+(ptPlan.pt[k]||0)); if(ptFree(lastG,ptPlan)[t]<c)return; ptPlan.pt[k]=(ptPlan.pt[k]||0)+1;}
+    const id=b.dataset.ptp?"[data-ptp=\""+k+"\"]":"[data-ptm=\""+k+"\"]"; render(); const f=$(id); if(f&&!f.disabled)f.focus(); else{const o=$("[data-ptp=\""+k+"\"]"); if(o)o.focus();}
+    say(STATS.find(x=>x[0]===k)[1]+" "+(lastG.stats[k]+(ptPlan.pt[k]||0))); return;}
+  if(ptPlan&&lastG&&b.dataset.spp){const x=spList(lastG).find(y=>y.id===b.dataset.spp); if(!x||x.lv>=2||(x.lv===1&&!x.ok))return;
+    if((ptPlan.sp[x.id]||0)>x.lv)delete ptPlan.sp[x.id]; else{ptPlan.sp[x.id]=x.lv+1; if(!ptFits(lastG,ptPlan)){delete ptPlan.sp[x.id]; return;}}
+    render(); const f=$("[data-spp=\""+x.id+"\"]"); if(f)f.focus(); say((ptPlan.sp[x.id]||0)>x.lv?x.n+"を えらんだよ":x.n+"を やめたよ"); return;}
   {const w=b.dataset.make||b.dataset.recolor||b.dataset.gmenu; if(w&&own(GEAR,w)&&(crafting||bkBusy)){craftSay(GEAR[w].L.k,crafting?`今 ${GEAR[crafting.id].n}${crafting.re?"の 色":""}を ほぞんして いるよ。 少し 待ってね。`:BKWAIT,crafting?"craft":"bk");return;}}
   if(b.dataset.make){if(crafting||(live&&!live.done)||!canMake(lastG,b.dataset.make))return;openSheet(b.dataset.make,false);return;}
   if(b.dataset.recolor){if(crafting||(live&&!live.done)||!own(game.made||{},b.dataset.recolor))return;openSheet(b.dataset.recolor,true);return;}
@@ -3931,6 +4055,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
   // v13: the materials this note brought, and a piece it made possible to make.
   const gm=gain.mat, matGot=gm&&MATS.some(([k])=>gm[k])?`<div class="matgot"><b>そざい ゲット!</b>${MATS.filter(([k])=>gm[k]).map(([k,nm])=>`<span title="${nm}">${matIcon(k)}+${gm[k]}</span>`).join("")}</div>`:"";
   const newMake=gameReady&&!live&&before.mat?GEARIDS.filter(id=>canMake(after,id)&&!canMake(before,id)):[];
+  const gp=gain.pts, ptGot=gp&&PTKINDS.some(([t])=>gp[t])?`<div class="matgot ptgot"><b>練習ポイント ゲット!</b>${PTKINDS.filter(([t])=>gp[t]).map(([t,n,i])=>`<span>${i}${n} +${gp[t]}</span>`).join("")}${gameReady&&!(live&&!live.done)&&PTKINDS.some(([t])=>after.left&&after.left[t]>0)?`<button class="ghost mini" type="button" id="ovpt">使う</button>`:""}</div>`:""; // v23
   // v14 banners, right under the number because they say why it is there: a mission cleared, juggling targets, a best, first counts.
   const jc=o.note?jugOf(o.note):{}, jn=k=>(JUGS.find(x=>x[0]===k)||["",""])[1], firsts=J.first.filter(k=>jc[k]>=1), bn=[];
   if(o.mk)bn.push(["msclear",o.mk==="video"?"<b>🎬 ミッション クリア!</b><span>自分の プレーを よく 見たね!</span>":o.mk==="pro"?"<b>🌟 ミッション クリア!</b><span>プロの プレーを よく 見たね!</span>":o.mk==="home"?"<b>🏠 ミッション クリア!</b><span>ボールと なかよく なったね!</span>":"<b>🔍 ミッション クリア!</b><span>新しい ことを 学んだね!</span>"]);
@@ -3950,7 +4075,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
     ${lvup?`<div class="lvup">レベルアップ! Lv.${after.level}${after.level>=MAXLV?" MAX!":""}</div>${rankOf(after.level)!==rankOf(before.level)?`<div><b>「${rankOf(after.level)}」になった!</b></div>`:""}`:""}
     ${starUp?`<div class="lvup">★ ゲット! ★×${after.stars}</div>`:""}
     ${lvup||starUp?"":`<div class="muted">${after.level>=MAXLV?`MAX! 次の ★まで あと ${toNext(after)} XP`:`次のレベルまで あと ${toNext(after)} XP`}</div>`}
-    <ul>${gain.parts.map(p=>`<li${p[2]==="msn"||p[2]==="stk"?` class="${p[2]}"`:""}><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>${matGot}${plan}
+    <ul>${gain.parts.map(p=>`<li${p[2]==="msn"||p[2]==="stk"?` class="${p[2]}"`:""}><span>${esc(p[0])}</span><b>+${p[1]}</b></li>`).join("")}</ul>${matGot}${ptGot}${plan}
     ${looks.length?`<div class="newmate"><div class="ava look">${pixSVG(Object.assign(heroOpts(after,equipNow()),{crop:lookCrop,label:heroName()}),"lk")}</div><div><b>新しい すがた!</b><br><span class="muted">${esc(looks.join("、"))}</span></div></div>`:""}
     ${newSkills.map(s=>`<div><span class="sk${s.lv===2?" gold":""}">${s.lv===2?"★ ":""}${esc(s.n)}</span> ${s.lv===2?"が ゴールドスキルに なった!":"を おぼえた!"}</div>`).join("")}
     ${newWaza.map(x=>`<div class="wzget"><span class="sk${x.lv===2?" gold":""}">${x.lv===2?"★ ":""}${x.n}</span> ${x.lv===2?"が ゴールドに なった!":"を おぼえた! しあいで 使えるよ!"}</div>`).join("")}
@@ -3973,6 +4098,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
   const mb=ov.querySelector("#ovmatch"); if(mb)mb.addEventListener("click",()=>{if(early())return;close();go("match");});
   const nb=ov.querySelector("#ovwrite"); if(nb)nb.addEventListener("click",()=>{if(early())return;close();if(o.mk==="home")noteFromHome(handoff);else go("write");}); // v22.2; v22.4: from 🏠 with what he played
   const pb=ov.querySelector("#ovpar"); if(pb)pb.addEventListener("click",()=>{if(early())return;close();openParent(handoff);});
+  const ptb=ov.querySelector("#ovpt"); if(ptb)ptb.addEventListener("click",()=>{if(early())return;close();tab="home";ptPlan={pt:{},sp:{}};render();const h=$("#ptBar");if(h&&h.scrollIntoView)h.scrollIntoView({block:"start"});const f=$("[data-ptp]:not([disabled])");if(f)try{f.focus({preventScroll:true});}catch(err){f.focus();}}); // v23
   const cb=ov.querySelector("#ovcraft"); if(cb)cb.addEventListener("click",()=>{if(early())return;close();toCraft();});
   ov.querySelectorAll("[data-ovmname]").forEach(x=>x.addEventListener("click",()=>{if(early())return;close();go("team");mateEdit=x.dataset.ovmname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}}));
   ov.addEventListener("click",ev=>{if(ev.target===ov&&!early())close(true)});
