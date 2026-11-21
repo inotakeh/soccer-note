@@ -122,6 +122,8 @@ p{margin:0}
 .skills{display:flex;flex-wrap:wrap;gap:8px}
 .sk{display:inline-flex;font-weight:800;font-size:.85rem;padding:4px 12px;border-radius:4px;background:var(--good);color:var(--on);transform:skewX(-8deg)}
 .sk.gold{background:var(--accent);color:var(--accent-ink)}
+details.tip{border-top:1px solid var(--rule);padding:8px 0}details.tip summary{font-weight:800;cursor:pointer;min-height:32px;display:flex;align-items:center}
+details.tip p{margin:6px 0 0}
 .soon{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
 .soon>div{display:flex;flex-direction:column;gap:4px}
 .more summary{cursor:pointer;font-weight:800;color:var(--good);padding:4px 0}
@@ -663,7 +665,7 @@ const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 
 /* ---------- game rules ---------- */
-const STATS=[["stamina","スタミナ"],["dribble","ドリブル"],["pass","パス"],["shoot","シュート"],["defense","ディフェンス"],["brave","ゆうき"]];
+const STATS=[["stamina","スタミナ"],["dribble","ドリブル"],["pass","パス"],["shoot","シュート"],["defense","ディフェンス"],["brave","ゆうき"],["speed","スピード"]]; // v23.3 スピード
 // "team" chips are about other people: they also earn キズナ, which brings teammates in.
 const CHIPS=[
   {id:"chase",t:"ボールを追いかけた",s:{stamina:2,brave:1},skill:"ボールハンター",line:"{h}が こぼれ球を 拾った!"},
@@ -687,10 +689,26 @@ const CHIP={};CHIPS.forEach(c=>CHIP[c.id]=c);
 // bought with its own kind (PTOF); one step costs ptCost(its value now): 1, and 1 more for every PTSTEP it already has.
 const PTGATE="2026-11-21T15:00:00.000Z"; // 2026-11-22 00:00 in Japan
 const PTKINDS=[["b","体","🏃"],["o","ボール","⚽"],["h","心","💛"]];
-const PTOF={stamina:"b",defense:"b",dribble:"o",pass:"o",shoot:"o",brave:"h"};
+const PTOF={stamina:"b",defense:"b",dribble:"o",pass:"o",shoot:"o",brave:"h",speed:"b"};
 const PTSTEP=100, ptCost=v=>1+Math.floor(Math.max(0,v)/PTSTEP);
+const LOSSPT={b:1,o:1,h:1}, lpOf=x=>x&&Number.isInteger(x.lp)&&x.lp>0&&x.lp<=1e6?x.lp:0; // v23.3 a lost match
+// v23.3 足が 速く なる コツ: one opens at each スピード in SPTIPAT (nothing stored)
+const SPTIPAT=[1,5,10,20,30,45,60,80];
+const SPTIPS=[
+  ["せすじを ピン","せすじを のばして、頭は 体の 真上に。 目は 下を 見ないで、少し 先を 見よう。","あいさつの とき、せすじを スッと のばして みよう。"],
+  ["うでを 大きく ふる","ひじを 曲げて、前と 後ろに 大きく ふろう。 うでが 速く ふれると 足も 速く 動くよ。","「1、2、1、2」\u2060と 言いながら、ひじを 後ろに 引く 練習。 かがみを 見て、まっすぐ ふれて いるか たしかめよう。"],
+  ["数字の「4」","地面に つく 足は まっすぐ、上げた 足は ひざを 曲げて 前へ。 横から 見ると 4の 形に なるよ。","手びょうしに 合わせて、その場で 足を かわりばんこに 上げよう。"],
+  ["つま先で トン","かかとで ドスンと ふまないで、つま先の 方で 軽く トンと 地面を おそう。","歯みがきの とき、かかとを 少し 上げて 立って みよう。"],
+  ["親ゆびの つけねで ける","足の 親ゆびの つけねで 地面を おして、体を 前へ はこぼう。","はや歩きで 地面を ける かんじを つかんでから 走って みよう。"],
+  ["ももを 上げる","けった 足を むねの 方へ 引き上げると、一歩が 大きく なるよ。","かべに 手を ついて、かた足ずつ もも上げ。 おへその 方まで 上げよう。"],
+  ["スタートは ひくく","走り出しは 体を 前に たおして、5歩くらいまでは ひくい まま。 少しずつ 体を 起こそう。","その場で「タタタタッ」\u2060と 速く 足ぶみして、体を たおして とび出そう。"],
+  ["一番のりの 走り出し","しあいでは、ボールが 来そうな 所を 先に 見て、早く 走り出すのも スピード。","こぼれ球が 出たら「よーい ドン!」\u2060の つもりで、一番に 走り出そう。"]];
+const sptipN=v=>SPTIPAT.filter(x=>(v||0)>=x).length;
+// v23.3 each day with a cleared 🏃 かけっこ 練習 opens one more (in the same order)
+const runDays=g=>new Set((g&&g.ms||[]).filter(m=>m.kind==="run"&&missionDone(m)).map(mday)).size;
+const tipsOpen=(v,rd)=>Math.min(SPTIPS.length,sptipN(v)+(rd||0)), tipsOf=g=>tipsOpen(g&&g.stats?g.stats.speed:0,runDays(g));
 // v23.1 a cleared mission (its kind's first finished record of the day) and the day's first note with a juggling count give points too
-const MSPT={home:{o:2},video:{h:2},learn:{h:2},pro:{h:2}}, JUGPT={o:2};
+const MSPT={home:{o:2},video:{h:2},learn:{h:2},pro:{h:2},run:{b:2}}, JUGPT={o:2};
 // v23 スペシャル のうりょく: [id, name, what it does, cost of step 1, cost of 金色, what 金色 needs, match line]. Ids are never reused.
 // 金色 needs a skill (chip id, learned) or so many learned わざ of a group. Each step gives the team SPPOW (金色 the second number).
 const SPPOW=[.4,.8];
@@ -850,13 +868,13 @@ const kjOld=t=>typeof t==="string"&&Object.prototype.hasOwnProperty.call(KJOLD,t
 const kjNote=x=>{if(x&&typeof x==="object")["goal","goalFrom","next"].forEach(k=>{if(typeof x[k]==="string")x[k]=kjOld(x[k]);}); return x;};
 const GOALS=["ルーズボールを1回追いかける","パスを1回もらいに行く","声を3回出す","シュートを1本打つ","相手に1回近づく","「パスちょうだい」を1回言う","さいごまで走る"];
 const POS={
-  FW:{n:"フォワード",d:"ゴールを 決める",w:{shoot:.3,dribble:.25,brave:.15,stamina:.1,pass:.1,defense:.1},
+  FW:{n:"フォワード",d:"ゴールを 決める",w:{shoot:.3,dribble:.25,brave:.15,stamina:.1,pass:.1,defense:.1,speed:.15},
     goals:["シュートを3本打つ","キーパーの いない 方を ねらって 1本打つ","前を 向いて ボールを 1回もらう","こぼれた ボールに 一番に 1回さわる"]},
-  MF:{n:"ミッドフィルダー",d:"パスで つなぐ",w:{pass:.3,stamina:.2,dribble:.2,defense:.1,shoot:.1,brave:.1},
+  MF:{n:"ミッドフィルダー",d:"パスで つなぐ",w:{pass:.3,stamina:.2,dribble:.2,defense:.1,shoot:.1,brave:.1,speed:.1},
     goals:["ボールが 来る 前に まわりを 3回見る","パスしたら 動いて 1回もらい直す","「へい!」と 言って パスを 2回もらう","前の 味方に パスを 2回出す"]},
-  DF:{n:"ディフェンダー",d:"ゴールを 守る",w:{defense:.35,brave:.2,stamina:.2,pass:.15,dribble:.05,shoot:.05},
+  DF:{n:"ディフェンダー",d:"ゴールを 守る",w:{defense:.35,brave:.2,stamina:.2,pass:.15,dribble:.05,shoot:.05,speed:.15},
     goals:["相手に すばやく 近づくを 3回","取った ボールを 前の 味方に 1回パス","声で 味方に 3回教える","こぼれた ボールに 一番に 1回さわる"]},
-  GK:{n:"ゴールキーパー",d:"さいごの とりで",w:{defense:.3,brave:.25,pass:.2,stamina:.15,dribble:.05,shoot:.05},
+  GK:{n:"ゴールキーパー",d:"さいごの とりで",w:{defense:.3,brave:.25,pass:.2,stamina:.15,dribble:.05,shoot:.05,speed:.05},
     goals:["かまえてから 取るを 3回","両手で キャッチを 2回","声で しじを 3回出す","前に 出て ボールを 1回取る"]}
 };
 // For each position: three points to look out for in play (the note asks which were done; they are kept apart from the がんばったこと chips),
@@ -1005,12 +1023,22 @@ const KINDS=[["practice","練習"],["match","しあい"],["self","自主練"]];
 // Forward-only: an XP value may go up, never down; LADDER may gain targets, never lose or move one; MINCHARS and JUGASK may go down, never up.
 const JUGS=[["r","右足"],["l","左足"],["b","両足"]], JUGMAX=9999, LADDER=[5,10,20,50,100];
 const JUGXP=5, JUGPB=10, JUGSTEP=20, JUGASK=20; // a note with any count; the first new best of a writing day; each target, once; ask once from this count
-const VIDEOBONUS=50, LEARNBONUS=30, PROBONUS=30, HOMEBONUS=20, MINCHARS=2;  // once a day each, for the first finished record of its day (mday)
+const VIDEOBONUS=50, LEARNBONUS=30, PROBONUS=30, HOMEBONUS=20, MINCHARS=2, RUNBONUS=20; // v23.3 RUNBONUS 🏃  // once a day each, for the first finished record of its day (mday)
 // v14.1 👪: the first finished 🎬 record of a day (writing order) with a parent's comment (any non-empty one, as for the comment's +10)
 // gets VIDEOPARENT more, once a day, on top of the comment's +10. Worked out every time, never stored. Forward-only: VIDEOPARENT may go
 // up, never down.
 const VIDEOPARENT=100, VPART="👪 おうちの人と ふり返り";
-const MKINDS=[["video","🎬 動画 ふり返り",VIDEOBONUS],["learn","🔍 調べて 学ぶ",LEARNBONUS],["pro","🌟 プロの しあいを 見る",PROBONUS],["home","🏠 おうちで ボール遊び",HOMEBONUS]];
+const MKINDS=[["video","🎬 動画 ふり返り",VIDEOBONUS],["learn","🔍 調べて 学ぶ",LEARNBONUS],["pro","🌟 プロの しあいを 見る",PROBONUS],["home","🏠 おうちで ボール遊び",HOMEBONUS],["run","🏃 かけっこ 練習",RUNBONUS]];
+// v23.3 🏃 the running drills of a かけっこ record: [id, name, tip] (ids never reused). Done with one picked.
+const RUNMENU=[["arm","うでふり","ひじを 曲げて、 前と 後ろに 大きく ふろう。"],
+  ["momo","もも上げ","かべに 手を ついて、 おへその 方まで 足を 上げよう。"],
+  ["ton","つま先 トン","かかとを 少し 上げて、 つま先の 方で 軽く 地面を おそう。"],
+  ["four","4の 形 足ぶみ","手びょうしに 合わせて、 その場で 足を かわりばんこに 上げよう。"],
+  ["dash","スタート ダッシュ","体を 前に たおして、 5歩くらいまでは ひくい まま 走ろう。"],
+  ["kake","かけっこ","せすじを のばして、 少し 先を 見て 走ろう。"],
+  ["oni","おにごっこ","まわりを 見て、 すばやく 向きを かえよう。"]];
+const runMenu=m=>(m&&Array.isArray(m.menu)?m.menu:[]).filter((id,i,a)=>typeof id==="string"&&RUNMENU.some(c=>c[0]===id)&&a.indexOf(id)===i);
+const RUNRULE="走る 場所は おうちの人と 決めてね。 車や 人に 気を つけよう。 いたい ところが ある 日は、 お休み しよう。";
 // v15 🏠 the plays of a ball-play record: [id, name, tip]. Every tip is about the ball or the target, not about the body. Ids are
 // never reused; names and tips may change. homeMenu reads the known ids of a record or draft, each once.
 const HOMEMENU=[["touch","ボールタッチ","ボールの 上を なでる ように、 やさしく 転がそう。"],
@@ -1042,7 +1070,7 @@ const PROHOW=[["tv","テレビ"],["net","ネット・動画"],["live","スタジ
 const PROOFF=["パスを もらう 前に 動く","こぼれ球に 一番に 走る","ボールが ない ときも 走りつづける"];
 const PRORULE="ネットや 動画で 見る ときは おうちの人と いっしょに。<br>夜の おそい しあいは、 おうちの人と 決めた 時間まで。";
 const PROSKIP=["fws_wide","df2_voice"];
-const MTITLE={video:["🎬","動画 ふり返り"],learn:["🔍","調べて 学ぶ"],pro:["🌟","プロの しあいを 見る"],home:["🏠","おうちで ボール遊び"]};
+const MTITLE={video:["🎬","動画 ふり返り"],learn:["🔍","調べて 学ぶ"],pro:["🌟","プロの しあいを 見る"],home:["🏠","おうちで ボール遊び"],run:["🏃","かけっこ 練習"]};
 const LEARNHINTS=["ボールを もらう 動き","リフティングの コツ","スタミナが つく 遊び","声の かけ方","こぼれ球への 走り方",
   "ボールを ピタッと 止める コツ","ミスした あとの 切りかえ方","もらう 前に まわりを 見る コツ","インサイドキックの けり方",
   "ごはんと すいみんの ひみつ","パスを もらいやすい 場所","反対の 足で ける 練習","相手に うまく 近づく コツ",
@@ -1243,7 +1271,7 @@ function jugPass(es){
 }
 // v14 what a mission record is worth: its kind's XP for the first finished record of that kind on its day (mday), in writing order, nothing for the
 // others; a parent's comment +10, as on notes. Worked out every time and never stored, so deleting a record moves its XP to the next one of that day.
-const missionDone=m=>m.kind==="video"?written(m.good)&&written(m.fix):m.kind==="learn"?written(m.learn):m.kind==="pro"?written(m.wow)||written(m.next):m.kind==="home"?homeMenu(m).length>0||wazaOf(m).length>0:false;
+const missionDone=m=>m.kind==="video"?written(m.good)&&written(m.fix):m.kind==="learn"?written(m.learn):m.kind==="pro"?written(m.wow)||written(m.next):m.kind==="home"?homeMenu(m).length>0||wazaOf(m).length>0:m.kind==="run"?runMenu(m).length>0:false;
 function missionPass(ms){
   const list=(Array.isArray(ms)?ms:[]).filter(m=>m&&typeof m==="object"&&typeof m.id==="string"&&MKINDS.some(k=>k[0]===m.kind)).sort(byWritten);
   const won=Object.create(null), per=Object.create(null), vpar=Object.create(null); let pn=0;
@@ -1333,6 +1361,7 @@ function compute(list,ms){
     if(!q||!r||isoOr(m.createdAt,"")<PTGATE)return; const np={b:0,o:0,h:0}; for(const t in q){np[t]+=q[t]; pts[t]+=q[t];} r.pts=np;});
   for(const id in mp.per){xp+=mp.per[id].sum; const mm=mp.per[id].mat; for(const k in mm)mat[k]+=mm[k];} parentN+=mp.pn; // v14.2: a 🎬 record's ⭐ // v14 records add XP (and a parent's comment counts for おうえんパワー): no stats, materials or こまめに 書いた (つづけて書いた before v14.1)
   const ml=mealPass(typeof profile==="object"&&profile?profile.meal:null); stats.stamina+=ml.pt; // v22.3 ごはん
+  let lpN=0; try{lpN=lpOf(live&&!live.done?live.base:game);}catch(e){} PTKINDS.forEach(([t])=>{pts[t]+=lpN*(LOSSPT[t]||0);}); // v23.3 lost matches
   const ps=ptState(), base=Object.assign({},stats), left={}; STATS.forEach(([k])=>{stats[k]+=ps.pt[k];}); PTKINDS.forEach(([t])=>{left[t]=pts[t]-ps.spent[t];}); // v23 what he raised
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
@@ -1881,6 +1910,7 @@ function cleanMission(x){
     m.vdate=isDay(x.vdate)&&x.vdate<=x.date?x.vdate:"";m.vtext=m.vdate?"":s(x.vtext,20);}
   else if(x.kind==="pro"){m.how=PROHOW.some(c=>c[0]===x.how)?x.how:"";m.match=s(x.match,30);m.look=s(x.look,40);m.wow=s(x.wow,300);}
   else if(x.kind==="home"){m.menu=homeMenu(x);m.mins=homeMins(x.mins);m.memo=s(x.memo,60);const wz=wazaOf(x);if(wz.length)m.waza=wz;} // v15 🏠, v16 わざ
+  else if(x.kind==="run"){m.menu=runMenu(x);m.memo=s(x.memo,60);} // v23.3 🏃
   else{m.src=(Array.isArray(x.src)?x.src:[]).filter((id,i,a)=>typeof id==="string"&&LEARNSRC.some(c=>c[0]===id)&&a.indexOf(id)===i);m.topic=s(x.topic,20);m.learn=s(x.learn,300);}
   if(typeof x.createdAt==="string"&&x.createdAt.length<=40&&!isNaN(Date.parse(x.createdAt)))m.createdAt=x.createdAt;
   return m;
@@ -1898,6 +1928,7 @@ function cleanGame(x){
   g.items=(Array.isArray(x.items)?x.items:[]).filter((id,i,a)=>typeof id==="string"&&own(ITEMS,id)&&a.indexOf(id)===i);
   g.made=cleanMade(x.made);
   ptPut(g,ptStateOf(x)); // v23
+  if(lpOf(x))g.lp=lpOf(x); // v23.3
   if(x.equip&&typeof x.equip==="object")Object.keys(x.equip).forEach(k=>{const id=x.equip[k];if(g.items.includes(id)||(typeof id==="string"&&own(GEAR,id)&&own(g.made,id)))g.equip[slotOf(id)]=id;});
   g.trophies=(Array.isArray(x.trophies)?x.trophies:[]).filter((t,i,a)=>Number.isInteger(t)&&t>=0&&t<CUPS.length&&a.indexOf(t)===i);
   g.log=(Array.isArray(x.log)?x.log:[]).filter(l=>l&&typeof l==="object").slice(0,12).map(l=>{const k=v=>Number.isInteger(v)&&v>=0&&v<100?v:0;
@@ -1933,7 +1964,7 @@ function bkPlan(d){
   const mine=new Map(entries.map(e=>[e.id,e]));
   const fixJ=d.entries.filter(e=>{const x=mine.get(e.id); return !!x&&!Object.keys(cleanJug(x.jug)).length&&Object.keys(cleanJug(e.jug)).length>0;});
   const bm=d.profile&&d.profile.meal||{}, pm=profile.meal||{}, addMeal=Object.keys(bm).filter(k=>!own(pm,k)); // v22.3
-  return {add,addM,fixJ,addMade,addNames,addMeal,meal:cleanMeal(Object.assign({},bm,pm)),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),usePt:!!d.game&&ptSpentOf(d.game)>ptSpentOf(game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+  return {add,addM,fixJ,addMade,addNames,addMeal,meal:cleanMeal(Object.assign({},bm,pm)),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),usePt:!!d.game&&ptSpentOf(d.game)>ptSpentOf(game),useLp:!!d.game&&lpOf(d.game)>lpOf(game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
 }
 // v14 the notes with the file's counts put back on the notes in fixJ (only {jug} changes), and what the device would hold after a restore.
 const withJug=(list,fixJ)=>{const f=new Map(fixJ.map(e=>[e.id,e])); return list.map(e=>f.has(e.id)?Object.assign({},e,{jug:cleanJug(f.get(e.id).jug)}):e);};
@@ -1944,6 +1975,7 @@ function bkGame(p,d){
   if(p.useGame){if(!msErr)g.used=Math.min(g.used,bkCap(p)); g.made=Object.assign({},g.made,mine);}
   else{g.made=Object.assign({},g.made); p.addMade.forEach(id=>{if(!own(g.made,id))g.made[id]=Object.assign({},d.game.made[id]);});}
   ptPut(g,ptStateOf(p.usePt?d.game:game)); // v23
+  const lp=Math.max(lpOf(d.game),lpOf(game)); if(lp)g.lp=lp; else delete g.lp; // v23.3
   return g;
 }
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1975,7 +2007,7 @@ const isMission=id=>!entries.some(e=>e.id===id)&&missions.some(m=>m.id===id);
 const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 let dict=null, dictReady=false, dictHidden=false, dictState="idle", dictTarget=null, dictLang="ja", dictPartial="";
 let sess=0, sessHandled=-1, sessLang="", startPending=false, noticeTimer=null;
-const FIELD_NAMES={"f-goal":"今日の めあて","f-good":"うまくいったこと","f-hard":"むずかしかったこと","f-coach":"コーチに 言われたこと・ほめられたこと","f-next":"次の めあて","f-parent":"おうちの人から","mv-good":"よかった ところ","mv-fix":"直したい ところ","mv-next":"次に やってみる こと","ml-learn":"学んだ こと","ml-next":"やってみたい こと","mp-wow":"すごかった プレー","mp-next":"まねしたい こと","mh-memo":"一言"};
+const FIELD_NAMES={"f-goal":"今日の めあて","f-good":"うまくいったこと","f-hard":"むずかしかったこと","f-coach":"コーチに 言われたこと・ほめられたこと","f-next":"次の めあて","f-parent":"おうちの人から","mv-good":"よかった ところ","mv-fix":"直したい ところ","mv-next":"次に やってみる こと","ml-learn":"学んだ こと","ml-next":"やってみたい こと","mp-wow":"すごかった プレー","mp-next":"まねしたい こと","mh-memo":"一言","mr-memo":"一言"};
 function micBtn(id){
   if(!dict||dictHidden)return "";
   return `<button type="button" class="mic" data-mic="${esc(id)}" aria-pressed="${dictState!=="idle"&&dictTarget===id}" aria-label="声で入力">${MIC}</button>`;
@@ -2259,7 +2291,7 @@ function fitCard(){const c=document.querySelector(".card"), w=c.querySelector(".
 
 function radar(stats){
   const max=Math.max(10,...Object.values(stats)); const cx=100,cy=100,R=70;
-  const pt=(i,r)=>{const a=-Math.PI/2+i*Math.PI/3;return [cx+Math.cos(a)*r,cy+Math.sin(a)*r]};
+  const pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/STATS.length;return [cx+Math.cos(a)*r,cy+Math.sin(a)*r]};
   let grid="";[.33,.66,1].forEach(f=>{grid+=`<polygon points="${STATS.map((_,i)=>pt(i,R*f).join(",")).join(" ")}" fill="none" stroke="var(--rule)"/>`});
   const poly=STATS.map(([k],i)=>pt(i,R*Math.max(.04,stats[k]/max)).join(",")).join(" ");
   const labels=STATS.map(([k,t],i)=>{const [x,y]=pt(i,R+18);return `<text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--muted)">${t}</text>`}).join("");
@@ -2298,7 +2330,7 @@ function viewHome(g){
   const setup=ready&&profReady&&(!profile.name||!profile.pos)&&!settingsOpen?`<section class="panel empty"><h2>はじめに</h2><p class="muted">せんしゅの 名前と ポジションを 決めよう!</p><button class="primary" id="openSettings" type="button">せっていを 開く</button></section>`:"";
   const empty=ready&&!g.es.length?`<section class="panel empty"><h2>さいしょのノートを書こう!</h2><p class="muted">練習や しあいのあとに 書くと、せんしゅが 育って、なかまが ふえて、しあいにも 出られるよ。</p><button class="primary" data-go="write" type="button">ノートを書く</button></section>`:"";
   const hp=handGet(), he=hp&&(g.es.find(e=>e.id===hp.id)||g.ms.find(m=>m.id===hp.id)), hm=he&&g.ms.includes(he)?he.kind:"", hb=he&&!stampsOf(he).length&&!String(he.parent||"").trim()
-    ?`<button class="stampnews handnote" id="handBtn" data-note="${esc(he.id)}" type="button">${hm==="video"?"👪 今日の 動画 ふり返りを おうちの人に 見せよう!":hm==="learn"?"👪 調べた ことを おうちの人に 教えよう!":hm==="pro"?"👪 プロの しあいで 見つけた ことを おうちの人に 見せよう!":hm==="home"?"👪 今日の ボール遊びを おうちの人に 話そう!":"👪 今日の ノートを おうちの人に 見せよう!"}<small>タップで おうちの人の 番に なるよ</small></button>`:"";
+    ?`<button class="stampnews handnote" id="handBtn" data-note="${esc(he.id)}" type="button">${hm==="video"?"👪 今日の 動画 ふり返りを おうちの人に 見せよう!":hm==="learn"?"👪 調べた ことを おうちの人に 教えよう!":hm==="pro"?"👪 プロの しあいで 見つけた ことを おうちの人に 見せよう!":hm==="home"?"👪 今日の ボール遊びを おうちの人に 話そう!":hm==="run"?"👪 今日の かけっこ 練習を おうちの人に 話そう!":"👪 今日の ノートを おうちの人に 見せよう!"}<small>タップで おうちの人の 番に なるよ</small></button>`:"";
   const ng=goalCard(g), nw=stampNews(g), sn=nw?`<button class="stampnews" id="newsBtn" data-note="${esc(nw.id)}" type="button">🎉 おうちの人から ${nw.stamp&&nw.comment?"コメントと スタンプが":nw.comment?"コメントが":"スタンプが"} とどいたよ!<small>タップで 見てね</small></button>`:"";
   const rv=gameReady&&!live&&revOpen(game), tkb=tk||rv?`<div class="ticket"><div><span class="label">${rv?"🔥 リベンジ チャンス":"しあいチケット"}</span><b>${rv?(tk?`+ チケット × ${tk}`:""):`× ${tk}`}</b></div><button class="ghost" data-go="match" type="button">しあいに 行く</button></div>`:"";
   const max=Math.max(10,...Object.values(g.stats));
@@ -2307,9 +2339,10 @@ function viewHome(g){
   return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${tkb}${shopNews(g)}
   <section class="panel" id="ability"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   ${ptBox(g)}
+  ${g.stats.speed?"":`<p class="muted" id="speedHint">🏃 スピード(足の 速さ)は 新しい のうりょく。 体ポイントで 上げられるよ!</p>`}
   <p class="muted" id="mealHint">🍚 ごはんを いっぱい 食べても、スタミナが のびるよ。</p>
   <p class="muted">「がんばったこと」\u2060を えらんだり、 ミッションを クリアしたり すると、練習ポイントが たまるよ。 ポイントで のうりょくを 上げたり、スペシャル のうりょくを 取ったり しよう!</p>${pw}</section>
-  ${posPanel(g)}${spPanel(g)}${skillsPanel(g)}${wazaPanel(g)}${looksPanel(g)}`;
+  ${posPanel(g)}${tipPanel(g)}${spPanel(g)}${skillsPanel(g)}${wazaPanel(g)}${looksPanel(g)}`;
 }
 
 // v23 練習ポイント: the points left and, when open (ptPlan), the plan he is making: +/- for each ability, the specials, then 決める.
@@ -2334,6 +2367,11 @@ function ptBox(g){const L=g.left, any=PTKINDS.some(([t])=>L[t]>0), hold=live&&!l
   <div class="ptfoot"><p class="ptleft">のこり ${PTKINDS.map(([t,n,i])=>`<span>${i}${n} <b>${ptNum(f[t])}</b></span>`).join("")}</p>
   <div class="row"><button class="ghost" id="ptNo" type="button">やめる</button><button class="primary" id="ptGo" type="button"${some&&!ptBusy?"":" disabled"} style="flex:1">これで 決める</button></div></div></div>`;}
 // the specials he has, with what each does (on home, under the abilities)
+// v23.3 the tips he has opened, and how far the next one is
+function tipPanel(g){const v=g.stats.speed||0, k=sptipN(v), n=tipsOf(g);
+  return `<section class="panel" id="tipBook"><h2>🏃 足が 速く なる コツ <span class="muted">${n} / ${SPTIPS.length}</span></h2>
+  ${n?SPTIPS.slice(0,n).map(([t,b,r],i)=>`<details class="tip"${i===n-1?" open":""}><summary>${i+1}. ${t}</summary><p>${b}</p><p class="muted">練習: ${r}</p></details>`).join(""):""}
+  <p class="muted">${n<SPTIPS.length?`スピードが ${SPTIPAT[k]}に なるか(今 ${v})、 🏃 かけっこ 練習の ミッションを すると、 ${n?"つぎの":"さいしょの"} コツが ひらくよ。`:"ぜんぶ ひらいたよ! 練習で ためして みよう。"}</p></section>`;}
 function spPanel(g){const sl=spList(g), got=sl.filter(x=>x.lv>0);
   return `<section class="panel" id="spBook"><h2>スペシャル のうりょく <span class="muted">${got.length} / ${sl.length}</span></h2>
   ${got.length?`<div class="skills">${got.map(x=>`<span class="sk${x.lv===2?" gold":""}">${x.lv===2?"★ ":""}${esc(x.n)}</span>`).join("")}</div><p class="muted">しあいで 使えるよ! 金色に すると もっと 強く なる。</p>`
@@ -2343,12 +2381,13 @@ async function ptCommit(){if(!ptPlan||ptBusy||!lastG||(live&&!live.done))return;
   const c=ptPlanCost(g,ptPlan); if(!PTKINDS.some(([t])=>c[t]>0))return;
   const ps=ptState(), was=JSON.parse(JSON.stringify({pt:game.pt,sp:game.sp,spent:game.spent})), up=[];
   STATS.forEach(([k,n])=>{const a=ptPlan.pt[k]||0; if(a){ps.pt[k]+=a; up.push(n+" +"+a);}});
+  const tipNew=tipsOpen((g.stats.speed||0)+(ptPlan.pt.speed||0),runDays(g))-tipsOf(g); // v23.3
   const okOf=id=>(spList(g).find(y=>y.id===id)||{}).ok;
   Object.keys(ptPlan.sp).forEach(id=>{const to=ptPlan.sp[id]; if(SPEC[id]&&to===(ps.sp[id]||0)+1&&to<=2&&(to===1||okOf(id))){ps.sp[id]=to; up.push(SPEC[id][1]+(to===2?" 金色":""));}});
   PTKINDS.forEach(([t])=>{ps.spent[t]+=c[t];});
   game.pt=ps.pt; game.sp=ps.sp; game.spent=ps.spent; ptPlan=null; ptBusy=true; render();
   const slow=setTimeout(()=>flash(PTWAIT),10000);
-  try{if(db)await store.setGame();else if(!lsSave())throw new Error("local"); clearTimeout(slow); ptBusy=false; render(); flash("決めたよ! "+up.join("、")); const h=$("#ability"); if(h&&h.scrollIntoView)h.scrollIntoView({block:"start"});}
+  try{if(db)await store.setGame();else if(!lsSave())throw new Error("local"); clearTimeout(slow); ptBusy=false; render(); flash("決めたよ! "+up.join("、")+(tipNew>0?" 🏃 足が 速く なる コツが ひらいたよ!":"")); const h=$("#ability"); if(h&&h.scrollIntoView)h.scrollIntoView({block:"start"});}
   catch(e){clearTimeout(slow); ptBusy=false;
     if(game.pt===ps.pt&&game.sp===ps.sp&&game.spent===ps.spent){game.pt=was.pt; game.sp=was.sp; game.spent=was.spent; if(!was.pt)delete game.pt; if(!was.sp)delete game.sp; if(!was.spent)delete game.spent;}
     if(db)store.setGame().catch(()=>{}); // so the store ends as the screen
@@ -2419,7 +2458,7 @@ function followGoal(before,t){
 /* ---------- v14 missions: 動画 ふり返り and 調べて 学ぶ records (the logic; the cards and the forms draw from it) ---------- */
 // The words typed in a mission form are kept on this device at every change ({day, video, learn, pro}, never in backups) and come back for a week.
 const MDRAFT="soccer-note-mission-draft", MDRAFTDAYS=7; // a kept mission draft comes back for a week after it was last kept
-let missionOpen=null, mdraft={video:null,learn:null,pro:null,home:null}, msaving=false, msNote="", msWhy=false, vhowOpen=null;
+let missionOpen=null, mdraft={video:null,learn:null,pro:null,home:null,run:null}, msaving=false, msNote="", msWhy=false, vhowOpen=null;
 let drawnDay="", mdDay=""; // v14: the day home was last drawn for (newDay); the day the drafts in memory were last kept or read (proTapsGo)
 // Three topic hints a day, by date, never random (the same on every device that day).
 const dayNo=d=>Math.floor(Date.parse(d+"T00:00:00Z")/864e5);
@@ -2444,15 +2483,17 @@ function newMission(kind){const base={id:uid(),kind,createdAt:"",next:""};
   if(kind==="learn")return Object.assign(base,{src:[],topic:"",learn:""});
   if(kind==="pro")return Object.assign(base,{how:"",match:"",look:"",wow:""});
   if(kind==="home")return Object.assign(base,{menu:[],mins:0,memo:""}); // v15 🏠
+  if(kind==="run")return Object.assign(base,{menu:[],memo:""}); // v23.3 🏃
   const md=matchDays(), pre=md.length&&daysBetween(md[0].date,today())<=3?md[0].date:"";
   return Object.assign(base,{vdate:pre,vother:!md.length,vtext:"",good:"",fix:"",fun:0});}
 // v14 (spec14_pro R16): taps alone in a 🌟 draft belong to the day they were kept, in memory too: on a later day, with its form closed,
 // they go (as a reload already does); typed words keep the draft for its week. A form left open across midnight keeps its taps.
 function proTapsGo(){const d=mdraft.pro; if(mdDay&&mdDay!==today()&&d&&missionOpen!=="pro"&&!(String(d.wow||"").trim()||String(d.next||"").trim()||String(d.match||"").trim()))mdraft.pro=null;
-  const h=mdraft.home; if(mdDay&&mdDay!==today()&&h&&missionOpen!=="home"&&!String(h.memo||"").trim())mdraft.home=null;} // v15 🏠: taps alone belong to their day, as in 🌟
-function keepMission(){proTapsGo(); mdDay=today(); try{localStorage.setItem(MDRAFT,JSON.stringify({day:today(),video:mdraft.video,learn:mdraft.learn,pro:mdraft.pro,home:mdraft.home}));}catch(e){}}
+  const h=mdraft.home; if(mdDay&&mdDay!==today()&&h&&missionOpen!=="home"&&!String(h.memo||"").trim())mdraft.home=null;
+  const r=mdraft.run; if(mdDay&&mdDay!==today()&&r&&missionOpen!=="run"&&!String(r.memo||"").trim())mdraft.run=null;} // v23.3 🏃 the same // v15 🏠: taps alone belong to their day, as in 🌟
+function keepMission(){proTapsGo(); mdDay=today(); try{localStorage.setItem(MDRAFT,JSON.stringify({day:today(),video:mdraft.video,learn:mdraft.learn,pro:mdraft.pro,home:mdraft.home,run:mdraft.run}));}catch(e){}}
 // Reads the kept words back as clean drafts (only known choices and texts of the lengths the forms allow), while 0-7 days old.
-function keptMissions(){const out={video:null,learn:null,pro:null,home:null};
+function keptMissions(){const out={video:null,learn:null,pro:null,home:null,run:null};
   try{const k=JSON.parse(localStorage.getItem(MDRAFT)||"null"), age=k&&isDay(k.day)?daysBetween(k.day,today()):-1; if(age<0||age>MDRAFTDAYS)return out;
     MKINDS.forEach(([kind])=>{const d=k[kind]; if(!d||typeof d!=="object"||typeof d.id!=="string"||!/^[a-z0-9]{1,24}$/.test(d.id))return;
       const s=(v,n)=>typeof v==="string"?v.slice(0,n):"", m=newMission(kind); m.id=d.id;
@@ -2461,9 +2502,10 @@ function keptMissions(){const out={video:null,learn:null,pro:null,home:null};
       if(kind==="video"){m.vdate=isDay(d.vdate)&&d.vdate<=today()?d.vdate:""; m.vother=d.vother===true; m.vtext=s(d.vtext,20); m.good=s(d.good,300); m.fix=s(d.fix,200); m.fun=[1,2,3,4,5].includes(d.fun)?d.fun:0;}
       else if(kind==="pro"){m.how=PROHOW.some(c=>c[0]===d.how)?d.how:""; m.match=s(d.match,30); m.look=s(kjOld(d.look),40); m.wow=s(d.wow,300);}
       else if(kind==="home"){m.menu=homeMenu(d); m.mins=homeMins(d.mins); m.memo=s(d.memo,60); const wz=wazaOf(d); if(wz.length)m.waza=wz;}
+      else if(kind==="run"){m.menu=runMenu(d); m.memo=s(d.memo,60);}
       else{m.src=(Array.isArray(d.src)?d.src:[]).filter((id,i,a)=>LEARNSRC.some(c=>c[0]===id)&&a.indexOf(id)===i); m.topic=s(kjOld(d.topic),20); m.learn=s(d.learn,300);}
       if(kind==="pro"&&age&&!(m.wow.trim()||m.next.trim()||m.match.trim()))return; // v14 pro: taps alone come back the same day only
-      if(kind==="home"&&age&&!m.memo.trim())return; // v15 🏠: the same
+      if((kind==="home"||kind==="run")&&age&&!m.memo.trim())return; // v15 🏠: the same (v23.3 🏃 too)
       out[kind]=m;});}catch(e){}
   return out;}
 // The record as saved: dated from its save time on the writer's own clock (never picked), texts trimmed to the forms' lengths.
@@ -2472,6 +2514,7 @@ function missionOf(d,at){const day=localDay(Date.parse(at)), s=(v,n)=>String(v==
   if(d.kind==="video"){m.good=s(d.good,300);m.fix=s(d.fix,200);m.fun=[1,2,3,4,5].includes(d.fun)?d.fun:0;m.vdate=isDay(d.vdate)&&d.vdate<=day?d.vdate:"";m.vtext=!m.vdate&&d.vother?s(d.vtext,20):"";}
   else if(d.kind==="pro"){m.how=PROHOW.some(c=>c[0]===d.how)?d.how:"";m.match=s(d.match,30);m.look=s(d.look,40);m.wow=s(d.wow,300);}
   else if(d.kind==="home"){m.menu=homeMenu(d);m.mins=homeMins(d.mins);m.memo=s(d.memo,60);const wz=wazaOf(d);if(wz.length)m.waza=wz;}
+  else if(d.kind==="run"){m.menu=runMenu(d);m.memo=s(d.memo,60);}
   else{m.src=(Array.isArray(d.src)?d.src:[]).filter((id,i,a)=>LEARNSRC.some(c=>c[0]===id)&&a.indexOf(id)===i);m.topic=s(d.topic,20);m.learn=s(d.learn,300);}
   return m;}
 // Web addresses are not kept in a record (the app keeps no links); v14 pro: also the hosts of streaming and share links typed without a
@@ -2482,6 +2525,7 @@ const missionLeft=(kind,id)=>!missions.some(m=>m.id!==id&&m.kind===kind&&mday(m)
 // What to say when the record is not finished yet: [message, box to focus], or null when it is.
 function missionWhy(m){
   // v14 pro: \u2060 (WORD JOINER) keeps each particle on the line of its 」 (keep-all still breaks after a closing bracket)
+  if(m.kind==="run")return runMenu(m).length?null:["やった 練習を 1つ えらんでね。","mr-arm"]; // v23.3 🏃
   if(m.kind==="home")return homeMenu(m).length||wazaOf(m).length?null:["やった 遊びか わざを 1つ えらんでね。","mh-touch"]; // v15 🏠, v16
   if(m.kind==="pro")return written(m.wow)||written(m.next)?null:nchars(m.wow)?["「すごかった プレー」\u2060を もう 少し 書いてね。","mp-wow"]
     :nchars(m.next)?["「まねしたい こと」\u2060を もう 少し 書いてね。","mp-next"]:["「すごかった プレー」\u2060か 「まねしたい こと」\u2060を 書いてね。 どちらか 1つで OK!","mp-wow"];
@@ -2499,7 +2543,7 @@ function matchDays(){const by={}; entries.forEach(e=>{if(e&&e.kind==="match"&&is
 const matchName=(x,f)=>`${f(x.date)}${x.opp.length?" vs "+x.opp[0]+(x.opp.length>1?" ほか":""):"の しあい"}`;
 // Words typed in a mission draft (chips alone are not kept once the form closes). v14 pro: a tapped hint or way counts too, because he
 // taps them while the match is on, before he writes.
-const mWords=d=>!!d&&d.kind==="home"?homeMenu(d).length>0||wazaOf(d).length>0||String(d.memo||"").trim()!=="":!!d&&(d.kind==="video"?["good","fix","next","vtext"]:d.kind==="pro"?["wow","next","match","look","how"]:["learn","next"]).some(k=>String(d[k]==null?"":d[k]).trim()!=="");
+const mWords=d=>!!d&&d.kind==="run"?runMenu(d).length>0||String(d.memo||"").trim()!=="":!!d&&d.kind==="home"?homeMenu(d).length>0||wazaOf(d).length>0||String(d.memo||"").trim()!=="":!!d&&(d.kind==="video"?["good","fix","next","vtext"]:d.kind==="pro"?["wow","next","match","look","how"]:["learn","next"]).some(k=>String(d[k]==null?"":d[k]).trim()!=="");
 /* ---------- v14 missions: the screens (spec14 §6.1-6.3) ---------- */
 // After every change in a mission form (each box and each chip) the box under it is refreshed (never a re-render) and the draft is kept at
 // once, as draftChanged keeps the note, so a reload (iOS dropping the app while a video plays in another app) brings back every box and chip.
@@ -2518,12 +2562,12 @@ function openMission(kind){
   const f=$("#msForm"); if(f&&f.scrollIntoView)f.scrollIntoView({block:"start"});
   const h=$("#msfH"); if(h){try{h.focus({preventScroll:true});}catch(e){h.focus();}}}
 // The box under a form: a pill for each part (✓ once written()), and what is left to clear the mission.
-const mSlots=d=>d.kind==="home"?[[homeMenu(d).length||!wazaOf(d).length?"やった 遊び":"練習した わざ",homeMenu(d).length||wazaOf(d).length?"えらんだ":""]]:d.kind==="video"?[["よかった ところ",d.good],["直したい ところ",d.fix]]:d.kind==="pro"?[["すごかった プレー",d.wow],["まねしたい こと",d.next]]:[["学んだ こと",d.learn]];
+const mSlots=d=>d.kind==="run"?[["やった 練習",runMenu(d).length?"えらんだ":""]]:d.kind==="home"?[[homeMenu(d).length||!wazaOf(d).length?"やった 遊び":"練習した わざ",homeMenu(d).length||wazaOf(d).length?"えらんだ":""]]:d.kind==="video"?[["よかった ところ",d.good],["直したい ところ",d.fix]]:d.kind==="pro"?[["すごかった プレー",d.wow],["まねしたい こと",d.next]]:[["学んだ こと",d.learn]];
 const mNeed=d=>d.kind==="video"?2:1; // the parts to write: both for a video review, the one for learning, either one for a pro match
 const mCount=d=>mSlots(d).filter(x=>written(x[1])).length;
 let msBoxN=0; // the parts written when the box was drawn: say() speaks only when the number goes up
 function msBoxHTML(d){const v=d.kind==="video", p=d.kind==="pro", sl=mSlots(d), n=mCount(d);
-  const line=n>=mNeed(d)?"じゅんび OK! 「書けた!」\u2060を おしてね。":v?(n?"あと 1つ!":`2つ 書くと クリア! +${VIDEOBONUS} XP`):p?`どちらか 1つ 書くと クリア! +${PROBONUS} XP`:d.kind==="home"?`1つ えらぶと クリア! +${HOMEBONUS} XP`:`書くと クリア! +${LEARNBONUS} XP`;
+  const line=n>=mNeed(d)?"じゅんび OK! 「書けた!」\u2060を おしてね。":v?(n?"あと 1つ!":`2つ 書くと クリア! +${VIDEOBONUS} XP`):p?`どちらか 1つ 書くと クリア! +${PROBONUS} XP`:d.kind==="home"?`1つ えらぶと クリア! +${HOMEBONUS} XP`:d.kind==="run"?`1つ えらぶと クリア! +${RUNBONUS} XP`:`書くと クリア! +${LEARNBONUS} XP`;
   return `<b><span aria-hidden="true">${MTITLE[d.kind][0]} </span>ミッション クリアまで</b><div class="slots">${sl.map(([t,x])=>{const on=written(x);
     return `<span class="slot${on?" on":""}" aria-label="${t}:${on?"書けた":"まだ"}">${on?"✓":"○"} ${t}</span>`;}).join(p?`<span class="or">か</span>`:"")}</div><p>${line}</p>`;}
 function msBox(d){const el=$("#msBox"), n=mCount(d), up=n>msBoxN; msBoxN=n; if(!el)return; el.innerHTML=msBoxHTML(d);
@@ -2548,7 +2592,7 @@ async function saveMission(kind){
   if(mdraft[kind]!==d)return;
   const at=d.createdAt||new Date().toISOString(), m=missionOf(d,at), why=missionWhy(m);
   if(why)return mformMsg(why[0],why[1],true);
-  const lk=(kind==="video"?["mv-good","mv-fix","mv-next","mv-vtext"]:kind==="pro"?["mp-wow","mp-next","mp-match"]:kind==="home"?["mh-memo"]:["ml-learn","ml-next"]).find(id=>hasLink(m[id.slice(3)]));
+  const lk=(kind==="video"?["mv-good","mv-fix","mv-next","mv-vtext"]:kind==="pro"?["mp-wow","mp-next","mp-match"]:kind==="home"?["mh-memo"]:kind==="run"?["mr-memo"]:["ml-learn","ml-next"]).find(id=>hasLink(m[id.slice(3)]));
   if(lk)return mformMsg("アドレス(URL)は のこさないよ。 言葉で 書いてね。",lk);
   d.createdAt=at; keepMission(); msSaving(true); mformMsg("");
   const before=compute(entries,missions.filter(x=>x.id!==m.id));
@@ -2614,10 +2658,11 @@ function missionPanel(g){
   const fresh=msReady&&!g.ms.length&&!g.es.some(e=>Object.keys(jugOf(e)).length);
   return `<section class="panel ms" id="missions" aria-labelledby="msH"><h2 id="msH">ミッション${fresh?`<span class="msnew">NEW!</span>`:""}</h2>
   ${msReady&&!msErr?`<p class="muted mstk" id="msTk">${g.mleft>0?`ミッションを クリアすると、しあいチケットを あと ${g.mleft}まい もらえるよ! (ノートを 書くと ${TKPERNOTE}まいに もどるよ)`:`${dayFull()?"明日 ":""}ノートを 書くと、ミッションで また しあいチケットを もらえるよ! (ノート 1さつで ${TKPERNOTE}まいまで)`}</p>`:""}
-  <div class="ms-grid">${mCard(g,"video")}${mCard(g,"learn")}${mCard(g,"pro")}${mCard(g,"home")}${liftTiles(g)}</div></section>`;
+  <div class="ms-grid">${mCard(g,"video")}${mCard(g,"learn")}${mCard(g,"pro")}${mCard(g,"run")}${mCard(g,"home")}${liftTiles(g)}</div></section>`;
 }
 // One writing card. Whether it is done today is worked out on every render, so it opens again after midnight with no message.
-const MDONE={video:"今日は できたね! 次の しあいの 動画で また やろう。",learn:"今日は できたね! 学んだ ことを ためして みよう。",pro:"今日は できたね! 見た プレーを まねして みよう。",home:"今日は できたね! 「まだ やりたい」\u2060で 終わるのが ちょうど いいよ。"};
+const MDONE={video:"今日は できたね! 次の しあいの 動画で また やろう。",learn:"今日は できたね! 学んだ ことを ためして みよう。",pro:"今日は できたね! 見た プレーを まねして みよう。",home:"今日は できたね! 「まだ やりたい」\u2060で 終わるのが ちょうど いいよ。",run:"今日は できたね! コツを 思い出して また 走ろう。"};
+const runPick=d=>{const n=dayNo(d), L=RUNMENU.length; return RUNMENU[((n%L)+L)%L];}; // v23.3 🏃 by date
 // v15 🏠 the play the home card suggests, by date (never random)
 const homePick=d=>{const n=dayNo(d), L=HOMEMENU.length; return HOMEMENU[((n%L)+L)%L];};
 function mCard(g,kind){
@@ -2628,6 +2673,7 @@ function mCard(g,kind){
   if(!missionLeft(kind))return `<div class="${c} done" id="ms-${kind}" tabindex="-1">${head(`<span class="ms-pill">✓ クリア!</span>`)}<p>${MDONE[kind]} (これまで ${n}回)</p>${hn?`<div class="msc-f"><button class="ms-go ms-note" id="msnote-home" data-homenote="${esc(hn.id)}" type="button">この 遊びを ノートに 書く</button></div>`:""}</div>`;
   const body=kind==="video"?`<p>自分の しあいの 動画を 見て 書こう。</p><p class="muted vpar"><span aria-hidden="true">👪 </span>おうちの人の コメントで +${VIDEOPARENT}\u00a0XP!</p>`
     :kind==="learn"?`<p><span class="label">今日の ヒント</span> ${esc(hintsFor(today())[0])}</p><p class="muted"><span aria-hidden="true">👪 </span>ネットで 調べる ときは おうちの人と いっしょに。<br>動画を 見る ときも、 おうちの人と いっしょに。</p>`
+    :kind==="run"?`<p>5分くらい、 走る 練習を しよう。${tipsOf(g)<SPTIPS.length?" クリアすると、 足が 速く なる コツが 1つ ひらくよ!":" コツを 思い出して 走ろう!"}</p><p><span class="label">今日の おすすめ</span> ${esc(runPick(today())[1])}</p><p class="muted"><span aria-hidden="true">👪 </span>${RUNRULE}</p>`
     :kind==="home"?`<p>おうちで 5分〜10分、 ボールで 遊ぼう。 すきな 遊びを えらべるよ。</p><p><span class="label">今日の おすすめ</span> ${esc(homePick(today())[1])}</p><p class="muted"><span aria-hidden="true">👪 </span>${HOMERULE}</p>`
     :`<p>しあいを 見たら 書こう。 前半だけ、 後半だけでも OK!</p><p><span class="label">プロの ここを 見よう</span> ${esc(proCardLook(today()))}</p><p class="muted"><span aria-hidden="true">👪 </span>${PRORULE}</p>`;
   return `<div class="${c}" id="ms-${kind}" tabindex="-1">${head(`<span class="ms-pill">+${xp} XP</span>`)}${body}
@@ -2658,7 +2704,7 @@ const GLINE={done:"「できた!」って 書いたね。 動画に うつって
 function missionForm(g){const kind=missionOpen, d=mdraft[kind], v=kind==="video", [ic,nm]=MTITLE[kind]; msBoxN=mCount(d);
   return `<section class="panel msf" id="msForm" aria-labelledby="msfH"><div class="msf-top"><button class="ghost" id="msBack" type="button"><span aria-hidden="true">← </span>もどる</button><span class="label">ミッション</span></div>
   <h2 id="msfH" tabindex="-1">${ic} ${nm}</h2>
-  ${v?videoForm(g,d):kind==="pro"?proForm(d):kind==="home"?homeForm(d):learnForm(d)}
+  ${v?videoForm(g,d):kind==="pro"?proForm(d):kind==="home"?homeForm(d):kind==="run"?runForm(d):learnForm(d)}
   <div class="msbox" id="msBox">${msBoxHTML(d)}</div>
   <p class="msmsg" id="msMsg"${msNote?"":" hidden"}>${esc(msNote)}</p>
   <button class="primary" id="msSave" type="button"${msaving?" disabled":""}>${msaving?"ほぞん中…":"書けた!"}</button></section>`;}
@@ -2713,6 +2759,19 @@ function homeForm(d){const mn=homeMenu(d);
   <div class="field" id="mhWaza"><span class="q">練習した わざ <small>えらばなくても OK。 ${WAZAMAX}つまで(<span id="mhWazaN">${wazaOf(d).length}</span>/${WAZAMAX})</small></span>${wazaChips(wazaOf(d),"mwaza","mhw")}${wazaMsg("mhWazaN")}</div>
   <div class="field"><label class="q" for="mh-memo">一言 <small>書かなくても OK</small></label>
     <div class="voice"><input type="text" id="mh-memo" maxlength="60" value="${esc(d.memo)}" placeholder="れい:反対の 足で 3回 けれた">${micBtn("mh-memo")}</div></div>`;
+}
+// v23.3 🏃 the running form: the drills (one is enough), the tip of the last one tapped, a word if he likes
+function runTipHTML(d,id){const pick=id||runMenu(d).slice(-1)[0], c=RUNMENU.find(x=>x[0]===pick);
+  return c?`<b>${c[1]}の コツ</b>${c[2]}`:`<b>コツ</b>練習を えらぶと、 ここに コツが 出るよ。`;}
+function runForm(d){const mn=runMenu(d);
+  return `<p class="muted">5分くらい、 走る 練習を しよう。 やった ものを えらんでね。</p>
+  <div class="sidetip" id="mrRule"><b><span aria-hidden="true">👪 </span>走る ときの やくそく</b>${RUNRULE}</div>
+  ${voiceHint()}
+  <div class="field"><span class="q">今日 やった 練習 <small>いくつでも</small></span>
+    <div class="chips" id="mrMenu">${RUNMENU.map(([id,t])=>`<button type="button" id="mr-${id}" data-rmenu="${id}" aria-pressed="${mn.includes(id)}">${t}</button>`).join("")}</div>
+    <div class="sidetip" id="mrTip">${runTipHTML(d)}</div></div>
+  <div class="field"><label class="q" for="mr-memo">一言 <small>書かなくても OK</small></label>
+    <div class="voice"><input type="text" id="mr-memo" maxlength="60" value="${esc(d.memo)}" placeholder="れい:うでを 大きく ふれた">${micBtn("mr-memo")}</div></div>`;
 }
 function learnForm(d){
   const hints=hintsFor(today()), tps=d.topic&&!hints.includes(d.topic)?hints.concat([d.topic]):hints; // a topic kept from an earlier day stays in view
@@ -2842,7 +2901,7 @@ function bkConfirm(){
   return `<div class="bkbox" id="bkbox"><b>${d.at?`${esc(fmtDate(localDay(d.at)))}の バックアップ`:"この バックアップ"}から もどします。</b><ul>
   <li>ノート:${p.add.length?`${p.add.length}さつ ふえます`:"ふえる ノートは ありません"}${dup&&!p.fixJ.length?`(もう ある ${dup}さつは そのまま)`:""}</li>
   <li>しあいの きろく:${p.useGame?"バックアップの 方が 進んでいるので、そちらに します":"今の まま"}</li>
-  ${p.usePt?`<li>練習ポイントで 上げた のうりょく:バックアップの 方が 多いので、そちらに します</li>`:""}
+  ${p.usePt?`<li>練習ポイントで 上げた のうりょく:バックアップの 方が 多いので、そちらに します</li>`:""}${p.useLp?`<li>しあいで もらった 練習ポイント:バックアップの 方が 多いので、そちらに します</li>`:""}
   <li>せんしゅの 名前と 見た目:${p.useProfile?"バックアップの ものに します":"今の まま"}</li>
   ${p.addMade.length?`<li>作った そうび:${p.addMade.length}こ もどります</li>`:""}
   ${p.addNames.length?`<li>なかまの 名前:${p.addNames.length}人 もどります</li>`:""}${bkConfirmM(d,p)}</ul>
@@ -2894,7 +2953,7 @@ function bkPrepare(text){
 }
 // v14 what to say when a backup brings nothing new (records and counts included), or "" when it does.
 const BKMNOW="ミッションの きろくは 今は 読みこめないので、もどせません。後で もう一度 ためしてください。";
-function bkNothing(d,p){if(p.add.length||p.fixJ.length||p.addM.length||p.useGame||p.useProfile||p.addMade.length||p.addNames.length||p.usePt)return "";
+function bkNothing(d,p){if(p.add.length||p.fixJ.length||p.addM.length||p.useGame||p.useProfile||p.addMade.length||p.addNames.length||p.usePt||p.useLp)return "";
   return !d.entries.length&&!d.missions.length?"この バックアップには ノートが ありません。"
     :d.missions.length&&msErr?(d.entries.length?"この バックアップの ノートは、もう 全部 入っています。":"")+BKMNOW
     :d.missions.length?"この バックアップの ノートと ミッションは、もう 全部 入っています。":"この バックアップの ノートは、もう 全部 入っています。";}
@@ -2916,12 +2975,12 @@ async function bkApply(){
       {const add=p.add, addM=p.addM, fixJ=p.fixJ; p=bkPlan(d); p.add=add; p.addM=addM; p.fixJ=fixJ;} // a name changed or a match record that came in meanwhile is not overwritten
       if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names,meal:p.meal}));
       else if(p.addNames.length||p.addMeal.length)await store.setProfile({mnames:p.names,meal:p.meal});
-      {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade; p.usePt=q.usePt;} // and the match record as it is after that write
-      if(p.useGame||p.addMade.length||p.usePt){game=bkGame(p,d);await store.setGame();}
+      {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade; p.usePt=q.usePt; p.useLp=q.useLp;} // and the match record as it is after that write
+      if(p.useGame||p.addMade.length||p.usePt||p.useLp){game=bkGame(p,d);await store.setGame();}
     }else{
       const before=[entries,game,profile];
       entries=withJug(entries,p.fixJ).concat(p.add); // v14: a new array (and new objects for the counts put back), so the roll-back below still holds
-      if(p.useGame||p.addMade.length||p.usePt)game=bkGame(p,d);
+      if(p.useGame||p.addMade.length||p.usePt||p.useLp)game=bkGame(p,d);
       if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names,meal:p.meal}));
       else if(p.addNames.length||p.addMeal.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names,meal:p.meal}));
       if(!lsSave()){[entries,game,profile]=before;throw new Error("local");}
@@ -3136,7 +3195,8 @@ function viewLive(){
       +(L.keep?`<p class="muted keepmsg">作った スパイクを はいて いるので、そのままに したよ。もらった スパイクは「そうび」で はけるよ。</p>`:"");
     result=`<div class="result"><div class="big${L.res.win?" win":""}">${L.res.win?(L.cupWon?"ゆうしょう!!":"勝った!"):"ナイスチャレンジ!"}</div>
       ${L.cupWon?`<div class="got">${trophyIcon(L.ctx?L.ctx.cupI:4).replace("<svg",'<svg style="width:36px;height:36px"')}${esc(L.cupName)}の トロフィー</div>`:""}${got}
-      <p class="muted">${L.res.win?(L.cupWon?"次の 大会に 進めるよ。":"次の しあいに 進めるよ。"):"負けても だいじょうぶ。次は「くやしさパワー」で 少し 強くなるよ。"}</p>
+      ${!L.res.win&&lpOf(game)>lpOf(L.base)?`<div class="matgot ptgot" id="lossPt"><b>練習ポイント ゲット!</b>${PTKINDS.filter(([t])=>LOSSPT[t]).map(([t,n,i])=>`<span>${i}${n} +${LOSSPT[t]}</span>`).join("")}</div>`:""}
+      <p class="muted">${L.res.win?(L.cupWon?"次の 大会に 進めるよ。":"次の しあいに 進めるよ。"):lpOf(game)>lpOf(L.base)?"負けても だいじょうぶ。 ポイントで のうりょくを 上げよう! 次は「くやしさパワー」\u2060でも 少し 強くなるよ。":"負けても だいじょうぶ。次は「くやしさパワー」\u2060で 少し 強くなるよ。"}</p>
       ${L.res.win?"":`<p><b>${esc(L.hint)}</b></p>`}
       ${L.res.win?"":revOpen(game)?`<div class="revbox" id="revBox"><b>🔥 リベンジ チャンス!</b><span>チケット なしで、もう 一度 できるよ!</span>
         <button class="primary" id="revGo" type="button">${MXICON("whistle")}リベンジする!</button></div>`:`<p class="muted" id="revDone">今日の リベンジは もう 使ったよ(1日 1回)。ノートを 書いて また ちょうせんしよう!</p>`}
@@ -3368,7 +3428,7 @@ function parentsPanel(){return `<section class="panel" id="forParents" aria-labe
 function jugLine(g,e){const c=jugOf(e), p=g.per[e.id], pb=p&&p.jug?p.jug.pb:[];
   const l=JUGS.filter(([k])=>c[k]!==undefined).map(([k,t])=>`${t} ${c[k]}回${pb.includes(k)?` <b class="pb">じこベスト!</b>`:""}`);
   return l.length?`<p class="kw"><span class="k">リフティング</span>${l.join("、 ")}</p>`:"";}
-const PHINT={home:"おうちの人へ:やった ことを 聞いて、 つづけた ことを ほめて あげてください。 時間が あれば、 いっしょに ボールを けって みてください。 「まだ やりたい」\u2060で 終わるくらいが ちょうど いいです。 いたみが ある 日は、 休ませて あげてください。",
+const PHINT={run:"おうちの人へ:どの 練習を したか 聞いて、 つづけた ことを ほめて あげてください。 走る 場所は いっしょに 決めて、 車や 人に 気を つけて あげてください。 いたみが ある 日は、 休ませて あげてください。",home:"おうちの人へ:やった ことを 聞いて、 つづけた ことを ほめて あげてください。 時間が あれば、 いっしょに ボールを けって みてください。 「まだ やりたい」\u2060で 終わるくらいが ちょうど いいです。 いたみが ある 日は、 休ませて あげてください。",
   video:"おうちの人へ:自分で 見つけた ことを、 まず ほめて あげてください。 「直したい ところ」\u2060は、 いっしょに\u2060「どう したら できそう?」\u2060と 考えて みてください。",
   learn:"おうちの人へ:学んだ ことを 聞いて あげてください。 「やってみたい こと」\u2060を いっしょに ためせると いいですね。 「動画」\u2060で 調べた ときは、 どの 動画か いっしょに 見て あげてください。",
   pro:"おうちの人へ:プロの しあいで 見つけた ことを 聞いて あげてください。 「まねしたい こと」\u2060は、 次の 練習で いっしょに ためせると いいですね。 ネットで 見た ときは、 どの 動画か いっしょに 見て あげてください。 夜の おそい しあいは、 見る 時間を いっしょに 決めて あげてください。 前半だけ、 後半だけでも ミッションに なります。 ハイライトの 動画だけの ときは なりません。"};
@@ -3381,12 +3441,13 @@ function recordItem(g,m){
       +line("よかった",esc(mstr(m.good)))+line("直したい",esc(mstr(m.fix)))+line("気持ち",[1,2,3,4,5].includes(m.fun)?FACES[m.fun-1]:"")+line("次",esc(mstr(m.next)));}
   else if(p){const how=(PROHOW.find(c=>c[0]===m.how)||[])[1]||"";
     rows=line("なにで 見た",how)+line("見た しあい",esc(mstr(m.match)))+line("見た ところ",esc(mstr(m.look)))+line("すごかった",esc(mstr(m.wow)))+line("まねしたい",esc(mstr(m.next)));}
+  else if(m.kind==="run")rows=line("やった 練習",runMenu(m).map(x=>RUNMENU.find(c=>c[0]===x)[1]).join("、 "))+line("一言",esc(mstr(m.memo))); // v23.3 🏃
   else if(h){const mins=(HOMEMINS.find(c=>c[0]===m.mins)||[])[1]||""; // v15 🏠
     rows=line("やった 遊び",homeMenu(m).map(x=>HOMEMENU.find(c=>c[0]===x)[1]).join("、 "))+line("わざ",wazaNames(m).join("、"))+line("時間",mins)+line("一言",esc(mstr(m.memo)));}
   else{const src=(Array.isArray(m.src)?m.src:[]).filter((x,i,a)=>a.indexOf(x)===i).map(x=>(LEARNSRC.find(c=>c[0]===x)||[])[1]).filter(Boolean);
     rows=line("調べた",src.map(esc).join("、 "))+line("テーマ",esc(mstr(m.topic)))+line("学んだ",esc(mstr(m.learn)))+line("やってみたい",esc(mstr(m.next)));}
   const pb=editingParent===m.id
-    ?`${ptipBlock(m.id)}<div class="voice"><textarea id="pc-${id}" maxlength="300" placeholder="${v?"動画で 見つけた いい プレーを、 一言 ほめて あげてください":p?"プロの しあいで 見つけた ことを、 一言 ほめて あげてください":h?"ボールで 遊んだ ことを、 一言 ほめて あげてください":"学んだ ことを、 一言 ほめて あげてください"}">${esc(own(pcText,m.id)?pcText[m.id]:m.parent)}</textarea>${micBtn("pc-"+m.id)}</div><div class="row"><button class="ghost" data-pcsave="${id}" type="button"${pcBusy===m.id?" disabled":""}>${pcBusy===m.id?"ほぞん中…":"コメントをほぞん"}</button><button class="ghost" data-pccancel="${id}" type="button">${handoff===m.id?"とじる":"やめる"}</button></div>`
+    ?`${ptipBlock(m.id)}<div class="voice"><textarea id="pc-${id}" maxlength="300" placeholder="${v?"動画で 見つけた いい プレーを、 一言 ほめて あげてください":p?"プロの しあいで 見つけた ことを、 一言 ほめて あげてください":h?"ボールで 遊んだ ことを、 一言 ほめて あげてください":m.kind==="run"?"走る 練習を した ことを、 一言 ほめて あげてください":"学んだ ことを、 一言 ほめて あげてください"}">${esc(own(pcText,m.id)?pcText[m.id]:m.parent)}</textarea>${micBtn("pc-"+m.id)}</div><div class="row"><button class="ghost" data-pcsave="${id}" type="button"${pcBusy===m.id?" disabled":""}>${pcBusy===m.id?"ほぞん中…":"コメントをほぞん"}</button><button class="ghost" data-pccancel="${id}" type="button">${handoff===m.id?"とじる":"やめる"}</button></div>`
     :(mstr(m.parent)?`<div class="parent"><span class="k">おうちの人</span>${esc(m.parent)}</div>`:`<div class="row"><button class="ghost" data-pc="${id}" type="button">おうちの人コメントを書く(+${v&&vparOpen(g,m.id)?10+VIDEOPARENT:10}\u00a0XP)</button></div>`);  // review C5: a no-break space before XP
   const del=confirmDel===m.id
     ?`<div class="row"><span class="muted">この きろくを 消しますか? (XP も へるよ)</span><button class="ghost" data-delyes="${id}" type="button" style="color:var(--kick)">消す</button><button class="ghost" data-delno type="button">やめる</button></div>`
@@ -3587,7 +3648,7 @@ function settle(base,res,c){const opp=c.opp, ex=c.ex, cupI=c.cupI, round=c.round
         if(!cur||own(ITEMS,cur)||!gearOf(cur))next.equip=Object.assign({},next.equip,{[sl]:id});else keep=true;});
       next.round=round+1; if(next.round>=nR){next.cup=cupI+1;next.round=0;}
     }
-  }else next.lossStreak=(next.lossStreak||0)+1;
+  }else{next.lossStreak=(next.lossStreak||0)+1; if(c.t>=Date.parse(PTGATE))next.lp=lpOf(next)+1;} // v23.3
   next.log=[{t:c.t,opp:opp.n,gm:res.gm,go:res.go,pk:res.pk,win:res.win}].concat(next.log||[]).slice(0,12);
   return {next,rewards,cupWon,keep};}
 function kickoff(auto){
@@ -3822,8 +3883,8 @@ $("#zoomBtn").addEventListener("click",toggleZoom); $("#fig").addEventListener("
 window.addEventListener("resize",fitCard); if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitCard);
 document.addEventListener("input",e=>{
   // v14: every change in a mission form is kept at once (dictation's onFinal sends input too, so voice works there)
-  const mm=/^m([vlph])-(vtext|good|fix|next|learn|match|wow|memo)$/.exec(e.target.id||"");
-  if(mm){const d=missionOpen&&mdraft[missionOpen]; if(d&&d.kind===({v:"video",l:"learn",p:"pro",h:"home"})[mm[1]]){d[mm[2]]=e.target.value; if(e.target.id==="mv-next")pressData("#mvNext button","mng",d.next);} missionChanged(); return;}
+  const mm=/^m([vlphr])-(vtext|good|fix|next|learn|match|wow|memo)$/.exec(e.target.id||"");
+  if(mm){const d=missionOpen&&mdraft[missionOpen]; if(d&&d.kind===({v:"video",l:"learn",p:"pro",h:"home",r:"run"})[mm[1]]){d[mm[2]]=e.target.value; if(e.target.id==="mv-next")pressData("#mvNext button","mng",d.next);} missionChanged(); return;}
   if(!draft||tab!=="write")return; const id=e.target.id;
   if(jugInput(e,id))return; // v14 the juggling counts (§6.4)
   const map={"f-date":"date","f-goal":"goal","f-good":"good","f-next":"next","f-parent":"parent","f-place":"place","f-hard":"hard","f-coach":"coach"};
@@ -3958,6 +4019,8 @@ $("#view").addEventListener("click",async e=>{
     if(b.dataset.mlook!==undefined){d.look=d.look===b.dataset.mlook?"":b.dataset.mlook;document.querySelectorAll("#mpLook button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.mlook===d.look)));missionChanged();return;}
     if(b.dataset.mhow){d.how=d.how===b.dataset.mhow?"":b.dataset.mhow;document.querySelectorAll("#mpHow button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.mhow===d.how)));missionChanged();return;}
     if(b.dataset.mmenu&&d.kind==="home"){const id=b.dataset.mmenu, mn=homeMenu(d), i=mn.indexOf(id); if(i<0)mn.push(id);else mn.splice(i,1); d.menu=mn;b.setAttribute("aria-pressed",String(i<0));missionChanged();homeTip(d,i<0?id:"");return;} // v15 🏠 (the tip after the box: say() keeps the last words)
+    if(b.dataset.rmenu&&d.kind==="run"){const id=b.dataset.rmenu, mn=runMenu(d), i=mn.indexOf(id); if(i<0)mn.push(id);else mn.splice(i,1); d.menu=mn;b.setAttribute("aria-pressed",String(i<0));missionChanged();
+      const el=$("#mrTip"); if(el)el.innerHTML=runTipHTML(d,i<0?id:""); const c=i<0&&RUNMENU.find(x=>x[0]===id); if(c)say(c[1]+"の コツ。 "+c[2]); return;} // v23.3 🏃
     if(b.dataset.mwaza&&d.kind==="home"){if(wazaTap(d,b,b.dataset.mwaza,"mhWazaN"))missionChanged();return;} // v16
     if(b.dataset.mmins&&d.kind==="home"){const n=+b.dataset.mmins;d.mins=d.mins===n?0:n;document.querySelectorAll("#mhMins button").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.mmins===d.mins)));missionChanged();return;}
     if(b.id==="msSave"){await saveMission(missionOpen);return;}
@@ -4074,7 +4137,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
   const gp=gain.pts, ptGot=gp&&PTKINDS.some(([t])=>gp[t])?`<div class="matgot ptgot"><b>練習ポイント ゲット!</b>${PTKINDS.filter(([t])=>gp[t]).map(([t,n,i])=>`<span>${i}${n} +${gp[t]}</span>`).join("")}${gameReady&&!(live&&!live.done)&&PTKINDS.some(([t])=>after.left&&after.left[t]>0)?`<button class="ghost mini" type="button" id="ovpt">使う</button>`:""}</div>`:""; // v23
   // v14 banners, right under the number because they say why it is there: a mission cleared, juggling targets, a best, first counts.
   const jc=o.note?jugOf(o.note):{}, jn=k=>(JUGS.find(x=>x[0]===k)||["",""])[1], firsts=J.first.filter(k=>jc[k]>=1), bn=[];
-  if(o.mk)bn.push(["msclear",o.mk==="video"?"<b>🎬 ミッション クリア!</b><span>自分の プレーを よく 見たね!</span>":o.mk==="pro"?"<b>🌟 ミッション クリア!</b><span>プロの プレーを よく 見たね!</span>":o.mk==="home"?"<b>🏠 ミッション クリア!</b><span>ボールと なかよく なったね!</span>":"<b>🔍 ミッション クリア!</b><span>新しい ことを 学んだね!</span>"]);
+  if(o.mk)bn.push(["msclear",o.mk==="video"?"<b>🎬 ミッション クリア!</b><span>自分の プレーを よく 見たね!</span>":o.mk==="pro"?"<b>🌟 ミッション クリア!</b><span>プロの プレーを よく 見たね!</span>":o.mk==="home"?"<b>🏠 ミッション クリア!</b><span>ボールと なかよく なったね!</span>":o.mk==="run"?`<b>🏃 ミッション クリア!</b><span>${tipsOf(after)>tipsOf(before)?"足が 速く なる コツが ひらいたよ! 「足が 速く なる コツ」\u2060を 見てね。":"たくさん 走ったね!"}</span>`:"<b>🔍 ミッション クリア!</b><span>新しい ことを 学んだね!</span>"]);
   if(J.clr.length)bn.push(["msclear","<b>⚽ ミッション クリア!</b>"+J.clr.map(([k,hit])=>{const nx=LADDER.find(x=>x>(jc[k]===undefined?Math.max.apply(null,hit):jc[k]));
     return `<span>${jn(k)} ${hit.join("回・")}回 クリア! ${nx===undefined?"全部 クリア!":`次は ${nx}回`}</span>`;}).join("")]);
   if(J.pb.length)bn.push(["pbest","<b>🏅 じこベスト!</b>"+J.pb.map(k=>`<span>${jn(k)} ${jc[k]}回 (前は ${before.jug&&before.jug[k]?before.jug[k].n:0}回)</span>`).join("")+firsts.map(k=>`<span>${jn(k)} ${jc[k]}回 (はじめての きろく)</span>`).join("")]);
@@ -4100,7 +4163,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
     ${ticket&&o.note&&(before.mleft||0)<TKPERNOTE?`<div class="muted tkask" id="ovtkm">ミッションを クリアしても、しあいチケットを もらえるよ! (${TKPERNOTE}まいまで)</div>`:""}
     ${o.noTk?`<div class="tkask" id="ovtkn"><b>${dayFull()?"明日 ":""}ノートを 書くと、ミッションで また しあいチケットを もらえるよ!</b></div>`:""}
     ${newMake.length?`<div class="craft-ask"><b>🔨 ${esc(GEAR[newMake[0]].n)}${newMake.length>1?" など":""}が 作れるよ!</b><button class="ghost" type="button" id="ovcraft">こうぼうへ</button></div>`:""}
-    ${handoff?`<div class="handoff-ask"><b>${o.mk==="learn"?"👪 おうちの人に 教えて あげよう!":o.mk==="pro"?"👪 見た プレーを おうちの人と 話そう!":o.mk==="home"?"👪 やった 遊びを おうちの人に 話そう!":o.mk==="video"&&vparOpen(after,handoff)?`👪 おうちの人と いっしょに ふり返ろう! コメントで +${VIDEOPARENT}\u00a0XP`:"👪 次は おうちの人の 番!"}</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
+    ${handoff?`<div class="handoff-ask"><b>${o.mk==="learn"?"👪 おうちの人に 教えて あげよう!":o.mk==="pro"?"👪 見た プレーを おうちの人と 話そう!":o.mk==="home"?"👪 やった 遊びを おうちの人に 話そう!":o.mk==="run"?"👪 やった 練習を おうちの人に 話そう!":o.mk==="video"&&vparOpen(after,handoff)?`👪 おうちの人と いっしょに ふり返ろう! コメントで +${VIDEOPARENT}\u00a0XP`:"👪 次は おうちの人の 番!"}</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
     <div class="row" style="justify-content:center">${ticket?`<button class="ghost" type="button" id="ovmatch">しあいに 行く</button>`:o.noTk&&!dayFull()?`<button class="ghost" type="button" id="ovwrite">ノートを 書く</button>`:""}<button class="primary" type="button" id="ovok" style="flex:1">やったね!</button></div></div>`;
   document.body.appendChild(ov);
   // The second tap of a double tap on the save button lands on the reward, so for half a second it ignores taps: it must not vanish before it has been seen.
