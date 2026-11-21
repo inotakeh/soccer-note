@@ -1059,7 +1059,16 @@ const LEARNWORDS={"ボールを もらう 動き":"サッカー ボールの も
   "スローインの 投げ方":"スローイン 投げ方 小学生"};
 const ytWords=t=>{t=String(t==null?"":t).trim(); return !t?"":Object.prototype.hasOwnProperty.call(LEARNWORDS,t)?LEARNWORDS[t]:"サッカー "+t+" 小学生";}; // a topic not in the list: サッカー + it
 const ytURL=w=>{try{return "https://www.youtube.com/results?search_query="+encodeURIComponent(w);}catch(e){return "";}}; // a broken letter in a kept topic: no link
-const ytHTML=t=>{const w=ytWords(t), u=w?ytURL(w):""; return u?`<span class="label">さがす 言葉</span> <b>${esc(w)}</b><a class="ghost ytgo" href="${esc(u)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▶ </span>YouTubeで さがす</a><span class="muted ytafter">見おわったら、 アプリに もどって 「学んだ こと」\u2060を 書こう。</span>`
+// v23.2 the Home Screen copy opened from its icon on an iPad or iPhone opens YouTube's own app straight away (youtube://): a web link
+// there opens YouTube's page in a browser that iOS keeps over the app, with no way back (the app had to be closed).
+const ytApp=()=>STANDALONE&&IOS&&!IOS_TAB;
+const ytAppURL=w=>{try{return "youtube://www.youtube.com/results?search_query="+encodeURIComponent(w);}catch(e){return "";}};
+let ytLeft=false, ytT=0, ytOn=false; // the listener is added at the first tap: this part of the script also runs without a page (sim13.js, v132.js)
+function ytTry(){if(!ytOn){ytOn=true; document.addEventListener("visibilitychange",()=>{if(document.hidden){ytLeft=true; const n=$("#mlYtNo"); if(n)n.hidden=true;}});} // YouTube's app in front: the line goes
+  ytLeft=false; clearTimeout(ytT); const o=$("#mlYtNo"); if(o)o.hidden=true; // still on screen 6 s later (iOS asks 「開きますか?」 first): YouTube's app did not open
+  ytT=setTimeout(()=>{const n=$("#mlYtNo"); if(!ytLeft&&n&&!document.hidden){n.hidden=false; say(n.textContent);}},6000);}
+const ytHTML=t=>{const w=ytWords(t), app=ytApp(), u=w?(app?ytAppURL(w):ytURL(w)):""; return u&&app?`<span class="label">さがす 言葉</span> <b>${esc(w)}</b><a class="ghost ytgo" href="${esc(u)}" data-ytapp="1"><span aria-hidden="true">▶ </span>YouTubeで さがす</a><span class="muted ytafter">「開きますか?」\u2060と 出たら 「開く」\u2060を タップしてね。 見おわったら、 左上の 「◀ サッカーノート」\u2060を タップして もどって、 「学んだ こと」\u2060を 書こう。</span><span class="muted ytafter" id="mlYtNo" hidden>YouTube アプリが 開かない ときは、 YouTube アプリで この 言葉を さがしてね。</span>`
+  :u?`<span class="label">さがす 言葉</span> <b>${esc(w)}</b><a class="ghost ytgo" href="${esc(u)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▶ </span>YouTubeで さがす</a><span class="muted ytafter">見おわったら、 アプリに もどって 「学んだ こと」\u2060を 書こう。</span>`
   :`<span class="muted">ヒントを タップすると、 YouTubeで さがす 言葉が 出るよ。</span>`;};
 const VGOODASK=["ボールに 向かって 走った ところは?","パスを もらいに 動いた ところは?","「パス!」\u2060と 声を 出した ところは?","相手に 近づいた ところは?","ボールに さわった ところを 全部 さがそう!"];
 const VFIXASK=["ボールを 待って いた ところ、 あった? どこへ 動けば もらえた かな?","こぼれ球が きた とき、 もっと 速く 行けた ところは?","「パス!」\u2060と 言えたら よかった ところは?","もう 一度 できるなら、 どう する?"];
@@ -3863,6 +3872,7 @@ $("#view").addEventListener("keydown",e=>{if(e.target.id!=="pkView")return; cons
   else if(e.key==="Enter"||e.key===" "){e.preventDefault(); pkGo();}});
 $("#view").addEventListener("click",async e=>{
   if(Date.now()<holdUntil&&e.target.closest("#mlYt a")){e.preventDefault();return;} // v22.6 the second tap of a double tap on 書く does not leave the app
+  if(e.target.closest("#mlYt a[data-ytapp]")){ytTry();return;} // v23.2 iOS opens YouTube's app (the link itself does it)
   const b=e.target.closest("button"); if(!b)return; if(Date.now()<holdUntil)return;
   if(b.dataset.mic){toggleMic(b.dataset.mic);return;} // before any await
   if(b.dataset.go){go(b.dataset.go);return;}
