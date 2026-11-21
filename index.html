@@ -689,6 +689,8 @@ const PTGATE="2026-11-21T15:00:00.000Z"; // 2026-11-22 00:00 in Japan
 const PTKINDS=[["b","体","🏃"],["o","ボール","⚽"],["h","心","💛"]];
 const PTOF={stamina:"b",defense:"b",dribble:"o",pass:"o",shoot:"o",brave:"h"};
 const PTSTEP=100, ptCost=v=>1+Math.floor(Math.max(0,v)/PTSTEP);
+// v23.1 a cleared mission (its kind's first finished record of the day) and the day's first note with a juggling count give points too
+const MSPT={home:{o:2},video:{h:2},learn:{h:2},pro:{h:2}}, JUGPT={o:2};
 // v23 スペシャル のうりょく: [id, name, what it does, cost of step 1, cost of 金色, what 金色 needs, match line]. Ids are never reused.
 // 金色 needs a skill (chip id, learned) or so many learned わざ of a group. Each step gives the team SPPOW (金色 the second number).
 const SPPOW=[.4,.8];
@@ -1306,16 +1308,20 @@ function wazaPass(es,ms){
 function compute(list,ms){
   const es=sortEntries(list), jp=jugPass(es), mp=missionPass(ms), tp=ticketPass(es,mp), sp=streakPass(es,mp.list); let xp=0; const stats={}; STATS.forEach(([k])=>stats[k]=0);
   const per={}, chipCount={}, mat={hane:0,ishi:0,ito:0,hoshi:0}, pts={b:0,o:0,h:0}; let kizuna=0, done=0, parentN=0;
+  const jday=Object.create(null), jugGets=new Set(); es.slice().sort(byWritten).forEach(e=>{if(isoOr(e.createdAt,"")>=PTGATE&&Object.keys(jugOf(e)).length){const d=wday(e); if(!jday[d]){jday[d]=1; jugGets.add(e.id);}}}); // v23.1
   es.forEach((e,i)=>{
     const j=jp.per[e.id], s=sp.note[e.id]||null, parts=entryXP(e,es[i-1]).concat(j?j.parts:[],stkPart(s)); const sum=parts.reduce((a,p)=>a+p[1],0);
     const nm=noteMat(e); per[e.id]={parts,sum,mat:nm,jug:j?j.info:null,stk:s}; xp+=sum; for(const k in nm)mat[k]+=nm[k];
     const post=isoOr(e.createdAt,"")>=PTGATE, np={b:0,o:0,h:0}; per[e.id].pts=post?np:null; // v23: a note from the gate on gives points
     (e.chips||[]).slice(0,MAXCHIPS).forEach(id=>{const c=CHIP[id]; if(!c)return; chipCount[id]=(chipCount[id]||0)+1; for(const k in c.s){if(post){np[PTOF[k]]+=c.s[k]; pts[PTOF[k]]+=c.s[k];} else stats[k]+=c.s[k];} if(c.team)kizuna++;});
+    if(jugGets.has(e.id))for(const t in JUGPT){np[t]+=JUGPT[t]; pts[t]+=JUGPT[t];} // v23.1 ⚽
     if(e.goalResult==="done")done++;
     if((e.parent||"").trim())parentN++;
   });
   // v14.1 a finished record's day is a writing day too, so the first thing written on a day may be a record: the bonus then goes on it.
   for(const id in sp.rec){const r=mp.per[id], s=sp.rec[id]; if(!r)continue; r.stk=s; if(s.xp){r.parts=r.parts.concat(stkPart(s)); r.sum+=s.xp;}}
+  Object.keys(mp.won).forEach(key=>{const id=mp.won[key], m=mp.list.find(x=>x.id===id), q=m&&MSPT[m.kind], r=mp.per[id]; // v23.1 a cleared mission
+    if(!q||!r||isoOr(m.createdAt,"")<PTGATE)return; const np={b:0,o:0,h:0}; for(const t in q){np[t]+=q[t]; pts[t]+=q[t];} r.pts=np;});
   for(const id in mp.per){xp+=mp.per[id].sum; const mm=mp.per[id].mat; for(const k in mm)mat[k]+=mm[k];} parentN+=mp.pn; // v14.2: a 🎬 record's ⭐ // v14 records add XP (and a parent's comment counts for おうえんパワー): no stats, materials or こまめに 書いた (つづけて書いた before v14.1)
   const ml=mealPass(typeof profile==="object"&&profile?profile.meal:null); stats.stamina+=ml.pt; // v22.3 ごはん
   const ps=ptState(), base=Object.assign({},stats), left={}; STATS.forEach(([k])=>{stats[k]+=ps.pt[k];}); PTKINDS.forEach(([t])=>{left[t]=pts[t]-ps.spent[t];}); // v23 what he raised
@@ -2293,7 +2299,7 @@ function viewHome(g){
   <section class="panel" id="ability"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   ${ptBox(g)}
   <p class="muted" id="mealHint">🍚 ごはんを いっぱい 食べても、スタミナが のびるよ。</p>
-  <p class="muted">「がんばったこと」\u2060を えらぶと、練習ポイントが たまるよ。 ポイントで のうりょくを 上げたり、スペシャル のうりょくを 取ったり しよう!</p>${pw}</section>
+  <p class="muted">「がんばったこと」\u2060を えらんだり、 ミッションを クリアしたり すると、練習ポイントが たまるよ。 ポイントで のうりょくを 上げたり、スペシャル のうりょくを 取ったり しよう!</p>${pw}</section>
   ${posPanel(g)}${spPanel(g)}${skillsPanel(g)}${wazaPanel(g)}${looksPanel(g)}`;
 }
 
@@ -2302,7 +2308,7 @@ let ptPlan=null, ptBusy=false;
 const ptNum=n=>Math.max(0,n);
 function ptBox(g){const L=g.left, any=PTKINDS.some(([t])=>L[t]>0), hold=live&&!live.done;
   const bar=`<div class="ptbar" id="ptBar"><span class="label">練習ポイント</span>${PTKINDS.map(([t,n,i])=>`<span class="ptk"><span aria-hidden="true">${i}</span>${n} <b>${ptNum(L[t])}</b></span>`).join("")}</div>`;
-  if(!ptPlan||hold)return `<div class="ptbox">${bar}${hold?`<p class="muted">しあいが 終わったら 使えるよ。</p>`:any?`<button class="primary" id="ptOpen" type="button">ポイントを 使う</button>`:`<p class="muted">ノートで「がんばったこと」\u2060を えらぶと たまるよ。</p>`}</div>`;
+  if(!ptPlan||hold)return `<div class="ptbox">${bar}${hold?`<p class="muted">しあいが 終わったら 使えるよ。</p>`:any?`<button class="primary" id="ptOpen" type="button">ポイントを 使う</button>`:`<p class="muted">ノートで「がんばったこと」\u2060を えらんだり、 ミッションを クリアしたり すると たまるよ。</p>`}</div>`;
   const f=ptFree(g,ptPlan), top=profile.pos?Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>x[0]):[];
   const rows=STATS.map(([k,n])=>{const add=ptPlan.pt[k]||0, v=g.stats[k], nx=ptCost(v+add), t=PTOF[k], ki=PTKINDS.find(x=>x[0]===t);
     return `<div class="ptrow"><span class="ptn">${top.includes(k)?`<span class="ptstar" aria-label="大事">★</span>`:""}${n}</span><span class="ptv">${v}${add?` <b>→ ${v+add}</b>`:""}</span>
