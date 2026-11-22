@@ -414,6 +414,9 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-t
 /* v14 missions (spec14 §6.9): the purple of the missions is --msn; colour is never the only sign (the ✓ pill, the ▲ and the words carry it too) */
 .ms .msnew{font-family:var(--body);font-weight:800;font-size:.8rem;color:var(--kick);margin-left:8px}
 .ms-grid{display:flex;flex-direction:column;gap:8px}
+/* v24.3: the line above the goals one step further */
+.stepup{font-size:.88rem;font-weight:700;color:var(--accent-text);margin:8px 0 2px;word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+.stepup[hidden]{display:none}
 /* v24.1: a mission is one row (name, pill, button); the rest folds under くわしく */
 .ms .msc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 0;align-items:center;padding:8px 12px}
 .ms .msc>.msc-h{display:contents} .ms .msc>.msc-h h3{grid-column:1/3;grid-row:1;font-size:1rem;margin:0} .ms .msc>.msc-h .ms-pill{grid-column:1;grid-row:2;margin-right:10px;white-space:nowrap}
@@ -3085,8 +3088,34 @@ const askFor=d=>{const r=roleOf(d.npos,d.nside,d.nshape), a=d.npos===MIX?MIXASK:
 // The goals of the place picked come first (on the left or the right they name that side's foot).
 const sideGoals=(pos,side,shape)=>{const r=roleOf(pos,side,shape); return r?r.goals:[];};
 function goalPresets(pos,side,shape){return [...new Set([...sideGoals(pos,side,shape),...(POS[pos]?POS[pos].goals:[]),...GOALS])].slice(0,7);}
-// For the next goal: today's goal again unless it was done, then the position's goals (or the general ones).
-function nextPresets(d){const g=d.goal.trim(), again=g&&d.goalResult!=="done"?[g]:[], r=sideGoals(d.npos,d.nside,d.nshape);return [...new Set([...again,...r,...(POS[d.npos]?POS[d.npos].goals:GOALS)])].slice(0,4);}
+// v24.3 次の 一歩: goals one step further than a goal that was done. The first theme whose words are in the goal gives them;
+// a goal with a count (1回, 3本) also gets the same goal with one more. Order matters: the first theme that fits wins.
+const NEXTSTEP=1;
+const STEPS=[
+  [/((^|[^っ])すぐ|早く|はやく)に? ?パス|ワンタッチ|ダイレクト/,["ボールが 来る 前に まわりを 1回見る","パスしたら 動いて もう一度 もらう","「パスちょうだい」と 声を 出して もらう"]],
+  [/まわり|見る|見て|キョロ/,["見てから 空いて いる 味方に 1回パス","前を 向いて ボールを 1回もらう","もらう 前に 後ろも 1回見る"]],
+  [/もら|ちょうだい|へい!|受け|うけ/,["もらう 前に まわりを 1回見る","もらったら 前を 向くを 1回","空いて いる 場所へ 動いて 1回もらう"]],
+  [/ボールを ?守|キープ/,["もらう 前に まわりを 1回見る","体を 入れて ボールを 守るを 1回","守った 後、前を 向くを 1回"]],
+  [/キャッチ|かまえ|セーブ|前に 出て ボール/,["取ったら すぐ 味方に 1回わたす","前に 出て ボールを 1回取る","声で 味方に しじを 3回出す"]],
+  [/近づ|ちかづ|守り|守る|まもる|止めに|シュートされ|ボールを ?取|取り返|うばう|追い出|けり出|ぬかれ/,["相手と ゴールの 間に 立つを 1回","ぬかれても すぐ 追いかけるを 1回","取った ボールを 前の 味方に 1回パス"]],
+  [/シュート|打つ|打て|うつ|ゴールの 前|点を|点 ?取|きめ|決め/,["キーパーの いない 方を ねらって 1本打つ","反対の 足でも 1本打つ","こぼれた ボールに 一番に 1回さわる"]],
+  [/ルーズ|こぼれ|追いかけ|おいかけ/,["取った ボールを 味方に 1回パス","相手より 先に ボールに 1回さわる","取られたら すぐ 取り返しに 行くを 1回"]],
+  [/声|こえ|言う|言って|いう|教え|おしえ|しじ/,["味方の 名前を よんで 声を 1回出す","「フリー!」「後ろ 来てる!」と 1回教える","いい プレーに 「ナイス!」と 1回言う"]],
+  [/ドリブル|しかけ|1対1|ぬく|ぬいて/,["顔を 上げて ドリブルを 1回","ぬいた 後、パスか シュートまで 1回やる","反対の 足でも ボールに 1回さわる"]],
+  [/走|はし|もどる|もどり/,["取られたら すぐ 守りに もどるを 1回","パスしたら 止まらずに 走るを 1回","空いて いる 場所を 見つけて 1回走る"]],
+  [/トラップ|止める|止めて|とめる|とめて/,["止めたら すぐ 前を 向くを 1回","反対の 足でも 1回止める","止める 前に まわりを 1回見る"]],
+  [/パス|わたす/,["パスしたら 動いて もう一度 もらう","前の 味方に パスを 1回出す","反対の 足でも パスを 1回出す"]]
+];
+function stepUps(g){g=String(g||"").trim(); if(!NEXTSTEP||!g)return [];
+  const m=g.match(/^(\D*)([1-8])(回|本)(\D*)$/), more=m&&!/^[目中]/.test(m[4])?[(m[1]+(+m[2]+1)+m[3]+m[4]).slice(0,40)]:[], t=STEPS.find(x=>x[0].test(g));
+  const nn=x=>x.replace(/[0-9\s]/g,""), th=(t?t[1]:[]).filter(x=>nn(x)!==nn(g)); // not the same goal with another count
+  return [...new Set([...th.slice(0,more.length?2:3),...more])].slice(0,3);}
+// The last note, when its goal was done and no next goal was picked: the note after it offers the steps.
+function stepFrom(d){if(!NEXTSTEP||!d||entries.some(e=>e.id===d.id))return null; const es=sortEntries(entries), last=es[es.length-1];
+  if(!last||last.goalResult!=="done"||String(last.next||"").trim()||curGoal())return null; const g=String(last.goal||"").trim(), up=stepUps(g); return up.length?{g,up}:null;}
+const nextStepOn=d=>d.goalResult==="done"&&stepUps(d.goal).length>0;
+// For the next goal: today's goal again unless it was done (then the steps after it), then the position's goals (or the general ones).
+function nextPresets(d){const g=d.goal.trim(), again=g&&d.goalResult!=="done"?[g]:[], up=d.goalResult==="done"?stepUps(g):[], r=sideGoals(d.npos,d.nside,d.nshape);return [...new Set([...again,...up,...r,...(POS[d.npos]?POS[d.npos].goals:GOALS)])].slice(0,4);}
 function recentPlaces(){const out=[];sortEntries(entries).reverse().forEach(e=>{const p=typeof e.place==="string"?e.place.trim():"";if(p&&!out.includes(p)&&out.length<4)out.push(p);});return out;}
 const presetBtns=(list,attr,val)=>list.map(x=>`<button type="button" data-${attr}="${esc(x)}" aria-pressed="${val===x}">${esc(x)}</button>`).join("");
 // Practice days list what was practised (the kinds that suit the position get a star); match days list the matches.
@@ -3162,7 +3191,7 @@ function viewWrite(){
   // A note kept by an older version has no record of the goal it was given, so it keeps its own.
   if(draftStale&&loaded()&&profReady){draftStale=false;const t=curGoal();if(!d.goalResult&&d.goal===d.goalFrom&&t&&t!==d.goal){d.goal=d.goalFrom=t;keepDraft();}}
   if(!d.npos&&profile.pos){d.npos=profile.pos;d.nside=profile.side||"";d.nshape=TEAMSHAPE;} // a position cannot be unpicked, so "" means none was chosen yet
-  const presets=goalPresets(d.npos,d.nside,d.nshape), places=recentPlaces(), ask=askFor(d);
+  const sf=stepFrom(d), presets=[...new Set([...(sf?sf.up:[]),...goalPresets(d.npos,d.nside,d.nshape)])].slice(0,7), places=recentPlaces(), ask=askFor(d);
   return `<section class="panel write"><h2>今日のノート</h2>${fromHomeLine(d)}${voiceHint()}
   <h3 class="sec">今日の きろく</h3>
   <div class="field"><label class="q" for="f-date">いつ?</label><input type="date" id="f-date" max="${today()}" value="${esc(d.date)}"></div>
@@ -3178,6 +3207,7 @@ function viewWrite(){
   <h3 class="sec">めあて</h3>
   <div class="field"><label class="q" for="f-goal">今日の めあて<small>小さくてOK</small></label>
     <div class="voice"><input type="text" id="f-goal" maxlength="40" value="${esc(d.goal)}" placeholder="れい:ルーズボールを1回追いかける">${micBtn("f-goal")}</div>
+    ${sf?`<div class="stepup" id="goalStep">⭐ 前の めあて「${esc(sf.g)}」が できたね! 次の 一歩は どれに する?</div>`:""}
     <div class="chips" id="goalPresets">${presetBtns(presets,"g",d.goal)}</div></div>
   <div class="field"><span class="q">めあては できた?<small>「まだ」でも XPはもらえるよ</small></span>${seg("goalResult",RESULTS,d.goalResult)}</div>
   <h3 class="sec">ふり返り</h3>
@@ -3192,6 +3222,7 @@ function viewWrite(){
   <div class="field"><span class="q">楽しかった?</span><div class="faces" id="faces">${FACES.map((f,i)=>`<button type="button" data-f="${i+1}" aria-pressed="${d.fun===i+1}" aria-label="${i+1}">${f}</button>`).join("")}</div></div>
   <h3 class="sec">次に 向けて</h3>
   <div class="field"><label class="q" for="f-next">次の めあて</label><div class="voice"><input type="text" id="f-next" maxlength="40" value="${esc(d.next)}" placeholder="れい:シュートを1本打つ">${micBtn("f-next")}</div>
+    <div class="stepup" id="nextStep"${nextStepOn(d)?"":" hidden"}>⭐ めあてが できたね! 次の 一歩は どれに する?</div>
     <div class="chips" id="nextPresets">${presetBtns(nextPresets(d),"ng",d.next)}</div></div>
   <div class="field"><label class="q" for="f-parent">おうちの人から<small>後で書いてもOK</small></label><div class="voice"><textarea id="f-parent" maxlength="300" placeholder="一言 ほめてあげてください">${esc(d.parent)}</textarea>${micBtn("f-parent")}</div></div>
   <p class="xpprev" id="xpprev">このノートで <b>+${draftXP()} XP</b> と しあいチケット 1まい</p>
@@ -3963,7 +3994,7 @@ document.addEventListener("input",e=>{
 // Some browsers send no input event after a Japanese keyboard finishes a word, so the score box is tidied once more then.
 document.addEventListener("compositionend",e=>{if(/^(g-g[fa]-\d|f-jug-[a-z])$/.test(e.target.id||""))e.target.dispatchEvent(new Event("input",{bubbles:true}));});
 // The next-goal buttons depend on today's goal and whether it was done.
-const refreshNext=()=>{const np=$("#nextPresets");if(np&&draft)np.innerHTML=presetBtns(nextPresets(draft),"ng",draft.next);};
+const refreshNext=()=>{const np=$("#nextPresets"), ns=$("#nextStep");if(np&&draft)np.innerHTML=presetBtns(nextPresets(draft),"ng",draft.next);if(ns&&draft)ns.hidden=!nextStepOn(draft);};
 // Marks the preset button whose text is now in the field (if any).
 const pressData=(sel,key,val)=>document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",String(x.dataset[key]===val)));
 $("#view").addEventListener("toggle",e=>{if(e.target.id==="vhow"&&e.target.open!==(e.target.dataset.open==="1"))vhowOpen=e.target.open;if(e.target.id==="matHow")matHowOpen=e.target.open;if(e.target.id==="skAll")skOpen=e.target.open;if(/^wzb-/.test(e.target.id||""))wzOpen[e.target.id]=e.target.open;if(e.target.id==="bk")bkOpen=e.target.open;if(e.target.id==="wxp")wxpOpen=e.target.open;if(/^msd-/.test(e.target.id||""))msdOpen[e.target.id.slice(4)]=e.target.open;},true); // keep these open across re-renders
