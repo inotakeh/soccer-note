@@ -2302,10 +2302,11 @@ const look=()=>settingsOpen&&sdraft?Object.assign({},profile,sdraft):profile;
 // While a match is being played back the player keeps the look from before kick-off (items and sweat), so it does not give the result away.
 const lossNow=()=>((live&&!live.done?live.prevLoss:game.lossStreak)||0)>0;
 const equipNow=()=>live&&!live.done?live.prevEquip:(game.equip||{});
+const JPBLUE="#1c3fb0", wcNow=()=>isWC(live&&live.ctx?(live.ctx.ex?-1:live.ctx.cupI):game.cup), kitColor=c=>wcNow()&&!(settingsOpen&&sdraft)?JPBLUE:c; // v24.2
 function heroOpts(g,eq){eq=eq||{};const L=look(), tr=shopTry&&own(GEAR,shopTry.id)?shopTry:null, it=k=>{if(tr&&GEAR[tr.id].slot===k)return gearLook(tr.id,tr.c);const x=gearOf(eq[k]);return x&&x.slot===k?x:null;};
-  return {level:g.level,color:L.color,number:profile.number,hair:L.hair||0,hairColor:L.hairColor||0,skin:L.skin||0,mood:"fierce",gk:L.pos==="GK",hero:true,fx:true,sweat:lossNow(),
+  return {level:g.level,color:kitColor(L.color),number:profile.number,hair:L.hair||0,hairColor:L.hairColor||0,skin:L.skin||0,mood:"fierce",gk:L.pos==="GK",hero:true,fx:true,sweat:lossNow(),
     head:it("head")?it("head").c:null,wrist:it("wrist")?it("wrist").c:null,boots:it("boots"),shin:it("shin"),ball:it("ball")};}
-const mateOpts=m=>({level:4,color:profile.color,number:m.num,hair:m.hair,hairColor:m.hc,skin:m.skin,iris:m.iris,mood:m.mood,gk:m.pos==="GK",crop:"bust",label:m.n,mate:m.id}); // v18: a teammate has his own picture
+const mateOpts=m=>({level:4,color:kitColor(profile.color),number:m.num,hair:m.hair,hairColor:m.hc,skin:m.skin,iris:m.iris,mood:m.mood,gk:m.pos==="GK",crop:"bust",label:m.n,mate:m.id}); // v18: a teammate has his own picture
 const heroBust=(g,id)=>pixSVG(Object.assign(heroOpts(g,equipNow()),{crop:"bust",label:heroName()}),id);
 
 function renderCard(g){
@@ -2321,7 +2322,7 @@ function renderCard(g){
   const max=g.level>=MAXLV;
   $("#xpfill").style.width=Math.round((max?g.rest%STARXP/STARXP:g.rest/need(g.level))*100)+"%";
   $("#xptext").textContent=max?`MAX! 次の ★まで あと ${toNext(g)} XP`:`次のレベルまで あと ${toNext(g)} XP`;
-  document.querySelector(".card").style.setProperty("--team",L.color||TEAMCOLORS[0]);
+  document.querySelector(".card").style.setProperty("--team",kitColor(L.color||TEAMCOLORS[0]));
   const nx=UNLOCKS.find(u=>u[0]>g.level); $("#unlock").innerHTML=nx?`Lv.${nx[0]} で <b>${esc(nx[1])}</b>`:`全部 かいほう ずみ!${g.stars?" ★×"+g.stars:""}`;
   const tk=gameReady?tickets(g):0, dot=$("#tkdot"); dot.hidden=!tk; dot.textContent=tk;
   fitCard();
@@ -3269,7 +3270,7 @@ function viewMatch(g){
     return `<div><span class="label">${label}</span><div class="itemrow">${mine.length?mine.map(id=>{const x=gearOf(id);return `<button type="button" class="item" data-equip="${id}" aria-pressed="${eq[k]===id}">${itemIcon(x)}${esc(x.n)}</button>`;}).join(""):`<span class="muted">${k==="boots"||k==="shin"||k==="ball"?"まだ ないよ。こうぼうで 作れる!":"まだ ないよ。大会で 勝つと もらえる!"}</span>`}</div></div>`}).join("");
   const log=(game.log||[]).slice(0,6).map(l=>`<div><span>${l.win?"○":"●"} ${esc(l.opp)}</span><span>${l.gm} - ${l.go}${l.pk?` (PK ${l.pk[0]}-${l.pk[1]})`:""}</span></div>`).join("");
   return `<section class="panel"><h2>${cup?esc(cup.n)+" "+(rn[game.round]||""):"エキシビション"}</h2>
-    ${cup?"":`<p class="muted">全部の 大会で ゆうしょうした! さいきょうチームに ちょうせんできるよ。</p>`}${cup&&cup.wc?`<p class="muted" id="wcNote">${game.round<3?"アジアよせんを 勝ちぬいて、 ワールドカップに 出よう!":"ワールドカップの 本番だ! 世界一を 目指そう!"}</p>`:""}${cup&&game.cup>=REDEYE&&!cup.fair?`<p class="muted" id="uraNote">世界大会の 先の 大会。 赤い 目の 強い 相手に ちょうせんだ!</p>`:""}
+    ${cup?"":`<p class="muted">全部の 大会で ゆうしょうした! さいきょうチームに ちょうせんできるよ。</p>`}${cup&&cup.wc?`<p class="muted" id="wcNote">${game.round<3?"アジアよせんを 勝ちぬいて、 ワールドカップに 出よう!":"ワールドカップの 本番だ! 世界一を 目指そう!"} <span id="wcKit">日本代表の 青い ユニフォームで たたかうよ!</span></p>`:""}${cup&&game.cup>=REDEYE&&!cup.fair?`<p class="muted" id="uraNote">世界大会の 先の 大会。 赤い 目の 強い 相手に ちょうせんだ!</p>`:""}
     ${steps}
     <div class="vs"><span>${esc(myTeam())}</span><span class="b"><i style="width:${Math.round(me/mx*100)}%"></i></span><em>${me}</em>
       <span>${esc(opp.n)}</span><span class="b opp"><i style="width:${Math.round(opp.r/mx*100)}%"></i></span><em>${opp.r}</em></div>
