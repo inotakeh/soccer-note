@@ -1779,7 +1779,7 @@ const pixSVG=(()=>{
       // the back number from Lv.4 (not in the small avatar)
       const num=level>=4&&crop!=="bust"?String(o.number||"10").replace(/\D/g,"").slice(0,2):"";
       if(num){const ds=num.split(""),x0=CX-Math.floor((ds.length*10-2)/2),y0=BY+14;
-        [[1,1,J.dk],[0,0,gk?"#ffd34f":"#ffffff"]].forEach(sh=>ds.forEach((d,i)=>DIG[d].forEach((r,yy)=>{for(let xx=0;xx<4;xx++)if(r[xx]==="1")for(let k=0;k<4;k++)put(x0+i*10+xx*2+(k&1)+sh[0],y0+yy*2+(k>>1)+sh[1],sh[2]);})));}
+        [[1,1,J.dk],[0,0,gk?(kit?"#1c2f80":"#ffd34f"):"#ffffff"]].forEach(sh=>ds.forEach((d,i)=>DIG[d].forEach((r,yy)=>{for(let xx=0;xx<4;xx++)if(r[xx]==="1")for(let k=0;k<4;k++)put(x0+i*10+xx*2+(k&1)+sh[0],y0+yy*2+(k>>1)+sh[1],sh[2]);})));}
       // made gear. Spikes: the boot in the chosen colour (above), stripes from tier 2 that turn gold at 3, gold studs at 4.
       // Shin guards: a plate over each sock with a band from tier 2, a row longer at 4. Twinkles (tier 4) flicker in frame 1 and only where the legs show.
       if(sp&&sp.t>=4){const r=body.r[BH-1];for(let x=0;x<r.length;x++)if(r[x]!=="."&&x%3===0)put(bx+x,BY+BH-1,"#ffd34f");spark(tw,CX-24,BY+68);spark(tw,CX+24,BY+68);}
