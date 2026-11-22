@@ -1764,7 +1764,7 @@ const pixSVG=(()=>{
       const glow=fx&&pro&&eye.glow>0, gold=level>=25, gl=gold?(gk?"#ffffff":"#ffe07a"):mix(gk?"#ffd34f":jer,"#ffffff",.72), g2=gold?(gk?"#d8dce8":"#e0a820"):mix(jer,"#ffffff",.36);
       const sp=boots&&boots.t?boots:null, wd=wrist?mix(wrist,"#000000",.3):"";
       body.r.forEach((r,y)=>{for(let x=0;x<r.length;x++){const ch=r[x];if(ch===".")continue;let c=bp[ch];const tt=body.t[ch],f=tt?tt[0]:"",dx=x-bcx,ax=Math.abs(dx);
-        if(glow&&y>=3&&(f==="j"||(gold&&f==="n"))){const a=Math.abs(ax-8);if(a===0)c=gl;else if(a===1)c=g2;}
+        if(glow&&!kit&&y>=3&&(f==="j"||(gold&&f==="n"))){const a=Math.abs(ax-8);if(a===0)c=gl;else if(a===1)c=g2;}
         if(glow&&((f==="w"&&ax>19&&y>10)||(f==="k"&&y<=61)))c=eye.hi;
         if(kit){if(f==="j"&&(x+y)%7<2&&c===bp[ch])c=mix(c,"#ffffff",.16);
           if(!gk&&f==="j"&&(y===3||y===4)&&ax>=13)c="#fcfcfc";
