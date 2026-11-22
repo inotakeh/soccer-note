@@ -414,8 +414,22 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-t
 /* v14 missions (spec14 §6.9): the purple of the missions is --msn; colour is never the only sign (the ✓ pill, the ▲ and the words carry it too) */
 .ms .msnew{font-family:var(--body);font-weight:800;font-size:.8rem;color:var(--kick);margin-left:8px}
 .ms-grid{display:flex;flex-direction:column;gap:8px}
+/* v24.4: parts that open with a tap */
+.fold{border:2px solid var(--rule);border-radius:14px;background:var(--chip);margin:12px 0;padding:0 12px}
+.fold[open]{background:transparent;padding-bottom:4px}
+.fold>summary{display:flex;align-items:center;gap:8px;min-height:48px;margin:0 -12px;padding:6px 14px;font-weight:700;cursor:pointer;list-style:none;border-radius:12px;word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:"▼";margin-left:auto;color:var(--muted);font-size:.8rem;flex:none}
+.fold[open]>summary::after{content:"▲"}
+.fold .fold-s{font-weight:400;color:var(--muted);font-size:.8rem}
+.fold .fold-s.has{color:var(--good);font-weight:700}
+.panel>.fold.pf{border:0;background:none;margin:0;padding:0}
+.panel>.fold.pf>summary{margin:0;padding:0;min-height:44px}
+.panel>.fold.pf>summary h2{margin:0}
+.panel>.fold.pf[open]>summary{margin-bottom:8px}
+#notesMore{display:block;width:100%;min-height:48px;margin:12px 0}
 /* v24.3: the line above the goals one step further */
-.stepup{font-size:.88rem;font-weight:700;color:var(--accent-text);margin:8px 0 2px;word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+.stepup{font-size:.88rem;font-weight:700;color:var(--accent-text);margin:8px 0 2px;word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .stepup[hidden]{display:none}
 /* v24.1: a mission is one row (name, pill, button); the rest folds under くわしく */
 .ms .msc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 0;align-items:center;padding:8px 12px}
@@ -2179,7 +2193,7 @@ function wxMaybe(){
 function wxApply(d,key,r){d.temp=r.t; if(!d.wxHand)d.weather=r.w; d.wxFor=key; if(d===draft)keepDraft();}
 // The temperature belongs to the note's day, and so does the weather unless it was picked by hand, so a new date asks again.
 function wxDateChanged(){if(!draft)return; draft.temp=null; draft.wxFor=""; if(!draft.wxHand)draft.weather=""; wxShow(); wxMaybe();}
-function wxShow(){const el=$("#wxField"); if(el&&draft&&tab==="write"){el.outerHTML=wxField(draft);}}
+function wxShow(){const el=$("#wxField"); if(el&&draft&&tab==="write"){el.outerHTML=wxField(draft);const fd=document.getElementById("fold-rec");if(fd)foldSub(fd,foldWSub("rec",draft));}}
 function wxField(d){
   let info="";
   if(WX_ON&&profile.wx){
@@ -2355,7 +2369,7 @@ function radar(stats){
 
 function skillsPanel(g){
   const sl=skillList(g), got=sl.filter(s=>s.lv>0), soon=sl.filter(s=>s.next).sort((a,b)=>b.count/b.next-a.count/a.next).slice(0,4);
-  return `<section class="panel"><h2>スキル <span class="muted">${got.length} / ${sl.length}</span></h2>
+  return `<section class="panel" id="skillBook"><h2>スキル <span class="muted">${got.length} / ${sl.length}</span></h2>
   ${got.length?`<div class="skills">${got.map(s=>`<span class="sk${s.lv===2?" gold":""}">${s.lv===2?"★ ":""}${esc(s.n)}</span>`).join("")}</div>`
     :`<p class="muted">同じ「がんばったこと」を 5回 書くと スキルを おぼえて、しあいで 使えるよ。15回で ★ゴールドスキルに!</p>`}
   <h3>もう少しで おぼえる</h3>
@@ -2373,7 +2387,7 @@ function wazaPanel(g){const wl=wazaList(g), got=wl.filter(x=>x.lv>0).length;
     <p><b>やり方</b>${x.how}</p><p><b>コツ</b>${x.tip}</p></details>`).join("")}</div>`).join("")}</section>`;}
 // Every look the player grows into, so the next eye colour is something to aim for.
 function looksPanel(g){
-  return `<section class="panel"><h2>すがたの へんか</h2><p class="muted">レベルが 上がると、目の 色や スーツが かわるよ。</p>
+  return `<section class="panel" id="lookBook"><h2>すがたの へんか</h2><p class="muted">レベルが 上がると、目の 色や スーツが かわるよ。</p>
   <div class="sklist">${UNLOCKS.map(([lv,n])=>{const e=n.includes("目")&&EYES.find(x=>x.lv===lv), on=g.level>=lv;
     return `<div class="${on?"on":""}"><b>${e?`<i class="eyedot${e.c2?" two":""}" style="background:${e.c2||e.c}${e.c2?";--eye1:"+e.c:""}"></i>`:""}${on?"✓ ":""}${esc(n)}</b><span class="muted">Lv.${lv}${on?"":" で かわる"}</span></div>`}).join("")}</div>
   ${g.level>=MAXLV?`<p class="muted"><b>全部の すがたに なった! これからは ★を 集めよう${g.stars?" (今 ★×"+g.stars+")":""}</b></p>`:""}</section>`;
@@ -2462,7 +2476,7 @@ async function setMeal(n){if(mealBusy||!loaded()||!profReady)return; n=n===1||n=
   mealBusy=true; render();
   try{await store.setProfile({meal:m});}catch(e){mealBusy=false;flash("ほぞんできませんでした。");render();return;}
   mealBusy=false; render(); if(m[d])say(n===2?"おかわり した! スタミナ +2":"いっぱい 食べた! スタミナ +1");
-  const f=document.querySelector(`[data-meal="${n}"]`); if(f)f.focus();}
+  let f=document.querySelector(`[data-meal="${n}"]`); if(f&&f.closest("details:not([open])"))f=document.querySelector("#fold-mealCard>summary"); if(f)f.focus();}
 // v13 ways into the workshop from home: a one-time NEW note on each device, then a reminder while a piece can be made.
 const SHOPINTRO="soccer-note-shop-intro";
 function introSeen(){if(introClosed)return true;try{return localStorage.getItem(SHOPINTRO)==="1";}catch(e){return false;}}
@@ -2659,7 +2673,7 @@ async function saveMission(kind){
   const gain=stkGain(lastG.mper[m.id],before,true); // the records are in: saveMission() waits for them
   if(gain&&gain.sum)celebrate(before,gain,lastG,(lastG.mtk||0)>(before.mtk||0),m.id,{mk:kind,plan:m.next,focus:"#ms-"+kind,noTk:(lastG.mtk||0)<=(before.mtk||0)}); // v22.1: with its ticket; v22.2 noTk: none was open
   else if(wazaList(lastG).some((x,i)=>x.lv>wazaList(before)[i].lv)){ // v16: a record without XP can still teach a わざ
-    flash("新しい わざを おぼえたよ! わざ ずかんを 見てね。"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
+    foldOpen.wazaBook=true;renderView();flash("新しい わざを おぼえたよ! わざ ずかんを 見てね。"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
   else{flash(kind==="video"&&vparOpen(lastG,m.id)?`書けたね! おうちの人に コメントを もらうと +${VIDEOPARENT}\u00a0XP!`:"書けたね! 今日の XP は もう もらって いるよ。 また 明日!"); const c=document.getElementById("ms-"+kind); if(c)c.focus();}
 }
 // v14.1 home's 🔥 strip, after the ミッション panel, under the goal card's own condition, once the records are in (they count too). It never says a chain ended: after
@@ -3092,7 +3106,7 @@ function goalPresets(pos,side,shape){return [...new Set([...sideGoals(pos,side,s
 // a goal with a count (1回, 3本) also gets the same goal with one more. Order matters: the first theme that fits wins.
 const NEXTSTEP=1;
 const STEPS=[
-  [/((^|[^っ])すぐ|早く|はやく)に? ?パス|ワンタッチ|ダイレクト/,["ボールが 来る 前に まわりを 1回見る","パスしたら 動いて もう一度 もらう","「パスちょうだい」と 声を 出して もらう"]],
+  [/((^|[^っ])すぐ|早く|はやく)に? ?パス|ワンタッチ|ダイレクト/,["ボールが 来る 前に まわりを 1回見る","パスしたら 動いて もう一度 もらう","声を 出して パスを 1回もらう"]],
   [/まわり|見る|見て|キョロ/,["見てから 空いて いる 味方に 1回パス","前を 向いて ボールを 1回もらう","もらう 前に 後ろも 1回見る"]],
   [/もら|ちょうだい|へい!|受け|うけ/,["もらう 前に まわりを 1回見る","もらったら 前を 向くを 1回","空いて いる 場所へ 動いて 1回もらう"]],
   [/ボールを ?守|キープ/,["もらう 前に まわりを 1回見る","体を 入れて ボールを 守るを 1回","守った 後、前を 向くを 1回"]],
@@ -3100,7 +3114,7 @@ const STEPS=[
   [/近づ|ちかづ|守り|守る|まもる|止めに|シュートされ|ボールを ?取|取り返|うばう|追い出|けり出|ぬかれ/,["相手と ゴールの 間に 立つを 1回","ぬかれても すぐ 追いかけるを 1回","取った ボールを 前の 味方に 1回パス"]],
   [/シュート|打つ|打て|うつ|ゴールの 前|点を|点 ?取|きめ|決め/,["キーパーの いない 方を ねらって 1本打つ","反対の 足でも 1本打つ","こぼれた ボールに 一番に 1回さわる"]],
   [/ルーズ|こぼれ|追いかけ|おいかけ/,["取った ボールを 味方に 1回パス","相手より 先に ボールに 1回さわる","取られたら すぐ 取り返しに 行くを 1回"]],
-  [/声|こえ|言う|言って|いう|教え|おしえ|しじ/,["味方の 名前を よんで 声を 1回出す","「フリー!」「後ろ 来てる!」と 1回教える","いい プレーに 「ナイス!」と 1回言う"]],
+  [/声|こえ|言う|言って|いう|教え|おしえ|しじ/,["味方の 名前を よんで 声を 1回出す","後ろから 相手が 来たら 味方に 1回教える","いい プレーを 1回ほめる"]],
   [/ドリブル|しかけ|1対1|ぬく|ぬいて/,["顔を 上げて ドリブルを 1回","ぬいた 後、パスか シュートまで 1回やる","反対の 足でも ボールに 1回さわる"]],
   [/走|はし|もどる|もどり/,["取られたら すぐ 守りに もどるを 1回","パスしたら 止まらずに 走るを 1回","空いて いる 場所を 見つけて 1回走る"]],
   [/トラップ|止める|止めて|とめる|とめて/,["止めたら すぐ 前を 向くを 1回","反対の 足でも 1回止める","止める 前に まわりを 1回見る"]],
@@ -3207,7 +3221,7 @@ function viewWrite(){
   <h3 class="sec">めあて</h3>
   <div class="field"><label class="q" for="f-goal">今日の めあて<small>小さくてOK</small></label>
     <div class="voice"><input type="text" id="f-goal" maxlength="40" value="${esc(d.goal)}" placeholder="れい:ルーズボールを1回追いかける">${micBtn("f-goal")}</div>
-    ${sf?`<div class="stepup" id="goalStep">⭐ 前の めあて「${esc(sf.g)}」が できたね! 次の 一歩は どれに する?</div>`:""}
+    ${sf?`<div class="stepup" id="goalStep">⭐ 前の めあて「${esc(sf.g)}」\u2060が できたね! 次の 一歩は どれに する?</div>`:""}
     <div class="chips" id="goalPresets">${presetBtns(presets,"g",d.goal)}</div></div>
   <div class="field"><span class="q">めあては できた?<small>「まだ」でも XPはもらえるよ</small></span>${seg("goalResult",RESULTS,d.goalResult)}</div>
   <h3 class="sec">ふり返り</h3>
@@ -3663,7 +3677,8 @@ function calView(g){
   <p class="cal-key">${KINDS.map(([k,t])=>`<span><b class="mk k-${k}"></b>${t}</span>`).join("")}<span><b class="mk k-msn"></b>ミッション</span></p></section>`;
 }
 // Goes to a note in the list: scrolls it to the top, marks it for a moment and moves the focus there (for keyboards and screen readers).
-function showNote(pred){const el=[...document.querySelectorAll("#view article.note")].find(pred); if(!el)return;
+function showNote(pred){const all=[...document.querySelectorAll("#view article.note")], el=all.find(pred); if(!el)return;
+  if(el.style.display==="none"){notesMore=Math.max(notesMore,all.indexOf(el)+1-NOTES0); foldNotes();} // v24.4: a note under もっと 見る
   holdUntil=Date.now()+500; el.scrollIntoView({behavior:"smooth",block:"start"}); el.classList.add("hl"); setTimeout(()=>el.classList.remove("hl"),2000); try{el.focus({preventScroll:true});}catch(e){}}
 // The parents' turn right after a note is saved: the notes open at that note with its stamps and comment box ready.
 let handoff=null, pcText={}, pcBusy=null, holdUntil=0;
@@ -3673,6 +3688,44 @@ function openParent(id){go("notes"); if(!entries.some(e=>e.id===id)&&!missions.s
 function fmtDate(s){const d=new Date(s+"T00:00");return `${d.getMonth()+1}月${d.getDate()}日(${"日月火水木金土"[d.getDay()]})`}
 const fmtShort=s=>{const d=new Date(s+"T00:00");return `${d.getMonth()+1}月${d.getDate()}日`;};
 
+// v24.4 すっきり: after a view is drawn, parts of it go into <details class="fold"> (closed until tapped). foldOpen keeps what he
+// opened or closed; a group of the note form with something in it opens by itself, and the form starts over with each new note.
+const FOLD=1, NOTES0=5, NOTESSTEP=10;
+const foldOpen={}; let foldDraft="", notesMore=0, foldTips=-1;
+function foldBox(id,title,sub,nodes,open,before){nodes=nodes.filter(Boolean); if(!nodes.length)return null;
+  const d=document.createElement("details"), sm=document.createElement("summary"); d.className="fold"; d.id="fold-"+id; d.open=!!(own(foldOpen,id)?foldOpen[id]:open);
+  sm.innerHTML=`<span class="fold-t">${title}</span><small class="fold-s"></small>`; d.appendChild(sm); foldSub(d,sub);
+  const at=before||nodes[0]; at.parentNode.insertBefore(d,at); nodes.forEach(n=>d.appendChild(n)); return d;}
+function foldSub(d,sub){const el=d&&d.querySelector("summary .fold-s"); if(!el)return; const has=sub&&sub.charAt(0)==="✓"; el.textContent=sub||""; el.classList.toggle("has",!!has);}
+const FOLDW={
+  rec:[()=>"☀️ 天気・場所・ポジション",d=>false,d=>[(WEATHERS.find(x=>x[0]===d.weather)||[])[2],String(d.place||"").trim(),d.npos===MIX?"いろいろ":d.npos].filter(Boolean).join("・")],
+  menu:[d=>d.kind==="match"?"⚽ しあいの きろく・リフティング・わざ":"⚽ 練習メニュー・リフティング・わざ",d=>!!((d.menu||[]).length||Object.keys(cleanJug(d.jug)).length||wazaOf(d).length||(Array.isArray(d.games)?d.games:[]).some(gameUsed)),d=>""],
+  more:[()=>"✏️ もっと ふり返る",d=>!!(focusOf(d).length||String(d.hard||"").trim()||String(d.coach||"").trim()),d=>"書けたら +XP"],
+  par:[()=>"👪 おうちの人から",d=>!!String(d.parent||"").trim(),d=>"後で 書いても OK"]};
+const foldWSub=(id,d)=>FOLDW[id][1](d)?"✓ 書いたよ":FOLDW[id][2](d);
+function foldWrite(){const w=document.querySelector("#view .write"), d=draft; if(!w||!d)return;
+  if(foldDraft!==d.id){foldDraft=d.id; Object.keys(FOLDW).forEach(k=>delete foldOpen[k]);}
+  const fld=q=>{const e=w.querySelector(q); return e?(e.classList.contains("field")?e:e.closest(".field")):null;};
+  const mk=(id,nodes,open,before)=>{const has=FOLDW[id][1](d); if(has&&!own(foldOpen,id))foldOpen[id]=true; // opened by what is in it: it stays open while he changes that
+    return foldBox(id,FOLDW[id][0](d),foldWSub(id,d),nodes,open,before);};
+  mk("rec",[fld("#wxField"),fld("#f-place"),fld('[data-seg="npos"]')]);
+  mk("menu",[fld("#kindBox"),fld("#liftBox"),fld("#wazaField")],d.kind==="match");
+  const h=fld("#f-hard"); mk("more",[fld("#focusBox"),h,fld("#f-coach")],false,h);
+  mk("par",[fld("#f-parent")]);}
+function foldHome(){if(missionOpen&&mdraft[missionOpen])return;
+  const ab=document.getElementById("ability"); if(ab)foldBox("abil","❓ のうりょくの せつめい","",[...ab.children].filter(c=>c.tagName==="P"&&c.classList.contains("muted")&&c.id!=="speedHint"));
+  if(lastG){const n=tipsOf(lastG); if(foldTips>=0&&n>foldTips)foldOpen.tipBook=true; foldTips=n;} // a tip that has just opened shows
+  const meal=document.getElementById("mealCard"), ate=meal&&meal.querySelector('[data-meal][aria-pressed="true"]');
+  ["posPanel","tipBook","spBook","skillBook","wazaBook","lookBook"].concat(ate?["mealCard"]:[]).forEach(id=>{const p=document.getElementById(id), h=p&&p.children[0]; if(!h||h.tagName!=="H2")return;
+    const d=foldBox(id,"",id==="mealCard"?"✓ 食べたよ":"",[...p.children].slice(1)); if(!d)return; d.classList.add("pf"); const sm=d.querySelector("summary"); sm.insertBefore(h,sm.firstChild); sm.querySelector(".fold-t").remove();});}
+// The newest notes only; もっと 見る shows ten more. A note that is being worked on (a comment, stamps, the question before deleting) is never hidden.
+function foldNotes(){const ns=[...document.querySelectorAll("#view article.note")], old=document.getElementById("notesMore"); if(old)old.remove(); if(!ns.length)return;
+  let lim=NOTES0+notesMore; ns.forEach((n,i)=>{if(i>=lim&&(n.querySelector("textarea,.stamp-pick,[data-delyes]")||n.dataset.id===handoff))lim=i+1;});
+  ns.forEach((n,i)=>{n.style.display=i<lim?"":"none";});
+  if(ns.length>lim){const b=document.createElement("button"); b.type="button"; b.className="ghost"; b.id="notesMore"; b.textContent=`もっと 見る(あと ${ns.length-lim})`; ns[lim].parentNode.insertBefore(b,ns[lim]);}}
+function foldView(){if(!FOLD)return; if(tab==="write")foldWrite(); else if(tab==="home")foldHome(); else if(tab==="notes")foldNotes();}
+// Opens the folds around an element (before the page scrolls to it or it takes the focus).
+function foldShow(el){for(let d=el&&el.closest?el.closest("details.fold"):null;d;d=d.parentElement?d.parentElement.closest("details.fold"):null){if(!d.open){d.open=true;foldOpen[d.id.slice(5)]=true;}}}
 function renderView(g){
   g=g||lastG;
   const ae=document.activeElement, active=ae&&ae.id, sg=!active&&ae&&ae.dataset&&ae.dataset.v!==undefined&&ae.parentElement&&ae.parentElement.dataset.seg?[ae.parentElement.dataset.seg,ae.dataset.v]:null;
@@ -3681,11 +3734,15 @@ function renderView(g){
   const wait=!loaded()&&(tab==="team"||tab==="notes");
   $("#view").innerHTML=wait?`<section class="panel empty"><p class="muted">読みこみ中…</p></section>`:tab==="home"?viewHome(g):tab==="write"?viewWrite():tab==="team"?viewTeam(g):tab==="match"?viewMatch(g):viewNotes(g);
   document.querySelectorAll("nav.tabs button[data-tab]").forEach(b=>{if(b.dataset.tab===tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
+  foldView();
   for(const id in keep){const el=document.getElementById(id); if(!el||(id==="mn-in"&&(!el.form||el.form.dataset.mate!==km)))continue; el.value=keep[id];}
   if(sg){const el=[...document.querySelectorAll(`#view [data-seg="${sg[0]}"] button`)].find(x=>x.dataset.v===sg[1]); if(el)el.focus({preventScroll:true});}
-  if(active){const el=document.getElementById(active); if(el&&el.focus){el.focus(); if(el.setSelectionRange&&el.type!=="date"){const n=el.value.length;try{el.setSelectionRange(n,n)}catch(e){}}}}
+  if(active){const el=document.getElementById(active); if(el&&el.focus){foldShow(el);el.focus(); if(el.setSelectionRange&&el.type!=="date"){const n=el.value.length;try{el.setSelectionRange(n,n)}catch(e){}}}}
   if(tab==="write")wxMaybe();
 }
+// v24.4: a tap on a fold's heading is remembered (the click comes before the fold changes); a group of the note form says what is in it when it closes
+document.getElementById("view").addEventListener("click",e=>{const sm=e.target&&e.target.closest?e.target.closest("details.fold>summary"):null; if(!sm)return;
+  const d=sm.parentNode, id=d.id.slice(5); foldOpen[id]=!d.open; if(own(FOLDW,id)&&draft)foldSub(d,foldWSub(id,draft));});
 let flashMsg="", flashT=null;
 function showStatus(){
   const base=mode==="loading"?"読みこみ中…":mode==="slow"?"データを 読みこみ中です。電波が 弱いかも しれません。このまま 少し 待ってね。"
@@ -3715,7 +3772,7 @@ function flash(msg){flashMsg=msg;clearTimeout(flashT);flashT=setTimeout(()=>{fla
 let formAsk=false;
 function formMsg(msg,ask){formNote=msg; formAsk=!!(ask&&msg); const el=$("#saveMsg"); if(el){el.textContent=msg; el.hidden=!msg; el.classList.toggle("ask",formAsk);} else if(msg)flash(msg);
   const jb=$("#jugBack"); if(jb)jb.hidden=!formAsk;} // v14: 「数を 見る」 shows with the big-jump question only
-function go(t){stopVoice();const mk=missionOpen;closeMission();liftNote="";if(t==="notes"){stampSeen();calM="";weekOff=0;}chalOpen=false;mateEdit=null;shopSheet=null;shopTry=null;gearMenu=null;craftNote=null;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);if(t==="match")playShow(); // v21.1: back on the しあい tab during a chance, its box is on the screen again
+function go(t){stopVoice();const mk=missionOpen;closeMission();liftNote="";if(t==="notes"){stampSeen();calM="";weekOff=0;notesMore=0;}chalOpen=false;mateEdit=null;shopSheet=null;shopTry=null;gearMenu=null;craftNote=null;stampOpen=null;handoff=null;editingParent=null;if(t!=="home"){settingsOpen=false;sdraft=null;}if(!saving)formNote="";tab=t;render();window.scrollTo(0,0);if(t==="match")playShow(); // v21.1: back on the しあい tab during a chance, its box is on the screen again
   if(mk&&t==="home"){const b=document.getElementById("msgo-"+mk);if(b)b.focus();}}
 
 /* match flow: the result is decided and saved at kick-off, then played back line by line */
@@ -4097,8 +4154,8 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.mopen){openMission(b.dataset.mopen);return;}
   if(b.id==="weekGo"){holdUntil=Date.now()+400;go("notes");const h=$("#wkH");if(h){const p=$("#week");if(p&&p.scrollIntoView)p.scrollIntoView({block:"start"});try{h.focus({preventScroll:true});}catch(err){h.focus();}}return;} // v22.4 📅
   if(b.id==="growGo"){holdUntil=Date.now()+400;go("notes");const h=$("#grH");if(h){const p=$("#growth");if(p&&p.scrollIntoView)p.scrollIntoView({block:"start"});try{h.focus({preventScroll:true});}catch(err){h.focus();}}return;} // v15 📈
-  if(b.id==="jugBack"){const k=((draft&&jugBig(draft,lastG)[0])||["r"])[0], f=$("#f-jug-"+k); if(f){f.scrollIntoView({block:"center"});try{f.focus({preventScroll:true});}catch(err){f.focus();}}return;} // v14
-  if(b.id==="msgo-lift"){go("write");const f=$("#f-jug-r");if(f){f.scrollIntoView({block:"center"});try{f.focus({preventScroll:true});}catch(err){f.focus();}}return;}
+  if(b.id==="jugBack"){const k=((draft&&jugBig(draft,lastG)[0])||["r"])[0], f=$("#f-jug-"+k); if(f){foldShow(f);f.scrollIntoView({block:"center"});try{f.focus({preventScroll:true});}catch(err){f.focus();}}return;} // v14
+  if(b.id==="msgo-lift"){go("write");const f=$("#f-jug-r");if(f){foldShow(f);f.scrollIntoView({block:"center"});try{f.focus({preventScroll:true});}catch(err){f.focus();}}return;}
   if(missionOpen&&mdraft[missionOpen]){const d=mdraft[missionOpen];
     if(b.id==="msBack"){stopVoice();closeMission(true);return;}
     if(b.dataset.mvd!==undefined){const v=b.dataset.mvd;d.vdate=d.vdate===v?"":v;d.vother=false;renderView();const f=[...document.querySelectorAll("#mvDays [data-mvd]")].find(x=>x.dataset.mvd===v);if(f)f.focus();missionChanged();return;}
@@ -4117,6 +4174,7 @@ $("#view").addEventListener("click",async e=>{
     if(b.id==="msSave"){await saveMission(missionOpen);return;}
   }
   if(b.dataset.shownote){const id=b.dataset.shownote;showNote(a=>a.dataset.id===id);return;}
+  if(b.id==="notesMore"){const n=NOTES0+notesMore; notesMore+=NOTESSTEP; foldNotes(); const f=document.querySelectorAll("#view article.note")[n]; if(f){try{f.focus({preventScroll:true});}catch(err){}} return;}
   if(tab==="write"&&draft){
     const sg=b.closest("[data-seg]");
     if(sg){const k=sg.dataset.seg, fixed=k==="kind"||k==="npos", v=draft[k]===b.dataset.v&&!fixed?"":b.dataset.v, changed=draft[k]!==v; draft[k]=v;
