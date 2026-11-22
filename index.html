@@ -1137,8 +1137,9 @@ const isDay=v=>typeof v==="string"&&/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]
 const RANKS=[[1,"たまごせんしゅ"],[3,"ルーキー"],[6,"レギュラー"],[10,"エース"],[15,"キャプテン"],[20,"スター"],[25,"ヒーロー"],[30,"ミラクル"],[35,"マスター"],[40,"太陽"],[45,"ぎんが"],[50,"レジェンド"]];
 const TEAMCOLORS=["#2f7bff","#ff3b4a","#ff9a1f","#a45bff","#19c9b6","#b6f000"];
 // A third element "full" shows that look in the full figure on the reward (it is outside the up-to-the-knees frame).
+const STAR50=1; // v24.2: the Lv.50 mark is a gold star on the chest (0: the crown, as before)
 const UNLOCKS=[[2,"プロの スーツ"],[3,"青い目"],[4,"せばんごう"],[6,"光る目と 光るライン"],[10,"むらさきの目"],[12,"キャプテンマーク"],[15,"赤い目と オーラ"],[20,"ゴールドオーラと いなずま"],
-  [25,"かがやく ライン"],[30,"両目の 光"],[35,"ダブル いなずま","full"],[40,"赤と 金の 目"],[45,"にじいろ オーラ"],[50,"レジェンドの かんむり"]];
+  [25,"かがやく ライン"],[30,"両目の 光"],[35,"ダブル いなずま","full"],[40,"赤と 金の 目"],[45,"にじいろ オーラ"],[50,STAR50?"レジェンドの 金の 星":"レジェンドの かんむり"]];
 // XP from level l to l+1: v12's steps up to Lv.27, then 300 a level, never more than v12 asked, so nobody loses a level. Lv.50 is the cap;
 // after it every 300 XP adds a ★ (a ★ is only for show: no power, nothing to spend).
 const MAXLV=50, STARXP=300;
@@ -1770,6 +1771,7 @@ const pixSVG=(()=>{
           if(!gk&&f==="j"&&(y===3||y===4)&&ax>=13)c="#fcfcfc";
           if(f==="j"&&dx>=7&&dx<=15&&y>=7&&y<=13)c=dx===7||dx===15||y===7||y===13?(gk?"#1c2f80":"#0e1f66"):(dx-11)*(dx-11)+(y-10)*(y-10)<=2?"#e0303a":"#fcfcfc"; // 日の丸 (asked: the chest mark as the flag of Japan)
           if(f==="k"&&y>=61&&y<=64)c=y<=63?(gk?"#1c2f80":"#fcfcfc"):(gk?"#f2d21a":"#e0303a");}
+        if(STAR50&&level>=50&&f==="j"){const sx=dx-(kit?-16:11),sy=y-5;if(sx>=0&&sx<9&&sy>=0&&sy<9&&STAR[sy][sx]==="g")c=kit&&gk?"#1c2f80":sy<3?"#fff3b0":"#ffd34f";}
         if(wrist&&f==="s"&&ax>21&&y>=35&&y<=38)c=tt[1]<-.3?wd:wrist;
         if(o.hero&&level>=12&&dx>=20&&y>=23&&y<=28&&f)c=y===23||y===28?"#c99a1a":"#ffd34f";
         if(sp&&sp.t>=2&&f==="b"&&y>=72&&y<=78&&(ax+y)%4===0)c=sp.t>=3?sp.g:sp.ln;
@@ -1832,7 +1834,7 @@ const pixSVG=(()=>{
     if(fx&&level>=20){const up=crop==="up", P=(i,k,dx,dy)=>{const at=PX.bolt[k].at;return pxCells(PX.bolt[i],null,Math.round(CX-at[0])+dx,BY-at[1]+dy);};
       bolts=`<g class="pxf1" shape-rendering="crispEdges">${pxRuns(P(0,0,up?14:0,0).concat(P(1,1,up?-14:0,0)))}</g>`;
       if(level>=35)bolts+=`<g class="pxf2s" shape-rendering="crispEdges">${pxRuns(P(2,0,up?16:3,38).concat(P(3,1,up?-16:-3,-26)))}</g>`;}
-    if(fx&&level>=50&&!kit){const cx=Math.round(CX);let r=hy;for(let y=0;y<H;y++)if(g[y][cx]){r=y;break;}
+    if(fx&&level>=50&&!STAR50){const cx=Math.round(CX);let r=hy;for(let y=0;y<H;y++)if(g[y][cx]){r=y;break;}
       const sp=PX.crown,y0=r+7-sp.base,cells=pxCells(sp,null,Math.round(CX-sp.cx),y0),glint=q=>/^#f[0-9a-f]f[0-9a-f]f[0-9a-f]$/i.test(q[2])&&q[1]<y0+9;
       crown=`<g class="crown" shape-rendering="crispEdges">${pxRuns(cells.filter(q=>!glint(q)))}<g class="pxf1">${pxRuns(cells.filter(glint))}</g></g>`;}
     const gtw=tw.length&&(crop===""||crop==="legs"||crop==="feet")?`<g class="pxf1 gtw" shape-rendering="crispEdges">${pxRuns(tw)}</g>`:"";
