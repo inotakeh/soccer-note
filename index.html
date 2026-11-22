@@ -1732,7 +1732,7 @@ const pixSVG=(()=>{
     // a place in a list: a whole number inside it (as a number or as text), else the first
     const at=(a,v)=>(typeof v==="number"||(typeof v==="string"&&v!==""))&&Number.isInteger(+v)&&+v>=0&&+v<a.length?+v:0;
     const hc=HAIRCOLORS[at(HAIRCOLORS,o.hairColor)], sk=SKINS[at(SKINS,o.skin)], eye=eyeOf(level);
-    const jer=!pro?"#aab0c0":gk?"#22a046":team, J={c:jer,dk:mix(jer,"#000000",.42),hi:mix(jer,"#ffffff",.4)};
+    const kit=o.kit==="jp"&&pro, jer=!pro?"#aab0c0":gk?(kit?"#f2d21a":"#22a046"):team, J={c:jer,dk:mix(jer,"#000000",.42),hi:mix(jer,"#ffffff",.4)};
     // The pieces he wears, with every colour checked (only "#rrggbb" is a colour; a piece's missing colours come from its main colour)
     // and the tier a whole number from 1 to 4, else 0.
     const C=(c,d)=>hex(c)?c:d, gear=(x,dc)=>{if(!x||typeof x!=="object")return null;const c=C(x.c,dc);
@@ -1745,10 +1745,15 @@ const pixSVG=(()=>{
     const tw=[]; let hx=0, hy=0, hw=0, hd=null;
     if(mate){ // a teammate: one finished picture; only the shirt and the socks take the team colour
       hx=Math.round(CX-mate.cx);hy=BY+BH-mate.r.length;hw=mate.r[0].length;
-      draw(mate,palOf(mate,{j:J,k:J}),hx,hy);
+      if(kit){const mp=palOf(mate,{j:J,k:J}), kr=mate.r.findIndex(r=>r.split("").some(ch=>mate.t[ch]&&mate.t[ch][0]==="k"));
+        mate.r.forEach((r,y)=>{for(let x=0;x<r.length;x++){const ch=r[x];if(ch===".")continue;let c=mp[ch]||OL;const tt=mate.t[ch],f=tt?tt[0]:"";
+          if(f==="j"&&(x+y)%7<2)c=mix(c,"#ffffff",.16);
+          if(f==="k"&&kr>=0&&y-kr<=3)c=y-kr<=2?(tt[1]<-.3?"#c8cede":"#fcfcfc"):"#e0303a";
+          put(hx+x,hy+y,c);}});}
+      else draw(mate,palOf(mate,{j:J,k:J}),hx,hy);
     }else{
       const body=gk?PX.bodygk:PX.body, bx=CX-body.cx, bcx=body.cx;
-      const wc=!pro?"#c3c8d6":gk?"#ffd34f":"#fcfcfc", nc=!pro?"#4a5068":gk?"#3c4460":"#fcfcfc", kc=!pro?"#fcfcfc":jer;
+      const wc=!pro?"#c3c8d6":gk?(kit?"#1c2f80":"#ffd34f"):"#fcfcfc", nc=!pro?"#4a5068":gk?(kit?"#f2d21a":"#3c4460"):"#fcfcfc", kc=!pro?"#fcfcfc":jer;
       const bc=boots?boots.c:mix(jer,"#000000",.5);
       const bp=palOf(body,{s:t=>skinTone(sk,t),j:J,w:{c:wc,dk:mix(wc,gk?"#7a5a0a":"#6a7696",.5),hi:"#ffffff"},
         n:{c:nc,dk:pro&&!gk?"#9aa6c4":mix(nc,"#000000",.45),hi:mix(nc,"#ffffff",.3)},
@@ -1761,6 +1766,10 @@ const pixSVG=(()=>{
       body.r.forEach((r,y)=>{for(let x=0;x<r.length;x++){const ch=r[x];if(ch===".")continue;let c=bp[ch];const tt=body.t[ch],f=tt?tt[0]:"",dx=x-bcx,ax=Math.abs(dx);
         if(glow&&y>=3&&(f==="j"||(gold&&f==="n"))){const a=Math.abs(ax-8);if(a===0)c=gl;else if(a===1)c=g2;}
         if(glow&&((f==="w"&&ax>19&&y>10)||(f==="k"&&y<=61)))c=eye.hi;
+        if(kit){if(f==="j"&&(x+y)%7<2&&c===bp[ch])c=mix(c,"#ffffff",.16);
+          if(!gk&&f==="j"&&(y===3||y===4)&&ax>=13)c="#fcfcfc";
+          if(f==="j"&&((dx===11&&y>=8&&y<=12)||(y===10&&dx>=9&&dx<=13)))c=gk?"#1c2f80":"#ffd34f";
+          if(f==="k"&&y>=61&&y<=64)c=y<=63?(gk?"#1c2f80":"#fcfcfc"):(gk?"#f2d21a":"#e0303a");}
         if(wrist&&f==="s"&&ax>21&&y>=35&&y<=38)c=tt[1]<-.3?wd:wrist;
         if(o.hero&&level>=12&&dx>=20&&y>=23&&y<=28&&f)c=y===23||y===28?"#c99a1a":"#ffd34f";
         if(sp&&sp.t>=2&&f==="b"&&y>=72&&y<=78&&(ax+y)%4===0)c=sp.t>=3?sp.g:sp.ln;
@@ -2302,16 +2311,16 @@ const look=()=>settingsOpen&&sdraft?Object.assign({},profile,sdraft):profile;
 // While a match is being played back the player keeps the look from before kick-off (items and sweat), so it does not give the result away.
 const lossNow=()=>((live&&!live.done?live.prevLoss:game.lossStreak)||0)>0;
 const equipNow=()=>live&&!live.done?live.prevEquip:(game.equip||{});
-const JPBLUE="#1c3fb0", wcNow=()=>isWC(live&&live.ctx?(live.ctx.ex?-1:live.ctx.cupI):game.cup), kitColor=c=>wcNow()&&!(settingsOpen&&sdraft)?JPBLUE:c; // v24.2
+const JPBLUE="#1c3fb0", wcNow=()=>isWC(live&&live.ctx?(live.ctx.ex?-1:live.ctx.cupI):game.cup), kitNow=()=>wcNow()&&!(settingsOpen&&sdraft), kitColor=c=>kitNow()?JPBLUE:c; // v24.2
 function heroOpts(g,eq){eq=eq||{};const L=look(), tr=shopTry&&own(GEAR,shopTry.id)?shopTry:null, it=k=>{if(tr&&GEAR[tr.id].slot===k)return gearLook(tr.id,tr.c);const x=gearOf(eq[k]);return x&&x.slot===k?x:null;};
-  return {level:g.level,color:kitColor(L.color),number:profile.number,hair:L.hair||0,hairColor:L.hairColor||0,skin:L.skin||0,mood:"fierce",gk:L.pos==="GK",hero:true,fx:true,sweat:lossNow(),
+  return {level:g.level,color:kitColor(L.color),kit:kitNow()?"jp":"",number:profile.number,hair:L.hair||0,hairColor:L.hairColor||0,skin:L.skin||0,mood:"fierce",gk:L.pos==="GK",hero:true,fx:true,sweat:lossNow(),
     head:it("head")?it("head").c:null,wrist:it("wrist")?it("wrist").c:null,boots:it("boots"),shin:it("shin"),ball:it("ball")};}
-const mateOpts=m=>({level:4,color:kitColor(profile.color),number:m.num,hair:m.hair,hairColor:m.hc,skin:m.skin,iris:m.iris,mood:m.mood,gk:m.pos==="GK",crop:"bust",label:m.n,mate:m.id}); // v18: a teammate has his own picture
+const mateOpts=m=>({level:4,color:kitColor(profile.color),kit:kitNow()?"jp":"",number:m.num,hair:m.hair,hairColor:m.hc,skin:m.skin,iris:m.iris,mood:m.mood,gk:m.pos==="GK",crop:"bust",label:m.n,mate:m.id}); // v18: a teammate has his own picture
 const heroBust=(g,id)=>pixSVG(Object.assign(heroOpts(g,equipNow()),{crop:"bust",label:heroName()}),id);
 
 function renderCard(g){
   const eq=equipNow();
-  const L=look(), key=JSON.stringify([g.level,profile,eq,settingsOpen&&sdraft,figUp,lossNow(),[eq.boots,eq.shin,eq.ball].map(id=>{const x=gearOf(id);return x&&x.made?x.c:0;}),shopTry]);
+  const L=look(), key=JSON.stringify([g.level,profile,eq,settingsOpen&&sdraft,kitNow(),figUp,lossNow(),[eq.boots,eq.shin,eq.ball].map(id=>{const x=gearOf(id);return x&&x.made?x.c:0;}),shopTry]);
   if(key!==cardKey){cardKey=key;$("#fig").innerHTML=pixSVG(Object.assign(heroOpts(g,eq),{crop:figUp?"up":""}),"hero");
     const lp=$("#lookPrev"); if(lp)lp.innerHTML=heroBust(g,"lp");} // the small preview in the settings panel follows the choices too
   const zb=$("#zoomBtn"); zb.textContent=figUp?"全身を 見る":"アップで 見る";
