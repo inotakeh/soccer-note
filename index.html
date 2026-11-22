@@ -568,6 +568,7 @@ details.wz p{margin:0 0 8px;line-height:1.6} details.wz p b{display:block;font-s
 .pwzbox{display:flex;flex-direction:column;gap:6px} .pwzt{margin:0;font-size:.85rem;font-weight:700;color:var(--muted)}
 .pt.opp.out{opacity:.5;filter:grayscale(1)} .pt.opp.out::after{display:none} /* v21: beaten by a dribble with a わざ */
 .pwz button{min-height:44px;font:inherit;font-weight:700;font-size:.95rem;color:var(--ink);cursor:pointer} .pwz button small{font-size:.75rem;font-weight:700;margin-right:4px}
+.pwz.many{display:grid;grid-template-columns:1fr 1fr;gap:6px} .pwz.many button{min-height:40px;font-size:.85rem;padding:4px 6px;line-height:1.2} .pwz.many button small{display:block;font-size:.7rem;margin:0}
 .ppitch{position:relative;height:0;padding-top:115%;border-radius:12px;overflow:hidden;border:2px solid #e9f5ec;touch-action:manipulation;
   background:#2a6b22 url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAA/BAMAAABdkfYbAAAAJFBMVEUdVA4eWA0gWA4gWBAiZhQochotfxwxeiE0eyE0fCQ0gCE+pSMAX4/mAAAEyUlEQVR42l2TX4xcdRXHP+d3988dKjO/3ywt3Vq6dxZMKWCYZdWtsZYiiS8GaE1IfIFSfeDJOEpEebHVF41PNRITMSTb0CcNSY0h8VVN4MVNWitlSWDmbkm73Yad37kL69zZ2b2Hh21iwvfpJJ+cnHO+55zkz/ctxLHtJw9/5/3yZ6t/+Nfg5X9ffODrqwfueS7KD+7hfEdaoXfXh+mcDm9w6SfdavxRXZ6Q1/qf2PGV6CPaNELXi/mPfCX9zJk7+MRKIC9EjCy2BLc1qHuCut7MVJTKDLxI3sgVn6+JgHesQL3QRSGYkbgTxAcft+gDLquwXrVYv6zd+SKI/ANiLMQWSZ4qm+s1N33kGKODyM4ctWGopelo3hx8nK3w4Jcqq68IrhfxVDkTOEdw1zOiKVYwC6qwNQPgILIsqAertiH4c9XYWVNInqJWbfrasHZruiaFpmn5QOBgEsDtZmoDwPBomuHeDtEqRxfLul5yIy9AfQ7VcYJ84PB7Gt2xnLmHuj5c8J6M0OT6Iv9NHt7z5sd/+kr7xX/+/crhs8/+pX728GtLX13dXj9ygfE37m8uMDm/99Qc7Zfn51s/vv+NC3v3hUkkaQPkM+YUD0Rf7Vs6hFtquzYRizNsxIZZhKDJUubc5XmcEVAKNQgqTIHNoLyAOtH/4MGLaMTPHjAKjQ2udLyD0y2o5jCAfIXdwJ1DXGvqvh6C+spFAlEMvJhWrs1OLqrRIle9YGaIJ4I6IZqGhohdfbptUcd99SiK4l1liCGNqXDQXQL5pt1MonnAvYsYEf1Qmx94wSNfpOnmPMhjKg2JYgB4FR9Nm6wHooNG/z2/S4JiEXFGU/iuU3J/7DJorKt5jzVivd9D2k+42ar/0m1T24zX+qpK49q3h5yl/9brbkM717f2ppt0Rr8NG4+XtzuZypEbg4vvuW9tHS301R/G3+1P+emZfR3mar/445u/bNp5eWWm2XVZlQPu0NXGoetZF1dXMXMt3509RJ4BVX6i1VvvZFSKQfINnd1yK6YALvW3aguKMxAb8zqwpXsxcRVVXgFQAYZzrP78Vfg9BlIHPAJtJy55LnI0yTh6xw0Yii8f24gzRfJkCRlAplaCplCydQM1p9xR79Ya0DunwDoI/0dbCxeBA53a9M7uazjkDpp46WvAZHPsRxEYZrjdAwKS888DvkomLwK1HPkNuIpP7ubzsrHMVT3huG1UudsdeBbyCkhOJe9sF6Pe1IsPr5WPpB+Vv7761v7pPc1fLZwbu7J4e3LImYG8cvLt1+00o4GtdQab9ekvyJlLRNdAfF8DEKUV79RKpOCA7i8ZJpO+lqYTdw3GKxGA5Pa9tZgOCen/gqA7J5erCp+WgGv3Ir7hFY8Zo9ExCIUwBkmZFt+7kqrXYaojYzn3tUitrNq3nITT9oxyIlocd0AQJChc9kmaTvytC+/f3a/tPL0cylSYVHxJKa0oiOF3NxCA6D/dBjHXKxDTAEE8YhYVHSmYOV7ACFHRhmDKSWTcZRYRNwHwDKomBPH6V2MP8CzOPX8JPr3gG9+XaGqKieH11D52EitCOT70SWstlTKUWUHQNH33WoUQwITxEb7wMflyrtLY7TaRdO9mkbZvQslqXW4OBqMdTpaKfQadzVPVOEdmWQAAAABJRU5ErkJggg==) 0 0/104px 126px repeat;image-rendering:pixelated}
 /* v19: the pictures of the pitch (small PNGs, one dot of the drawn sheets = one pixel; a box is as many points as dots, or half as many) */
@@ -777,19 +778,30 @@ function ptStateOf(x){x=x&&typeof x==="object"?x:{}; const n=(v,hi)=>Number.isIn
 // never reused; names and words may change. Learned after WAZATH[0] different days of practice, gold after WAZATH[1]. A note or a 🏠
 // record holds WAZAMAX at most, and a day counts WAZAMAX at most. In a match a learned one gives the team WAZAPOW[0] (gold WAZAPOW[1]); the hero's goal or assist uses
 // one with the chance WAZAUSE, and WAZALINES technique lines are added.
+// v24.6 MOREWAZA: 9 more techniques (3 in each group), WAZACAP: the most the techniques add to the team (11 gold, as before v24.6).
+const MOREWAZA=1, WAZACAP=6.6;
 const WAZAGROUPS=[["shoot","シュート"],["drib","ドリブル"],["pass","パス・トラップ"]];
 const WAZA=[
   ["direct","shoot","ダイレクトシュート","来た ボールを 止めずに、そのまま シュートする。","ボールを さいごまで よく 見よう。 強く ふらずに、ゴールの すみを ねらおう。","{h}が ダイレクトシュート! キーパーが なんとか はじいた!"],
   ["corner","shoot","コースを ねらう シュート","強く けるより、キーパーの いない ところへ 転がす。","ゴールの すみの ネットを ねらおう。","{h}が ゴールの すみを ねらって シュート! おしい、ポストの 横!"],
   ["loop","shoot","ループシュート","前に 出た キーパーの 上を、ふわりと こえる。","ボールの 下を すくって、山なりの 道を えがこう。","{h}の ループシュート! キーパーが ジャンプして なんとか さわった!"],
+  ...(MOREWAZA?[["instep","shoot","インステップ シュート","足の こうで、ボールの まん中を 強く ける。","けらない 足は ボールの 横に。 つま先を 下に 向けて、足首を かためよう。","{h}の 強い インステップ シュート! キーパーが 両手で はじいた!"]]:[]),
+  ...(MOREWAZA?[["volley","shoot","ボレー シュート","うかんだ ボールが 地面に つく 前に、そのまま ける。","ボールを さいごまで よく 見て、足は 小さく ふろう。","{h}の ボレー シュート! キーパーが 手を のばして さわった!"]]:[]),
+  ...(MOREWAZA?[["side","shoot","ながしこむ シュート","インサイドで、ゴールの あいている ところへ そっと 転がす。","強さより コース! けった あと、ねらった 方へ 足を おし出そう。","{h}が インサイドで そっと ながしこむ! キーパーが ぎりぎり さわった!"]]:[]),
   ["scissors","drib","シザーズ","ボールの 前を またいで、またいだ 方と ぎゃくへ 運ぶ。","ボールの 前を 大きく またいで、相手を 動かそう。","{h}が シザーズで 相手を かわした!"],
   ["dtouch","drib","ダブルタッチ","横に ずらして、すぐ 前へ 運ぶ。2回 つづけて さわる。","相手が とどかない ところへ、ボールを すばやく 2回 動かそう。","{h}の ダブルタッチ! 相手の 横を すりぬけた!"],
   ["kfeint","drib","キックフェイント","ける ふりを して、ボールを 切り返す。","本当に ける ように 足を 大きく ふって、相手が とびこんだら 切り返そう。","{h}の キックフェイントに 相手が 引っかかった!"],
   ["roll","drib","あしうら ターン","足の うらで ボールを 引いて、向きを かえる。","ボールに 乗らないで、軽く 引こう。 相手から 遠い 方へ 運ぼう。","{h}が あしうら ターンで ボールを 守った!"],
+  ...(MOREWAZA?[["elastico","drib","エラシコ","足の そとがわで おし出して、すぐ 内がわで 切り返す。","さいしょは ゆっくり。 足を ボールから はなさずに、そと、うちと 動かそう。","{h}の エラシコ! 相手の 足が 止まった!"]]:[]),
+  ...(MOREWAZA?[["roulette","drib","ルーレット","足うらで ボールを 止めながら くるっと 回って、相手を かわす。","回る ときは 体で ボールを かくして、相手から 守ろう。","{h}が ルーレットで くるっと 回って ぬけた!"]]:[]),
+  ...(MOREWAZA?[["cutin","drib","インサイドで 切り返し","ドリブルの とちゅうで ボールを インサイドで 止めて、ぎゃくへ 向きを かえる。","切り返す 前に 少し スピードを 落とすと、相手を ふり切れるよ。","{h}が インサイドで 切り返して 相手を ふり切った!"]]:[]),
   ["outside","pass","アウトサイドキック","足の そとがわで、すばやく パスを 出す。","ボールの 横を おして、味方の 足元へ とどけよう。","{h}の アウトサイドキックで パスが 通った!"],
   ["onetwo","pass","ワンツー","パスを 出したら すぐ 走って、もう一度 もらう。","パスを 出したら、相手の 後ろの スペースへ 走ろう。","{h}が ワンツーで ぬけ出した!"],
   ["dpass","pass","ダイレクトパス","来た ボールを 止めずに、1回で 味方へ わたす。","ボールが 来る 前に、出す 味方を 決めて おこう。","{h}の ダイレクトパスで リズムが 生まれた!"],
-  ["first","pass","前を 向く トラップ","ボールを もらう ときに、さいしょの タッチで 前を 向く。","ボールを 次に 進みたい 方へ おこう。","{h}が さいしょの タッチで 前を 向いた!"]
+  ["first","pass","前を 向く トラップ","ボールを もらう ときに、さいしょの タッチで 前を 向く。","ボールを 次に 進みたい 方へ おこう。","{h}が さいしょの タッチで 前を 向いた!"],
+  ...(MOREWAZA?[["through","pass","スルーパス","相手と 相手の 間を 通して、味方が 走りこむ 先へ パスを 出す。","味方の 足元では なく、走って いく 先を ねらおう。","{h}の スルーパスが 相手の 間を ぬけた!"]]:[]),
+  ...(MOREWAZA?[["long","pass","ロングキック","足の こうで ボールの 下を けって、遠くの 味方へ とばす。","けらない 足を ボールの 横に おいて、体を 少し 後ろに たおそう。","{h}の ロングキックが 遠くの 味方へ とどいた!"]]:[]),
+  ...(MOREWAZA?[["chest","pass","むね トラップ","うかんだ ボールを むねで うけて、足元に 落とす。","ボールが 当たる ときに 体を 少し 引くと、やわらかく 止まるよ。","{h}が むね トラップで ボールを ぴたりと 止めた!"]]:[])
 ];
 const WAZAMAX=3, WAZATH=[3,10], WAZAPOW=[.3,.6], WAZAUSE=.7, WAZALINES=2;
 // v22.3 ごはん: profile.meal {"YYYY-MM-DD": 1 いっぱい 食べた | 2 おかわり した}, today only, once a day. Each day brings MEALPT[n] stamina,
@@ -801,7 +813,9 @@ function mealPass(m){const c=cleanMeal(m); let pt=0, days=0; Object.keys(c).forE
 const WZ=Object.create(null); WAZA.forEach(w=>{WZ[w[0]]=w;});
 // the hero's goal with a learned シュート ({a} the passer) and the hero's assist with a learned パス ({s} the scorer)
 const WAZAGOAL={direct:"{a}の パスを {h}が ダイレクトシュート! ゴール!!",corner:"{a}の パスから {h}が ゴールの すみへ! ゴール!!",loop:"{a}の パスから {h}が ループシュート! ゴール!!"};
+if(MOREWAZA)Object.assign(WAZAGOAL,{"instep":"{a}の パスから {h}が インステップで ズドン! ゴール!!","volley":"{a}の パスを {h}が ボレー シュート! ゴール!!","side":"{a}の パスから {h}が インサイドで ながしこんだ! ゴール!!"});
 const WAZAAST={outside:"{h}の アウトサイドキックから {s}が ゴール!",onetwo:"{h}との ワンツーから {s}が ゴール!",dpass:"{h}の ダイレクトパスから {s}が ゴール!",first:"{h}が 前を 向いて パス! {s}が ゴール!"};
+if(MOREWAZA)Object.assign(WAZAAST,{"through":"{h}の スルーパスから {s}が ゴール!","long":"{h}の ロングキックから {s}が ゴール!","chest":"{h}が むね トラップから パス! {s}が ゴール!"});
 // the known techniques of a note, a record or a draft, each once, WAZAMAX at most
 const wazaOf=x=>(x&&Array.isArray(x.waza)?x.waza:[]).filter((id,i,a)=>typeof id==="string"&&WZ[id]!==undefined&&a.indexOf(id)===i).slice(0,WAZAMAX);
 const wazaNames=x=>wazaOf(x).map(id=>WZ[id][2]);
@@ -1481,7 +1495,7 @@ function teamPower(g){
   // While a match is being played back the bonuses stay as they were at kick-off, so the team page does not give the result away.
   const held=live&&!live.done, it=(held?live.prevItems:(game.items||[]).length)*.5, fire=Math.min(9,((held?live.prevLoss:game.lossStreak)||0)*3);
   const mk=(held?live.prevMade||0:madeCount(game.made))*.5; // v13: each made piece, worn or not
-  const wz=wazaList(g).reduce((a,x)=>a+(x.lv===2?WAZAPOW[1]:x.lv===1?WAZAPOW[0]:0),0); // v16: learned techniques
+  const wz=Math.min(MOREWAZA?WAZACAP:1e9,wazaList(g).reduce((a,x)=>a+(x.lv===2?WAZAPOW[1]:x.lv===1?WAZAPOW[0]:0),0)); // v16: learned techniques (v24.6 at most WAZACAP)
   const sp=Object.keys(g.sp||{}).reduce((a,id)=>a+(g.sp[id]===2?SPPOW[1]:g.sp[id]===1?SPPOW[0]:0),0); // v23 スペシャル
   return {lu,hero,avg,sk,it,mk,wz,sp,fire,total:0.3*hero+0.7*avg+sk+it+mk+wz+sp+fire};
 }
@@ -3185,7 +3199,8 @@ function wazaField(d){const mine=wazaOf(d);
 // shows right under the chips (the status line at the top of the page is out of sight there) and is read out
 function wazaTap(d,b,id,box){const cur=wazaOf(d), i=cur.indexOf(id), full=i<0&&cur.length>=WAZAMAX, msg=document.getElementById(box+"Msg");
   if(msg)msg.hidden=!full;
-  if(full){say(WAZAFULL);return false;}
+  if(full){say(WAZAFULL); if(MOREWAZA&&msg){const r=msg.getBoundingClientRect(), nav=document.querySelector("nav.tabs"), bot=nav?nav.getBoundingClientRect().top:window.innerHeight;
+    if(r.bottom>bot||r.top<0)window.scrollBy(0,Math.round(r.top<0?r.top-12:r.bottom-bot+12));} return false;}
   if(i<0)cur.push(id); else cur.splice(i,1);
   d.waza=cur; b.setAttribute("aria-pressed",String(i<0)); const n=document.getElementById(box); if(n)n.textContent=cur.length; return true;}
 function focusField(d){
@@ -3987,7 +4002,7 @@ function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.po
   const wall=sc.coach?[]:wazaList(lastG).filter(x=>x.lv>0&&x.grp!=="shoot");
   const ptsub=sc.coach?`${esc(sc.who.h.n)}が ボールを 持った! キーパーの 君が 声で 教えよう。`:"君が ボールを 持った! どうする?"; // the title's second half: its room is kept (.pth) when the ball is lost or the chance is over
   const wzt=S.wzUsed>=PLAYWAZA?PLAYMSG.wzUsed:wl.length||S.over||S.lost?`わざを 使う(1つの チャンスで ${PLAYWAZA}回)`:PLAYMSG.wzNot;
-  const wzbox=sc.coach?"":wall.length?`<div class="pwzbox" id="pwz"><p class="pwzt" id="pwzt">${wzt}</p><div class="chips pwz">${wall.map(x=>{const on=!S.busy&&wl.some(y=>y.id===x.id);
+  const wzbox=sc.coach?"":wall.length?`<div class="pwzbox" id="pwz"><p class="pwzt" id="pwzt">${wzt}</p><div class="chips pwz${MOREWAZA&&wall.length>8?" many":""}">${wall.map(x=>{const on=!S.busy&&wl.some(y=>y.id===x.id);
       return `<button type="button" data-wz="${x.id}" aria-pressed="${on&&x.id===S.wz}"${on?"":" disabled"} aria-label="${x.grp==="drib"?"ドリブル":"パス"}の わざ ${esc(x.n)}${x.lv===2?" ゴールド":""}"><small>${x.grp==="drib"?"ドリブル":"パス"}</small>${esc(x.n)}${x.lv===2?" ★":""}</button>`;}).join("")}</div></div>`
     :`<p class="pwzt" id="pwzNote">ドリブルや パスの わざを おぼえると、ここで 使えるよ。</p>`;
   return `<div class="pitchbox" id="pitchBox"><p class="ptitle"><b>${sc.kind==="hard"?"むずかしい チャンス!":"大チャンス!"}</b>${S.over||S.lost?`<span class="pth" aria-hidden="true" data-t="${ptsub}">${sc.coach?MXICON("voice"):""}</span>`:`<span>${sc.coach?MXICON("voice"):""}${ptsub}</span>`}</p>
