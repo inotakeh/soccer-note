@@ -1832,7 +1832,7 @@ const pixSVG=(()=>{
     if(fx&&level>=20){const up=crop==="up", P=(i,k,dx,dy)=>{const at=PX.bolt[k].at;return pxCells(PX.bolt[i],null,Math.round(CX-at[0])+dx,BY-at[1]+dy);};
       bolts=`<g class="pxf1" shape-rendering="crispEdges">${pxRuns(P(0,0,up?14:0,0).concat(P(1,1,up?-14:0,0)))}</g>`;
       if(level>=35)bolts+=`<g class="pxf2s" shape-rendering="crispEdges">${pxRuns(P(2,0,up?16:3,38).concat(P(3,1,up?-16:-3,-26)))}</g>`;}
-    if(fx&&level>=50){const cx=Math.round(CX);let r=hy;for(let y=0;y<H;y++)if(g[y][cx]){r=y;break;}
+    if(fx&&level>=50&&!kit){const cx=Math.round(CX);let r=hy;for(let y=0;y<H;y++)if(g[y][cx]){r=y;break;}
       const sp=PX.crown,y0=r+7-sp.base,cells=pxCells(sp,null,Math.round(CX-sp.cx),y0),glint=q=>/^#f[0-9a-f]f[0-9a-f]f[0-9a-f]$/i.test(q[2])&&q[1]<y0+9;
       crown=`<g class="crown" shape-rendering="crispEdges">${pxRuns(cells.filter(q=>!glint(q)))}<g class="pxf1">${pxRuns(cells.filter(glint))}</g></g>`;}
     const gtw=tw.length&&(crop===""||crop==="legs"||crop==="feet")?`<g class="pxf1 gtw" shape-rendering="crispEdges">${pxRuns(tw)}</g>`:"";
