@@ -560,6 +560,11 @@ details.wz p{margin:0 0 8px;line-height:1.6} details.wz p b{display:block;font-s
 .revbox{display:flex;flex-direction:column;gap:6px;align-items:stretch;padding:10px 12px;border-radius:12px;border:2px solid #e8590c;background:rgba(232,89,12,.10);margin:6px 0}
 .revbox b{color:#e8590c;font-size:1.05rem}.revtag{display:inline-block;padding:1px 8px;border-radius:8px;background:#e8590c;color:#fff;font-size:.8rem;vertical-align:middle}
 .meal .mealrow{display:flex;gap:8px;flex-wrap:wrap}.meal .mealrow button{flex:1;min-width:130px;min-height:48px}
+.prep .mealrow{display:flex;gap:8px;flex-wrap:wrap}.prep .mealrow button{flex:1;min-width:130px;min-height:48px}
+.prep .mealrow button[aria-pressed="true"]{border-color:#2f9e44;background:rgba(47,158,68,.14);font-weight:700}
+.prep ol{margin:6px 0 4px;padding-left:1.4em}.prep li{margin:4px 0}.prep li b{display:block}
+.prep details{margin-top:8px}.prep summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center}
+.prep .ytgo{display:inline-block;margin:6px 0}
 .meal .mealrow button[aria-pressed="true"]{border-color:#2f9e44;background:rgba(47,158,68,.14);font-weight:700}
 .reward .tkask{margin:8px 0 0;word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .ticket .muted{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict} /* its longer line breaks at a space, never inside a word */.pth::after{content:attr(data-t)}.pitchbox{display:flex;flex-direction:column;gap:8px;margin:10px auto;width:100%;max-width:480px;max-width:min(480px,max(300px,calc((100vh - 380px)/1.15)));max-width:min(480px,max(300px,calc((100dvh - 380px)/1.15)));scroll-margin-top:calc(env(safe-area-inset-top,0px) + 12px);word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
@@ -809,6 +814,17 @@ const WAZAMAX=3, WAZATH=[3,10], WAZAPOW=[.3,.6], WAZAUSE=.7, WAZALINES=2;
 const MEALPT=[0,1,2], MEALCAP=100, MEALKEEP=400;
 function cleanMeal(x){const out={}; if(!x||typeof x!=="object"||Array.isArray(x))return out;
   Object.keys(x).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&(x[d]===1||x[d]===2)).sort().slice(-MEALKEEP).forEach(d=>out[d]=x[d]); return out;}
+// v24.7 体づくり: profile.prep {"YYYY-MM-DD": bits}, 1 じゅんび運動 (FIFA 11+ Kids), 2 ぎゃく足デー. Today only, no reward.
+const BODYCARE=1, PREPKEEP=400, PREPWEEK=[2,1];
+function cleanPrep(x){const out={}; if(!x||typeof x!=="object"||Array.isArray(x))return out;
+  Object.keys(x).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&[1,2,3].includes(x[d])).sort().slice(-PREPKEEP).forEach(d=>out[d]=x[d]); return out;}
+// the days of a week (a: its Monday, z: its Sunday) with each of the two
+function prepWeek(p,a,z){const c=cleanPrep(p), ds=Object.keys(c).filter(d=>d>=a&&d<=z); return [ds.filter(d=>c[d]&1).length,ds.filter(d=>c[d]&2).length];}
+// the 7 moves of 11+ Kids, in our own words (the kanji of grades 1-3)
+const PREPMOVES=[["走って 止まる","軽く 走って、 合図で ピタッと 止まる。"],["スケート ジャンプ","かた足で 左右に とんで、 ふらつかずに 止まる。"],
+  ["かた足で 立つ","かた足で 立って バランス。 なれたら ボールを パスし合う。"],["うでたて","うでたての しせいで、 体を まっすぐ キープ。"],
+  ["かた足 ジャンプ","同じ 足で 5回 とぶ。 ひざが 内がわに 入らない ように。"],["スパイダーマン","手と 足で はって 前に 進む。"],
+  ["ころがる","しゃがんだ ところから 横に ころがって、 安全な ころび方を おぼえる。"]];
 function mealPass(m){const c=cleanMeal(m); let pt=0, days=0; Object.keys(c).forEach(d=>{pt+=MEALPT[c[d]]; days++;}); return {pt:Math.min(MEALCAP,pt),raw:pt,days};}
 const WZ=Object.create(null); WAZA.forEach(w=>{WZ[w[0]]=w;});
 // the hero's goal with a learned シュート ({a} the passer) and the hero's assist with a learned パス ({s} the scorer)
@@ -1927,6 +1943,7 @@ function cleanProfile(p){const pick=(v,n)=>Number.isInteger(v)&&v>=0&&v<n?v:0;
   if(mn&&typeof mn==="object")MATES.forEach(m=>{const v=Object.prototype.hasOwnProperty.call(mn,m.id)?cleanMateName(mn[m.id]):""; if(v&&v!==m.n)names[m.id]=v;});
   if(Object.keys(names).length)p.mnames=names; else delete p.mnames;
   const ml=cleanMeal(p.meal); if(Object.keys(ml).length)p.meal=ml; else delete p.meal; // v22.3
+  const pr=cleanPrep(p.prep); if(Object.keys(pr).length)p.prep=pr; else delete p.prep; // v24.7
   return p;}
 function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");entries=d.entries||[];if(Array.isArray(entries))entries.forEach(kjNote);if(d.profile)profile=cleanProfile(Object.assign(profile,d.profile));if(d.game){game=Object.assign(newGame(),d.game);game.made=cleanMade(game.made);}}catch(e){}}
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify({entries,profile,game}));return true;}catch(e){return false;}}
@@ -2026,7 +2043,7 @@ function cleanGame(x){
   return g;
 }
 function cleanBackupProfile(x){const s=(v,n)=>typeof v==="string"?v.trim().slice(0,n):"";
-  return cleanProfile({name:s(x.name,12),number:x.number,team:s(x.team,12),color:x.color,pos:x.pos,side:x.side,hair:x.hair,hairColor:x.hairColor,skin:x.skin,wx:x.wx,chal:x.chal,mnames:x.mnames,meal:x.meal});}
+  return cleanProfile({name:s(x.name,12),number:x.number,team:s(x.team,12),color:x.color,pos:x.pos,side:x.side,hair:x.hair,hairColor:x.hairColor,skin:x.skin,wx:x.wx,chal:x.chal,mnames:x.mnames,meal:x.meal,prep:x.prep});}
 function bkParse(text){
   let d; try{d=JSON.parse(String(text||"").trim());}catch(e){return null;}
   if(!d||typeof d!=="object"||d.app!=="soccer-note"||!Array.isArray(d.entries))return null;
@@ -2054,7 +2071,9 @@ function bkPlan(d){
   const mine=new Map(entries.map(e=>[e.id,e]));
   const fixJ=d.entries.filter(e=>{const x=mine.get(e.id); return !!x&&!Object.keys(cleanJug(x.jug)).length&&Object.keys(cleanJug(e.jug)).length>0;});
   const bm=d.profile&&d.profile.meal||{}, pm=profile.meal||{}, addMeal=Object.keys(bm).filter(k=>!own(pm,k)); // v22.3
-  return {add,addM,fixJ,addMade,addNames,addMeal,meal:cleanMeal(Object.assign({},bm,pm)),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),usePt:!!d.game&&ptSpentOf(d.game)>ptSpentOf(game),useLp:!!d.game&&lpOf(d.game)>lpOf(game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+  const bp=cleanPrep(d.profile&&d.profile.prep), pp=cleanPrep(profile.prep), prep=Object.assign({},pp); // v24.7
+  Object.keys(bp).forEach(k=>{prep[k]=(pp[k]||0)|bp[k];}); const addPrep=Object.keys(bp).filter(k=>prep[k]!==pp[k]);
+  return {add,addM,fixJ,addMade,addNames,addMeal,addPrep,meal:cleanMeal(Object.assign({},bm,pm)),prep:cleanPrep(prep),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),usePt:!!d.game&&ptSpentOf(d.game)>ptSpentOf(game),useLp:!!d.game&&lpOf(d.game)>lpOf(game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
 }
 // v14 the notes with the file's counts put back on the notes in fixJ (only {jug} changes), and what the device would hold after a restore.
 const withJug=(list,fixJ)=>{const f=new Map(fixJ.map(e=>[e.id,e])); return list.map(e=>f.has(e.id)?Object.assign({},e,{jug:cleanJug(f.get(e.id).jug)}):e);};
@@ -2428,7 +2447,7 @@ function viewHome(g){
   const max=Math.max(10,...Object.values(g.stats));
   const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
   const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに 大事。</p>`:"";
-  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${tkb}${shopNews(g)}
+  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${prepCard(g)}${tkb}${shopNews(g)}
   <section class="panel" id="ability"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   ${ptBox(g)}
   ${g.stats.speed?"":`<p class="muted" id="speedHint">🏃 スピード(足の 速さ)は 新しい のうりょく。 体ポイントで 上げられるよ!</p>`}
@@ -2485,6 +2504,27 @@ async function ptCommit(){if(!ptPlan||ptBusy||!lastG||(live&&!live.done))return;
     if(db)store.setGame().catch(()=>{}); // so the store ends as the screen
     render(); flash("ほぞんできませんでした。 もう一度 ためしてね。");}}
 const PTWAIT="今 練習ポイントを ほぞんして いるよ。 少し 待ってね。";
+// v24.7 体づくり: today's じゅんび運動 and ぎゃく足デー. A second tap takes it back (today only). No reward.
+let prepBusy=false;
+function prepCard(g){if(!BODYCARE||!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
+  const p=cleanPrep(profile.prep), t=p[today()]||0, a=weekStart(today()), n=prepWeek(p,a,dayAdd(a,6));
+  const btn=(b,ic,w)=>`<button type="button" class="ghost" data-prep="${b}" aria-pressed="${!!(t&b)}"${prepBusy?" disabled":""}>${ic} ${w}</button>`;
+  const yw="FIFA 11+ キッズ", app=ytApp(), u=app?ytAppURL(yw):ytURL(yw);
+  const yt=u?`<a class="ghost ytgo" id="prepYt" href="${esc(u)}"${app?"":` target="_blank" rel="noopener noreferrer"`}><span aria-hidden="true">▶ </span>YouTubeで 動きを 見る</a>`:"";
+  return `<section class="panel prep" id="prepCard"><h2>🛡️ けがに 強い 体づくり</h2>
+  <p class="muted">練習の 前の じゅんび運動「11+ キッズ」(7つ、 20分 くらい)。 週に 2回 やると、 けがが へるよ。</p>
+  <div class="mealrow">${btn(1,"🛡️","じゅんび運動を やった")}${btn(2,"🦶","ぎゃく足デー")}</div>
+  <p class="muted" id="prepSum">今週: じゅんび運動 <b>${n[0]}</b> / ${PREPWEEK[0]}回 ・ ぎゃく足デー <b>${n[1]}</b> / ${PREPWEEK[1]}回${n[0]>=PREPWEEK[0]?" (じゅんび運動 クリア!)":""}</p>
+  <details id="prepHow"><summary>やり方を 見る</summary>
+  <p><b>🛡️ じゅんび運動</b> おうちの人か コーチと いっしょに、 ゆっくり ていねいに。</p>
+  <ol>${PREPMOVES.map(([h,x])=>`<li><b>${h}</b>${x}</li>`).join("")}</ol>${yt}
+  <p><b>🦶 ぎゃく足デー</b> リフティング・かべ当て・わざの 練習を、 いつも 使わない 方の 足だけで 30分 くらい。 週に 1回。</p></details></section>`;}
+async function setPrep(b){if(prepBusy||!loaded()||!profReady||!BODYCARE)return; b=b===1||b===2?b:0; if(!b)return;
+  const p=cleanPrep(profile.prep), d=today(), v=(p[d]||0)^b; if(v)p[d]=v; else delete p[d];
+  prepBusy=true; render();
+  try{await store.setProfile({prep:p});}catch(e){prepBusy=false;flash("ほぞんできませんでした。");render();return;}
+  prepBusy=false; render(); if(v&b)say(b===1?"じゅんび運動 やった! けがに 強い 体に なるよ。":"ぎゃく足デー! りょう足を 使える ように なろう!");
+  let f=document.querySelector(`[data-prep="${b}"]`); if(f&&f.closest("details:not([open])"))f=document.querySelector("#fold-prepCard>summary"); if(f)f.focus();}
 // v22.3 ごはん: today's meal, once a day. A second tap on the chosen one takes it back (today only).
 let mealBusy=false;
 function mealCard(g){if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
@@ -3071,16 +3111,16 @@ async function bkApply(){
       for(let i=0;i<p.add.length;i++){await db.collection("entries").doc(p.add[i].id).set(p.add[i]);const m=$("#bkmsg");if(m)m.textContent=`もどしています… ${i+1} / ${p.add.length}`;}
       await bkApplyNotesDb(p); // v14: the counts an older page dropped go back on those notes ({jug} only); the notes stay here until the snapshot lands
       {const add=p.add, addM=p.addM, fixJ=p.fixJ; p=bkPlan(d); p.add=add; p.addM=addM; p.fixJ=fixJ;} // a name changed or a match record that came in meanwhile is not overwritten
-      if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names,meal:p.meal}));
-      else if(p.addNames.length||p.addMeal.length)await store.setProfile({mnames:p.names,meal:p.meal});
+      if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names,meal:p.meal,prep:p.prep}));
+      else if(p.addNames.length||p.addMeal.length||p.addPrep.length)await store.setProfile({mnames:p.names,meal:p.meal,prep:p.prep});
       {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade; p.usePt=q.usePt; p.useLp=q.useLp;} // and the match record as it is after that write
       if(p.useGame||p.addMade.length||p.usePt||p.useLp){game=bkGame(p,d);await store.setGame();}
     }else{
       const before=[entries,game,profile];
       entries=withJug(entries,p.fixJ).concat(p.add); // v14: a new array (and new objects for the counts put back), so the roll-back below still holds
       if(p.useGame||p.addMade.length||p.usePt||p.useLp)game=bkGame(p,d);
-      if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names,meal:p.meal}));
-      else if(p.addNames.length||p.addMeal.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names,meal:p.meal}));
+      if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names,meal:p.meal,prep:p.prep}));
+      else if(p.addNames.length||p.addMeal.length||p.addPrep.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names,meal:p.meal,prep:p.prep}));
       if(!lsSave()){[entries,game,profile]=before;throw new Error("local");}
     }
     // v14: the records last, on their own: a failure there never undoes the notes, the match record, the look, the made pieces or the names.
@@ -3669,7 +3709,7 @@ function weekData(g,off){
     kinds:MKINDS.map(k=>[MTITLE[k[0]][0],ms.filter(m=>m.kind===k[0]).length]).filter(x=>x[1]),
     win:log.filter(l=>l.win).length,lose:log.filter(l=>!l.win).length,said:recs.filter(r=>String(r.parent||"").trim()).length,recs:recs.length,
     meal:{days:Object.keys(cm).filter(inW).length,pt:mpt(d=>d<=z)-mpt(d=>d<a)},
-    feel:feelWeek(es),canPrev:off>-WEEKMAX&&a>weekStart(first)};
+    prep:BODYCARE?prepWeek(profile.prep,a,z):[0,0],feel:feelWeek(es),canPrev:off>-WEEKMAX&&a>weekStart(first)};
 }
 // v24.5: the week's faces (in the order of the days), the reasons of the low ones, the nervous matches and the cues remembered.
 function feelWeek(es){const f=sortEntries(es).filter(e=>[1,2,3,4,5].includes(e.fun)), why={}, ff=es.map(e=>feelFields(e));
@@ -3694,6 +3734,8 @@ function weekPanel(g){
   if(W.stats.length)up.push(`<p class="wk-st">${W.stats.map(([n,v])=>`<span>${n} <b>+${v}</b></span>`).join("")}</p>`);
   if(W.pts.length)up.push(`<p class="wk-st"><span class="label">練習ポイント</span>${W.pts.map(([n,v])=>`<span>${n} <b>+${v}</b></span>`).join("")}</p>`); // v23
   if(W.meal.days)up.push(`<p id="wk-meal"><span aria-hidden="true">🍚 </span>ごはんを いっぱい 食べた 日: <b>${W.meal.days}日</b>${W.meal.pt>0?` (スタミナ +${W.meal.pt})`:""}</p>`);
+  if(W.prep[0])up.push(`<p id="wk-prep"><span aria-hidden="true">🛡️ </span>じゅんび運動: <b>${W.prep[0]}回</b>${W.prep[0]>=PREPWEEK[0]?" クリア!":` (めあて ${PREPWEEK[0]}回)`}</p>`);
+  if(W.prep[1])up.push(`<p id="wk-off"><span aria-hidden="true">🦶 </span>ぎゃく足デー: <b>${W.prep[1]}回</b></p>`);
   if(W.mates.length)up.push(`<p>なかまが ふえたよ: <b>${W.mates.map(esc).join("、")}</b></p>`);
   const two=(xs,a,z)=>{const l=xs.filter(x=>x[1]<2).map(x=>esc(x[0])), gd=xs.filter(x=>x[1]>=2).map(x=>"★"+esc(x[0])); // learned, and turned gold
     if(l.length)up.push(`<p>${a}: <b>${l.join("、")}</b></p>`); if(gd.length)up.push(`<p>${z}: <b>${gd.join("、")}</b></p>`);};
@@ -3715,6 +3757,7 @@ function weekPanel(g){
   if(W.recs)par.push(`<p>おうちの人の コメント: ${W.said}回 (一言で +10\u00a0XP)</p>`);
   if(KOTOBA&&W.feel.why.length){const k=W.feel.why.slice().sort((x,y)=>y[2]-x[2])[0][0]; par.push(`<p id="wk-whyhint">${WHYHINT[k]}</p>`);}
   else if(KOTOBA&&W.feel.lots)par.push(`<p id="wk-whyhint">しあいの 前に ドキドキした 日が ありました。 出かける 前に、 合いことばを いっしょに 言って みて ください。</p>`);
+  if(BODYCARE&&now&&W.recs&&!W.prep[0])par.push(`<p id="wk-prephint">けがを ふせぐ じゅんび運動「FIFA 11+ キッズ」は、 チームで 週2回 やると けがが 半分 くらいに へった 研究が あります。 チームで まだ やって いなければ、 コーチに 話して みて ください。</p>`);
   if(now&&!W.notes&&W.miss)par.push(`<p>ボール遊びの あとは、 「この 遊びを ノートに 書く」\u2060を いっしょに おして みて ください。</p>`);
   return `<section class="panel week" id="week" aria-labelledby="wkH"><h2 id="wkH" tabindex="-1"><span aria-hidden="true">📅 </span>${now?"今週の ふり返り":"1週間の ふり返り"}</h2>
   <div class="wk-head"><button class="ghost mini" id="weekPrev" data-weekoff="${W.off-1}" type="button" aria-label="前の 週"${W.canPrev?"":" disabled"}>◀</button><b>${fmtShort(W.a)}〜${fmtShort(W.z)}</b><button class="ghost mini" id="weekNext" data-weekoff="${W.off+1}" type="button" aria-label="次の 週"${now?" disabled":""}>▶</button></div>
@@ -3785,8 +3828,9 @@ function foldHome(){if(missionOpen&&mdraft[missionOpen])return;
   const ab=document.getElementById("ability"); if(ab)foldBox("abil","❓ のうりょくの せつめい","",[...ab.children].filter(c=>c.tagName==="P"&&c.classList.contains("muted")&&c.id!=="speedHint"));
   if(lastG){const n=tipsOf(lastG); if(foldTips>=0&&n>foldTips)foldOpen.tipBook=true; foldTips=n;} // a tip that has just opened shows
   const meal=document.getElementById("mealCard"), ate=meal&&meal.querySelector('[data-meal][aria-pressed="true"]');
-  ["posPanel","tipBook","spBook","skillBook","wazaBook","lookBook"].concat(ate?["mealCard"]:[]).forEach(id=>{const p=document.getElementById(id), h=p&&p.children[0]; if(!h||h.tagName!=="H2")return;
-    const d=foldBox(id,"",id==="mealCard"?"✓ 食べたよ":"",[...p.children].slice(1)); if(!d)return; d.classList.add("pf"); const sm=d.querySelector("summary"); sm.insertBefore(h,sm.firstChild); sm.querySelector(".fold-t").remove();});}
+  const prc=document.getElementById("prepCard"), did=prc&&prc.querySelector('[data-prep][aria-pressed="true"]'); // v24.7
+  ["posPanel","tipBook","spBook","skillBook","wazaBook","lookBook"].concat(ate?["mealCard"]:[]).concat(did?["prepCard"]:[]).forEach(id=>{const p=document.getElementById(id), h=p&&p.children[0]; if(!h||h.tagName!=="H2")return;
+    const d=foldBox(id,"",id==="mealCard"?"✓ 食べたよ":id==="prepCard"?"✓ やったよ":"",[...p.children].slice(1)); if(!d)return; d.classList.add("pf"); const sm=d.querySelector("summary"); sm.insertBefore(h,sm.firstChild); sm.querySelector(".fold-t").remove();});}
 // The newest notes only; もっと 見る shows ten more. A note that is being worked on (a comment, stamps, the question before deleting) is never hidden.
 function foldNotes(){const ns=[...document.querySelectorAll("#view article.note")], old=document.getElementById("notesMore"); if(old)old.remove(); if(!ns.length)return;
   let lim=NOTES0+notesMore; ns.forEach((n,i)=>{if(i>=lim&&(n.querySelector("textarea,.stamp-pick,[data-delyes]")||n.dataset.id===handoff))lim=i+1;});
@@ -4176,6 +4220,7 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.homenote){noteFromHome(b.dataset.homenote);return;}
   if(b.id==="openSettings"){openSettings();return;}
   if(b.dataset.meal){await setMeal(+b.dataset.meal);return;} // v22.3
+  if(b.dataset.prep){await setPrep(+b.dataset.prep);return;} // v24.7
   if(b.dataset.mname){if(!loaded()||!profReady){flash("読みこみ中です。少し 待ってから もう一度 おしてね。");return;}mateEdit=b.dataset.mname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}return;}
   if(b.id==="mnCancel"){const id=mateEdit;mateEdit=null;render();const f=document.querySelector(`[data-mname="${id}"]`);if(f)f.focus();return;}
   if(b.id==="mnReset"){await setMateName(mateEdit,"");return;}
@@ -4421,7 +4466,7 @@ Promise.resolve(use).then(d=>{
   db.collection("entries").onSnapshot(snap=>{clearTimeout(timer);mode="db";entries=snap.docs.map(x=>kjNote(Object.assign({id:x.id},x.data())));render();},
     err=>{clearTimeout(timer);mode="error";render();});
   msListen(); // v14: the mission records, apart from the notes (a failure there never sets mode)
-  db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists){const d=s.data()||{};profile=cleanProfile(Object.assign({},profile,d,{mnames:d.mnames,meal:d.meal}));}if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
+  db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists){const d=s.data()||{};profile=cleanProfile(Object.assign({},profile,d,{mnames:d.mnames,meal:d.meal,prep:d.prep}));}if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
   // Skip echoes of our own writes while one is queued or a match is being played back: the local state is already ahead.
   db.doc("game/main").onSnapshot(s=>{if(gameBusy||(live&&!live.done))return;gameReady=true;if(s.exists){game=Object.assign(newGame(),s.data());game.made=cleanMade(game.made);}render();},()=>{});
 }).catch(()=>{goLocal();});
