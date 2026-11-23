@@ -658,6 +658,10 @@ button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z
    on an iPad held sideways or a phone); the shadows in --paper cover what scrolls under the row and the reward's bottom padding */
 .reward>.row:last-child{position:sticky;bottom:0;z-index:1;background:var(--paper);box-shadow:0 20px 0 var(--paper),0 -10px 0 var(--paper)}
 /* v14.1 👪 (p_v14_1p.py): the comment reward's banner in --msn, as the mission banners; the lines break at spaces only */
+.chalban{display:flex;flex-direction:column;gap:2px;border-radius:14px;padding:8px 12px;background:rgba(240,140,0,.13);border:2px solid #e8590c;word-break:keep-all;overflow-wrap:anywhere;line-break:strict} .chalban b{color:#d9480f}
+#glvBox .seg[data-seg="glv"] button[data-v="hard"][aria-pressed="true"]{border-color:#e8590c;background:#e8590c}
+#glvBox .ghint{margin:6px 0 0;font-size:.88rem;word-break:keep-all;overflow-wrap:anywhere;line-break:strict}
+.cstamp{display:inline-block;margin-left:4px;padding:0 8px;border-radius:999px;background:rgba(240,140,0,.15);color:#d9480f;font-weight:700;font-size:.85em;white-space:nowrap}
 .parban{display:flex;flex-direction:column;gap:2px;border-radius:14px;padding:8px 12px;background:var(--msn-soft);border:2px solid var(--msn)} .parban b{color:var(--msn)}
 .parban,.msc .vpar{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 </style>
@@ -1307,10 +1311,17 @@ function matLeft(g){const r={}; MATS.forEach(([k])=>r[k]=g.mat[k]); Object.keys(
 const canMake=(g,id)=>{const G=own(GEAR,id)?GEAR[id]:null; if(!G||nextOf(G.L)!==id)return false; const r=matLeft(g); return Object.keys(G.cost).every(k=>r[k]>=G.cost[k]);}; // v14.2: only the piece's own materials
 const EXBASE=CUPS[CUPS.length-1].teams.slice(-1)[0][1]+3; // after the last cup: an endless challenge that gets a little harder with every win
 
+// v24.8 ちょうせん: how hard he thinks today's goal is. A hard goal he tried (できた! or やってみた!) gets the ちょうせんスタンプ and a
+// little XP, so trying something hard pays even when it does not work out. まだ does not (nothing was tried yet).
+const CHALLENGE=1, CHALXP=5;
+const GLVS=[["easy","かんたん"],["mid","ふつう"],["hard","むずかしい 😤"]];
+const glvOf=x=>CHALLENGE&&x&&String(x.goal||"").trim()&&typeof x.glv==="string"&&GLVS.some(v=>v[0]===x.glv)?x.glv:"";
+const chalStamp=e=>glvOf(e)==="hard"&&(e.goalResult==="done"||e.goalResult==="half");
 function entryXP(e,prev){
   const parts=[["ノートを書いた",20]];
   if((e.goal||"").trim())parts.push(["めあてを決めた",10]);
   if(e.goalResult)parts.push(["めあてをふり返った",5]);
+  if(chalStamp(e))parts.push(["😤 ちょうせんスタンプ",CHALXP]); // v24.8
   const c=Math.min((e.chips||[]).length,MAXCHIPS); if(c)parts.push(["がんばったこと ×"+c,c*3]);
   const f=focusOf(e).length; if(f)parts.push(["ポジションの ポイント ×"+f,f*2]);
   const g=(e.good||"").trim(); if(g){parts.push(["うまくいったこと",10]); if(g.length>=15)parts.push(["くわしく書けた",5]);}
@@ -1994,6 +2005,7 @@ function noteExtras(x){
     hard:s(x.hard,200),coach:s(x.coach,200),stamps:stampsOf(x),stampAt:isoOr(x.stampAt,""),parentAt:isoOr(x.parentAt,""),jug:cleanJug(x.jug)}, wz=wazaOf(x);
   if(wz.length)o.waza=wz; // v16: only when he tapped one, so a note without techniques keeps its v15 shape
   Object.assign(o,feelFields(Object.assign({},x,{goal:s(kjOld(x.goal),40)}))); // v24.5, only when set (the goal as the note keeps it)
+  const gl=glvOf({goal:s(x.goal,40),glv:x.glv}); if(gl)o.glv=gl; // v24.8, only with a goal
   return o;
 }
 function cleanEntry(x){
@@ -2326,6 +2338,7 @@ function noteOf(d,at){const e=Object.assign({},d,{createdAt:at,chips:d.chips.sli
     menu:d.kind==="match"?[]:d.menu.slice(),games:d.kind==="match"?d.games.map(g=>({opp:g.opp.trim(),gf:g.gf,ga:g.ga})).filter(gameUsed):[],jug:cleanJug(d.jug)});
   delete e.wxHand; delete e.wxFor; delete e.goalFrom; delete e.jugAsk; delete e.fromHome; // only the form needs these
   const ff=feelFields(Object.assign({},d,{goal:e.goal})); delete e.funWhy; delete e.nerve; delete e.cueR; Object.assign(e,ff); // v24.5
+  const gl=glvOf({goal:e.goal,glv:d.glv}); delete e.glv; if(gl)e.glv=gl; // v24.8
   const wz=wazaOf(d); if(wz.length)e.waza=wz; else delete e.waza; return e;} // v16
 // v14: reads a count box. ０-９ become 0-9, and 回, 回 or spaces at the ends are taken off. Then 0-4 digits are a count ("" = none),
 // 5 digits or more are "big" (the box is emptied, so 10000 never turns into 1000), and anything else is "nan" (v:null: the last count is put back).
@@ -3307,6 +3320,8 @@ function viewWrite(){
     <div class="voice"><input type="text" id="f-goal" maxlength="40" value="${esc(d.goal)}" placeholder="れい:ルーズボールを1回追いかける">${micBtn("f-goal")}</div>
     ${sf?`<div class="stepup" id="goalStep">⭐ 前の めあて「${esc(sf.g)}」\u2060が できたね! 次の 一歩は どれに する?</div>`:""}
     <div class="chips" id="goalPresets">${presetBtns(presets,"g",d.goal)}</div></div>
+  ${CHALLENGE?`<div class="field" id="glvBox"><span class="q">この めあて、 むずかしさは?<small>自分で 思った ことで OK</small></span>${seg("glv",GLVS,d.glv||"")}
+    <p class="muted ghint">😤 むずかしいに ちょうせんして 「できた!」か 「やってみた!」なら、 ちょうせんスタンプ +${CHALXP} XP。 できなくても OK!</p></div>`:""}
   <div class="field"><span class="q">めあては できた?<small>「まだ」でも XPはもらえるよ</small></span>${seg("goalResult",RESULTS,d.goalResult)}</div>
   <div class="field" id="cueBox"${cueOf(d.goal)?"":" hidden"}><span class="q">合いことば <b id="cueW">「${esc(cueOf(d.goal))}」</b>、 思い出せた?<small>えらばなくても OK</small></span>${seg("cueR",CUERS,d.cueR)}</div>
   <h3 class="sec">ふり返り</h3>
@@ -3587,7 +3602,7 @@ function viewNotes(g){
     ${menu.length?`<p><span class="k">練習</span>${menu.map(esc).join("、")}</p>`:""}
     ${wazaOf(e).length?`<p><span class="k">わざ</span>${wazaNames(e).join("、")}</p>`:""}
     ${jugLine(g,e)}
-    ${e.goal?`<p class="kw"><span class="k">めあて</span>${esc(e.goal)}${res?` → <b>${res}</b>`:""}</p>`:""}
+    ${e.goal?`<p class="kw"><span class="k">めあて</span>${esc(e.goal)}${glvOf(e)?` <small class="muted">(${GLVS.find(v=>v[0]===glvOf(e))[1]})</small>`:""}${res?` → <b>${res}</b>`:""}${chalStamp(e)?`<span class="cstamp">😤 ちょうせんスタンプ</span>`:""}</p>`:""}
     ${focus.length?`<p class="kw"><span class="k">${esc(posLabel(e.npos,e.nside,e.nshape))}の ポイント</span>${focus.map(esc).join("、")}</p>`:POSKEYS.includes(e.npos)||e.npos===MIX?`<p><span class="k">ポジション</span>${esc(posLabel(e.npos,e.nside,e.nshape))}</p>`:""}
     ${chips.length?`<p><span class="k">がんばった</span>${chips.map(esc).join("、")}</p>`:""}
     ${e.good?`<p><span class="k">うまくいった</span>${esc(e.good)}</p>`:""}
@@ -3704,7 +3719,7 @@ function weekData(g,off){
     stats:STATS.map(([k,n])=>[n,(A.base[k]||0)-(B.base[k]||0)]).filter(x=>x[1]>0),pts:PTKINDS.map(([t,n,i])=>[i+n,(A.pts[t]||0)-(B.pts[t]||0)]).filter(x=>x[1]>0),
     mates:squad(A).filter((m,i)=>m.joined&&!qb[i].joined).map(m=>m.n),skills:skillList(A).filter((x,i)=>x.lv>sb[i].lv).map(star),waza:wazaList(A).filter((x,i)=>x.lv>wb[i].lv).map(star),
     jug:JUGS.map(([k,nm])=>({nm,from:B.jug[k]?B.jug[k].n:0,to:A.jug[k]?A.jug[k].n:0})).filter(j=>j.to>j.from),
-    chips:Object.keys(cn).map(id=>[CHIP[id].t,cn[id]]).sort((x,y)=>y[1]-x[1]).slice(0,3),tries:{n:tried.length,done:tried.filter(e=>e.goalResult==="done").length},
+    chips:Object.keys(cn).map(id=>[CHIP[id].t,cn[id]]).sort((x,y)=>y[1]-x[1]).slice(0,3),tries:{n:tried.length,done:tried.filter(e=>e.goalResult==="done").length,chal:es.filter(chalStamp).length},
     goods:sortEntries(es).reverse().filter(e=>written(e.good)).slice(0,3).map(e=>[e.date,String(e.good).trim()]),
     kinds:MKINDS.map(k=>[MTITLE[k[0]][0],ms.filter(m=>m.kind===k[0]).length]).filter(x=>x[1]),
     win:log.filter(l=>l.win).length,lose:log.filter(l=>!l.win).length,said:recs.filter(r=>String(r.parent||"").trim()).length,recs:recs.length,
@@ -3743,7 +3758,7 @@ function weekPanel(g){
   W.jug.forEach(j=>up.push(`<p>リフティング(${j.nm}): ${j.from?`${j.from}回 → `:""}<b>${j.to}回</b></p>`));
   if(up.length)b.push(`<div class="wk-b" id="wk-up"><h3><span aria-hidden="true">💪 </span>${wk} のびた 力</h3>${up.join("")}</div>`);
   if(W.chips.length)b.push(`<div class="wk-b" id="wk-chip"><h3><span aria-hidden="true">⭐ </span>${wk} がんばった こと</h3>${W.chips.map(([l,n])=>`<p>${esc(l)} <b>${n}回</b></p>`).join("")}</div>`);
-  if(W.tries.n)b.push(`<div class="wk-b" id="wk-goal"><h3><span aria-hidden="true">🎯 </span>めあてに チャレンジ</h3><p><b>${W.tries.n}回</b> チャレンジ したよ!${W.tries.done?` 「できた!」\u2060は ${W.tries.done}回。`:""}</p></div>`);
+  if(W.tries.n)b.push(`<div class="wk-b" id="wk-goal"><h3><span aria-hidden="true">🎯 </span>めあてに チャレンジ</h3><p><b>${W.tries.n}回</b> チャレンジ したよ!${W.tries.done?` 「できた!」\u2060は ${W.tries.done}回。`:""}</p>${W.tries.chal?`<p id="wk-chal"><span aria-hidden="true">😤 </span>むずかしい めあてに ちょうせん: <b>${W.tries.chal}回</b> (ちょうせんスタンプ)</p>`:""}</div>`);
   const F=W.feel; if(KOTOBA&&(F.faces.length||F.lots||F.cueYes)){const fl=[];
     if(F.faces.length)fl.push(`<p class="wk-faces" aria-label="楽しさ">${F.faces.join("")}</p>`);
     if(F.why.length)fl.push(`<p>どうして: ${F.why.map(([k,t,n])=>`${esc(t)} <b>${n}回</b>`).join("、")}</p>`);
@@ -3755,6 +3770,7 @@ function weekPanel(g){
   if(W.recs)par.push(`<p>ノート ${W.notes}さつ・ミッション ${W.miss}回${W.kinds.length?`(${W.kinds.map(([ic,n])=>`${ic} ${n}`).join("・")})`:""}</p>`);
   if(W.win+W.lose)par.push(`<p>ゲームの しあい: 勝ち ${W.win}・負け ${W.lose}</p>`);
   if(W.recs)par.push(`<p>おうちの人の コメント: ${W.said}回 (一言で +10\u00a0XP)</p>`);
+  if(CHALLENGE&&W.tries.chal)par.push(`<p id="wk-chalhint">むずかしいと 思う めあてに ちょうせんした 日が ${W.tries.chal}回 ありました。 できた かどうかより、 ちょうせんした ことを ほめて ください。</p>`); // v24.8
   if(KOTOBA&&W.feel.why.length){const k=W.feel.why.slice().sort((x,y)=>y[2]-x[2])[0][0]; par.push(`<p id="wk-whyhint">${WHYHINT[k]}</p>`);}
   else if(KOTOBA&&W.feel.lots)par.push(`<p id="wk-whyhint">しあいの 前に ドキドキした 日が ありました。 出かける 前に、 合いことばを いっしょに 言って みて ください。</p>`);
   if(BODYCARE&&now&&W.recs&&!W.prep[0])par.push(`<p id="wk-prephint">けがを ふせぐ じゅんび運動「FIFA 11+ キッズ」は、 チームで 週2回 やると けがが 半分 くらいに へった 研究が あります。 チームで まだ やって いなければ、 コーチに 話して みて ください。</p>`);
@@ -4410,6 +4426,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
   if(J.pb.length)bn.push(["pbest","<b>🏅 じこベスト!</b>"+J.pb.map(k=>`<span>${jn(k)} ${jc[k]}回 (前は ${before.jug&&before.jug[k]?before.jug[k].n:0}回)</span>`).join("")+firsts.map(k=>`<span>${jn(k)} ${jc[k]}回 (はじめての きろく)</span>`).join("")]);
   else if(firsts.length)bn.push(["pbest","<b>⚽ はじめての きろく!</b>"+firsts.map(k=>`<span>${jn(k)} ${jc[k]}回</span>`).join("")]);
   // v14.1 the 7th, 14th, 30th, 50th and 100th day of a chain are celebrated (the 🔥 row in the list says the other days)
+  if(o.note&&chalStamp(o.note))bn.push(["chalban","<b>😤 ちょうせんスタンプ!</b><span>むずかしい ことに ちょうせんしたね! できても できなくても、 ちょうせんした ことが かっこいい!</span>"]); // v24.8
   if(o.par)bn.push(["parban","<b>👪 おうちの人と ふり返り ボーナス!</b><span>いっしょに ふり返ったね!</span>"]); // v14.1 👪
   const S=gain.stk; if(S&&STREAKMARKS.includes(S.n))bn.push(["stkban",`<b>🔥 れんぞく ${S.n}日目!</b><span>すごい! ${S.n}日 つづけて 書けたね!</span>`]);
   const banners=bn.map(([c,h],i)=>`<div class="${c}"${i?"":' id="ovban"'}>${h}</div>`).join("");
