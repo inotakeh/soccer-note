@@ -829,6 +829,15 @@ const PREPMOVES=[["走って 止まる","軽く 走って、 合図で ピタッ
   ["かた足で 立つ","かた足で 立って バランス。 なれたら ボールを パスし合う。"],["うでたて","うでたての しせいで、 体を まっすぐ キープ。"],
   ["かた足 ジャンプ","同じ 足で 5回 とぶ。 ひざが 内がわに 入らない ように。"],["スパイダーマン","手と 足で はって 前に 進む。"],
   ["ころがる","しゃがんだ ところから 横に ころがって、 安全な ころび方を おぼえる。"]];
+// v24.9 自転車: profile.bike {"YYYY-MM-DD": bits}, 1 行き (or just 行った) | 2 帰り. Today only. Each ride brings BIKEPT stamina,
+// BIKECAP in all; with BIKESPD every BIKESPD rides bring 1 speed too (BIKESPDCAP in all). Counted every time, nothing else is saved.
+const BIKE=1, BIKEPT=1, BIKECAP=50, BIKESPD=5, BIKESPDCAP=10, BIKETWO=0, BIKEKEEP=400;
+function cleanBike(x){const out={}; if(!x||typeof x!=="object"||Array.isArray(x))return out;
+  Object.keys(x).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&(BIKETWO?[1,2,3]:[1]).includes(x[d])).sort().slice(-BIKEKEEP).forEach(d=>out[d]=x[d]); return out;}
+const rides=v=>(v&1)+(v>>1&1);
+function bikeRides(b,f){const c=cleanBike(b); return Object.keys(c).filter(f||(()=>true)).reduce((n,d)=>n+rides(c[d]),0);}
+function bikeGain(n){return {st:Math.min(BIKECAP,n*BIKEPT),sp:BIKESPD?Math.min(BIKESPDCAP,Math.floor(n/BIKESPD)):0};}
+function bikePass(b){const n=BIKE?bikeRides(b):0, g=bikeGain(n); return {n,days:BIKE?Object.keys(cleanBike(b)).length:0,pt:g.st,sp:g.sp};}
 function mealPass(m){const c=cleanMeal(m); let pt=0, days=0; Object.keys(c).forEach(d=>{pt+=MEALPT[c[d]]; days++;}); return {pt:Math.min(MEALCAP,pt),raw:pt,days};}
 const WZ=Object.create(null); WAZA.forEach(w=>{WZ[w[0]]=w;});
 // the hero's goal with a learned シュート ({a} the passer) and the hero's assist with a learned パス ({s} the scorer)
@@ -1463,11 +1472,12 @@ function compute(list,ms){
     if(!q||!r||isoOr(m.createdAt,"")<PTGATE)return; const np={b:0,o:0,h:0}; for(const t in q){np[t]+=q[t]; pts[t]+=q[t];} r.pts=np;});
   for(const id in mp.per){xp+=mp.per[id].sum; const mm=mp.per[id].mat; for(const k in mm)mat[k]+=mm[k];} parentN+=mp.pn; // v14.2: a 🎬 record's ⭐ // v14 records add XP (and a parent's comment counts for おうえんパワー): no stats, materials or こまめに 書いた (つづけて書いた before v14.1)
   const ml=mealPass(typeof profile==="object"&&profile?profile.meal:null); stats.stamina+=ml.pt; // v22.3 ごはん
+  const bkp=bikePass(typeof profile==="object"&&profile?profile.bike:null); stats.stamina+=bkp.pt; stats.speed+=bkp.sp; // v24.9 自転車
   let lpN=0; try{lpN=lpOf(live&&!live.done?live.base:game);}catch(e){} PTKINDS.forEach(([t])=>{pts[t]+=lpN*(LOSSPT[t]||0);}); // v23.3 lost matches
   const ps=ptState(), base=Object.assign({},stats), left={}; STATS.forEach(([k])=>{stats[k]+=ps.pt[k];}); PTKINDS.forEach(([t])=>{left[t]=pts[t]-ps.spent[t];}); // v23 what he raised
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
-  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,mtk:tp.tk,mleft:tp.left,waza:wazaPass(es,mp.list),meal:ml,pts,left,base,sp:ps.sp,stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
+  return {xp,level,rest,stars,stats,per,es,chipCount,kizuna,done,parentN,mat,jug:jp.best,ms:mp.list,mper:mp.per,mtk:tp.tk,mleft:tp.left,waza:wazaPass(es,mp.list),meal:ml,bike:bkp,pts,left,base,sp:ps.sp,stk:{cur:sp.cur,last:sp.last,best:sp.best,days:sp.days}};
 }
 const rankOf=l=>RANKS.filter(r=>l>=r[0]).pop()[1];
 
@@ -1955,6 +1965,7 @@ function cleanProfile(p){const pick=(v,n)=>Number.isInteger(v)&&v>=0&&v<n?v:0;
   if(Object.keys(names).length)p.mnames=names; else delete p.mnames;
   const ml=cleanMeal(p.meal); if(Object.keys(ml).length)p.meal=ml; else delete p.meal; // v22.3
   const pr=cleanPrep(p.prep); if(Object.keys(pr).length)p.prep=pr; else delete p.prep; // v24.7
+  const bk=cleanBike(p.bike); if(Object.keys(bk).length)p.bike=bk; else delete p.bike; // v24.9
   return p;}
 function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");entries=d.entries||[];if(Array.isArray(entries))entries.forEach(kjNote);if(d.profile)profile=cleanProfile(Object.assign(profile,d.profile));if(d.game){game=Object.assign(newGame(),d.game);game.made=cleanMade(game.made);}}catch(e){}}
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify({entries,profile,game}));return true;}catch(e){return false;}}
@@ -2055,7 +2066,7 @@ function cleanGame(x){
   return g;
 }
 function cleanBackupProfile(x){const s=(v,n)=>typeof v==="string"?v.trim().slice(0,n):"";
-  return cleanProfile({name:s(x.name,12),number:x.number,team:s(x.team,12),color:x.color,pos:x.pos,side:x.side,hair:x.hair,hairColor:x.hairColor,skin:x.skin,wx:x.wx,chal:x.chal,mnames:x.mnames,meal:x.meal,prep:x.prep});}
+  return cleanProfile({name:s(x.name,12),number:x.number,team:s(x.team,12),color:x.color,pos:x.pos,side:x.side,hair:x.hair,hairColor:x.hairColor,skin:x.skin,wx:x.wx,chal:x.chal,mnames:x.mnames,meal:x.meal,prep:x.prep,bike:x.bike});}
 function bkParse(text){
   let d; try{d=JSON.parse(String(text||"").trim());}catch(e){return null;}
   if(!d||typeof d!=="object"||d.app!=="soccer-note"||!Array.isArray(d.entries))return null;
@@ -2085,7 +2096,9 @@ function bkPlan(d){
   const bm=d.profile&&d.profile.meal||{}, pm=profile.meal||{}, addMeal=Object.keys(bm).filter(k=>!own(pm,k)); // v22.3
   const bp=cleanPrep(d.profile&&d.profile.prep), pp=cleanPrep(profile.prep), prep=Object.assign({},pp); // v24.7
   Object.keys(bp).forEach(k=>{prep[k]=(pp[k]||0)|bp[k];}); const addPrep=Object.keys(bp).filter(k=>prep[k]!==pp[k]);
-  return {add,addM,fixJ,addMade,addNames,addMeal,addPrep,meal:cleanMeal(Object.assign({},bm,pm)),prep:cleanPrep(prep),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),usePt:!!d.game&&ptSpentOf(d.game)>ptSpentOf(game),useLp:!!d.game&&lpOf(d.game)>lpOf(game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+  const bb=cleanBike(d.profile&&d.profile.bike), pb=cleanBike(profile.bike), bike=Object.assign({},pb); // v24.9
+  Object.keys(bb).forEach(k=>{bike[k]=(pb[k]||0)|bb[k];}); const addBike=Object.keys(bb).filter(k=>bike[k]!==pb[k]);
+  return {add,addM,fixJ,addMade,addNames,addMeal,addPrep,addBike,meal:cleanMeal(Object.assign({},bm,pm)),prep:cleanPrep(prep),bike:cleanBike(bike),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),usePt:!!d.game&&ptSpentOf(d.game)>ptSpentOf(game),useLp:!!d.game&&lpOf(d.game)>lpOf(game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
 }
 // v14 the notes with the file's counts put back on the notes in fixJ (only {jug} changes), and what the device would hold after a restore.
 const withJug=(list,fixJ)=>{const f=new Map(fixJ.map(e=>[e.id,e])); return list.map(e=>f.has(e.id)?Object.assign({},e,{jug:cleanJug(f.get(e.id).jug)}):e);};
@@ -2460,11 +2473,12 @@ function viewHome(g){
   const max=Math.max(10,...Object.values(g.stats));
   const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
   const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに 大事。</p>`:"";
-  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${prepCard(g)}${tkb}${shopNews(g)}
+  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${bikeCard(g)}${prepCard(g)}${tkb}${shopNews(g)}
   <section class="panel" id="ability"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   ${ptBox(g)}
   ${g.stats.speed?"":`<p class="muted" id="speedHint">🏃 スピード(足の 速さ)は 新しい のうりょく。 体ポイントで 上げられるよ!</p>`}
   <p class="muted" id="mealHint">🍚 ごはんを いっぱい 食べても、スタミナが のびるよ。</p>
+  ${BIKE?`<p class="muted" id="bikeHint">🚲 自転車で 練習に 行っても、スタミナが のびるよ。</p>`:""}
   <p class="muted">「がんばったこと」\u2060を えらんだり、 ミッションを クリアしたり すると、練習ポイントが たまるよ。 ポイントで のうりょくを 上げたり、スペシャル のうりょくを 取ったり しよう!</p>${pw}</section>
   ${posPanel(g)}${tipPanel(g)}${spPanel(g)}${skillsPanel(g)}${wazaPanel(g)}${looksPanel(g)}`;
 }
@@ -2538,6 +2552,21 @@ async function setPrep(b){if(prepBusy||!loaded()||!profReady||!BODYCARE)return; 
   try{await store.setProfile({prep:p});}catch(e){prepBusy=false;flash("ほぞんできませんでした。");render();return;}
   prepBusy=false; render(); if(v&b)say(b===1?"じゅんび運動 やった! けがに 強い 体に なるよ。":"ぎゃく足デー! りょう足を 使える ように なろう!");
   let f=document.querySelector(`[data-prep="${b}"]`); if(f&&f.closest("details:not([open])"))f=document.querySelector("#fold-prepCard>summary"); if(f)f.focus();}
+// v24.9 自転車: today's ride to practice. A second tap takes it back (today only).
+let bikeBusy=false;
+function bikeCard(g){if(!BIKE||!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
+  const b=cleanBike(profile.bike), t=b[today()]||0, bk=g.bike||{pt:0,sp:0};
+  const btn=(v,w)=>`<button type="button" class="ghost" data-bike="${v}" aria-pressed="${!!(t&v)}"${bikeBusy?" disabled":""}>🚲 ${w}<br><small>スタミナ +${BIKEPT}</small></button>`;
+  return `<section class="panel meal bike" id="bikeCard"><h2>🚲 自転車で 練習へ</h2>
+  <p class="muted">${t?`自転車で 行った! スタミナが ${rides(t)*BIKEPT} 上がったよ。 こいだ 分だけ 体力が つくね!`:`練習に 自転車で 行ったら おしてね(${BIKETWO?"行きと 帰りで 1回ずつ":"1日 1回"})。 自転車で 体力が つくよ!${BIKESPD?` ${BIKESPD}回 行くと スピードも 上がる!`:""}`}</p>
+  <div class="mealrow">${BIKETWO?btn(1,"行き")+btn(2,"帰り"):btn(1,"自転車で 行った")}</div>
+  <p class="muted" id="bikeSum">自転車で ふえた スタミナ: ${bk.pt} / ${BIKECAP}${BIKESPD?` ・ スピード: ${bk.sp} / ${BIKESPDCAP}(${BIKESPD}回 ごとに +1)`:""}${bk.pt>=BIKECAP?"(いっぱい! これからも 自転車で がんばろう)":""}</p></section>`;}
+async function setBike(v){if(bikeBusy||!loaded()||!profReady||!BIKE)return; v=v===1||(BIKETWO&&v===2)?v:0; if(!v)return;
+  const b=cleanBike(profile.bike), d=today(), n=(b[d]||0)^v; if(n)b[d]=n; else delete b[d];
+  bikeBusy=true; render();
+  try{await store.setProfile({bike:b});}catch(e){bikeBusy=false;flash("ほぞんできませんでした。");render();return;}
+  bikeBusy=false; render(); if(n&v)say(`自転車で 行った! スタミナ +${BIKEPT}`);
+  let f=document.querySelector(`[data-bike="${v}"]`); if(f&&f.closest("details:not([open])"))f=document.querySelector("#fold-bikeCard>summary"); if(f)f.focus();}
 // v22.3 ごはん: today's meal, once a day. A second tap on the chosen one takes it back (today only).
 let mealBusy=false;
 function mealCard(g){if(!loaded()||!profReady||(!profile.name&&!g.es.length))return "";
@@ -3124,16 +3153,16 @@ async function bkApply(){
       for(let i=0;i<p.add.length;i++){await db.collection("entries").doc(p.add[i].id).set(p.add[i]);const m=$("#bkmsg");if(m)m.textContent=`もどしています… ${i+1} / ${p.add.length}`;}
       await bkApplyNotesDb(p); // v14: the counts an older page dropped go back on those notes ({jug} only); the notes stay here until the snapshot lands
       {const add=p.add, addM=p.addM, fixJ=p.fixJ; p=bkPlan(d); p.add=add; p.addM=addM; p.fixJ=fixJ;} // a name changed or a match record that came in meanwhile is not overwritten
-      if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names,meal:p.meal,prep:p.prep}));
-      else if(p.addNames.length||p.addMeal.length||p.addPrep.length)await store.setProfile({mnames:p.names,meal:p.meal,prep:p.prep});
+      if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names,meal:p.meal,prep:p.prep,bike:p.bike}));
+      else if(p.addNames.length||p.addMeal.length||p.addPrep.length||p.addBike.length)await store.setProfile({mnames:p.names,meal:p.meal,prep:p.prep,bike:p.bike});
       {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade; p.usePt=q.usePt; p.useLp=q.useLp;} // and the match record as it is after that write
       if(p.useGame||p.addMade.length||p.usePt||p.useLp){game=bkGame(p,d);await store.setGame();}
     }else{
       const before=[entries,game,profile];
       entries=withJug(entries,p.fixJ).concat(p.add); // v14: a new array (and new objects for the counts put back), so the roll-back below still holds
       if(p.useGame||p.addMade.length||p.usePt||p.useLp)game=bkGame(p,d);
-      if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names,meal:p.meal,prep:p.prep}));
-      else if(p.addNames.length||p.addMeal.length||p.addPrep.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names,meal:p.meal,prep:p.prep}));
+      if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names,meal:p.meal,prep:p.prep,bike:p.bike}));
+      else if(p.addNames.length||p.addMeal.length||p.addPrep.length||p.addBike.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names,meal:p.meal,prep:p.prep,bike:p.bike}));
       if(!lsSave()){[entries,game,profile]=before;throw new Error("local");}
     }
     // v14: the records last, on their own: a failure there never undoes the notes, the match record, the look, the made pieces or the names.
@@ -3724,6 +3753,7 @@ function weekData(g,off){
     kinds:MKINDS.map(k=>[MTITLE[k[0]][0],ms.filter(m=>m.kind===k[0]).length]).filter(x=>x[1]),
     win:log.filter(l=>l.win).length,lose:log.filter(l=>!l.win).length,said:recs.filter(r=>String(r.parent||"").trim()).length,recs:recs.length,
     meal:{days:Object.keys(cm).filter(inW).length,pt:mpt(d=>d<=z)-mpt(d=>d<a)},
+    bike:{days:BIKE?Object.keys(cleanBike(profile.bike)).filter(inW).length:0,pt:bikeGain(bikeRides(profile.bike,d=>d<=z)).st-bikeGain(bikeRides(profile.bike,d=>d<a)).st,sp:bikeGain(bikeRides(profile.bike,d=>d<=z)).sp-bikeGain(bikeRides(profile.bike,d=>d<a)).sp},
     prep:BODYCARE?prepWeek(profile.prep,a,z):[0,0],feel:feelWeek(es),canPrev:off>-WEEKMAX&&a>weekStart(first)};
 }
 // v24.5: the week's faces (in the order of the days), the reasons of the low ones, the nervous matches and the cues remembered.
@@ -3749,6 +3779,7 @@ function weekPanel(g){
   if(W.stats.length)up.push(`<p class="wk-st">${W.stats.map(([n,v])=>`<span>${n} <b>+${v}</b></span>`).join("")}</p>`);
   if(W.pts.length)up.push(`<p class="wk-st"><span class="label">練習ポイント</span>${W.pts.map(([n,v])=>`<span>${n} <b>+${v}</b></span>`).join("")}</p>`); // v23
   if(W.meal.days)up.push(`<p id="wk-meal"><span aria-hidden="true">🍚 </span>ごはんを いっぱい 食べた 日: <b>${W.meal.days}日</b>${W.meal.pt>0?` (スタミナ +${W.meal.pt})`:""}</p>`);
+  if(W.bike.days)up.push(`<p id="wk-bike"><span aria-hidden="true">🚲 </span>自転車で 練習に 行った 日: <b>${W.bike.days}日</b>${W.bike.pt>0||W.bike.sp>0?` (${[W.bike.pt>0?`スタミナ +${W.bike.pt}`:"",W.bike.sp>0?`スピード +${W.bike.sp}`:""].filter(Boolean).join("・")})`:""}</p>`);
   if(W.prep[0])up.push(`<p id="wk-prep"><span aria-hidden="true">🛡️ </span>じゅんび運動: <b>${W.prep[0]}回</b>${W.prep[0]>=PREPWEEK[0]?" クリア!":` (めあて ${PREPWEEK[0]}回)`}</p>`);
   if(W.prep[1])up.push(`<p id="wk-off"><span aria-hidden="true">🦶 </span>ぎゃく足デー: <b>${W.prep[1]}回</b></p>`);
   if(W.mates.length)up.push(`<p>なかまが ふえたよ: <b>${W.mates.map(esc).join("、")}</b></p>`);
@@ -3845,8 +3876,9 @@ function foldHome(){if(missionOpen&&mdraft[missionOpen])return;
   if(lastG){const n=tipsOf(lastG); if(foldTips>=0&&n>foldTips)foldOpen.tipBook=true; foldTips=n;} // a tip that has just opened shows
   const meal=document.getElementById("mealCard"), ate=meal&&meal.querySelector('[data-meal][aria-pressed="true"]');
   const prc=document.getElementById("prepCard"), did=prc&&prc.querySelector('[data-prep][aria-pressed="true"]'); // v24.7
-  ["posPanel","tipBook","spBook","skillBook","wazaBook","lookBook"].concat(ate?["mealCard"]:[]).concat(did?["prepCard"]:[]).forEach(id=>{const p=document.getElementById(id), h=p&&p.children[0]; if(!h||h.tagName!=="H2")return;
-    const d=foldBox(id,"",id==="mealCard"?"✓ 食べたよ":id==="prepCard"?"✓ やったよ":"",[...p.children].slice(1)); if(!d)return; d.classList.add("pf"); const sm=d.querySelector("summary"); sm.insertBefore(h,sm.firstChild); sm.querySelector(".fold-t").remove();});}
+  const bkc=document.getElementById("bikeCard"), rode=bkc&&bkc.querySelector('[data-bike][aria-pressed="true"]'); // v24.9
+  ["posPanel","tipBook","spBook","skillBook","wazaBook","lookBook"].concat(ate?["mealCard"]:[]).concat(rode?["bikeCard"]:[]).concat(did?["prepCard"]:[]).forEach(id=>{const p=document.getElementById(id), h=p&&p.children[0]; if(!h||h.tagName!=="H2")return;
+    const d=foldBox(id,"",id==="mealCard"?"✓ 食べたよ":id==="prepCard"?"✓ やったよ":id==="bikeCard"?"✓ 行ったよ":"",[...p.children].slice(1)); if(!d)return; d.classList.add("pf"); const sm=d.querySelector("summary"); sm.insertBefore(h,sm.firstChild); sm.querySelector(".fold-t").remove();});}
 // The newest notes only; もっと 見る shows ten more. A note that is being worked on (a comment, stamps, the question before deleting) is never hidden.
 function foldNotes(){const ns=[...document.querySelectorAll("#view article.note")], old=document.getElementById("notesMore"); if(old)old.remove(); if(!ns.length)return;
   let lim=NOTES0+notesMore; ns.forEach((n,i)=>{if(i>=lim&&(n.querySelector("textarea,.stamp-pick,[data-delyes]")||n.dataset.id===handoff))lim=i+1;});
@@ -4237,6 +4269,7 @@ $("#view").addEventListener("click",async e=>{
   if(b.id==="openSettings"){openSettings();return;}
   if(b.dataset.meal){await setMeal(+b.dataset.meal);return;} // v22.3
   if(b.dataset.prep){await setPrep(+b.dataset.prep);return;} // v24.7
+  if(b.dataset.bike){await setBike(+b.dataset.bike);return;} // v24.9
   if(b.dataset.mname){if(!loaded()||!profReady){flash("読みこみ中です。少し 待ってから もう一度 おしてね。");return;}mateEdit=b.dataset.mname;render();const f=$("#mn-in");if(f){f.focus();try{f.select();}catch(err){}}return;}
   if(b.id==="mnCancel"){const id=mateEdit;mateEdit=null;render();const f=document.querySelector(`[data-mname="${id}"]`);if(f)f.focus();return;}
   if(b.id==="mnReset"){await setMateName(mateEdit,"");return;}
@@ -4483,7 +4516,7 @@ Promise.resolve(use).then(d=>{
   db.collection("entries").onSnapshot(snap=>{clearTimeout(timer);mode="db";entries=snap.docs.map(x=>kjNote(Object.assign({id:x.id},x.data())));render();},
     err=>{clearTimeout(timer);mode="error";render();});
   msListen(); // v14: the mission records, apart from the notes (a failure there never sets mode)
-  db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists){const d=s.data()||{};profile=cleanProfile(Object.assign({},profile,d,{mnames:d.mnames,meal:d.meal,prep:d.prep}));}if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
+  db.doc("profile/main").onSnapshot(s=>{const was=profReady&&loaded(), before=was?curGoal():null; profReady=true;if(s.exists){const d=s.data()||{};profile=cleanProfile(Object.assign({},profile,d,{mnames:d.mnames,meal:d.meal,prep:d.prep,bike:d.bike}));}if(was)followGoal(before,curGoal());if(was)freshDraft();render();},()=>{profReady=true;render();});
   // Skip echoes of our own writes while one is queued or a match is being played back: the local state is already ahead.
   db.doc("game/main").onSnapshot(s=>{if(gameBusy||(live&&!live.done))return;gameReady=true;if(s.exists){game=Object.assign(newGame(),s.data());game.made=cleanMade(game.made);}render();},()=>{});
 }).catch(()=>{goLocal();});
