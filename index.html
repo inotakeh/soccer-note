@@ -629,6 +629,25 @@ button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z
   .pfx.flip{animation-name:pfxm}@keyframes pfxm{from{transform:translate(-50%,-50%) scale(-.4,.4);opacity:.3}}
   .pfx.old{animation:none}}
 .kickrow{display:flex;flex-direction:column;gap:8px} #playHint{margin:0}
+.prtap{position:absolute;left:0;top:0;width:100%;height:100%;z-index:3;cursor:pointer;-webkit-tap-highlight-color:transparent} .prtap[data-busy]{cursor:default}
+.prun{position:absolute;transform:translate(-50%,-50%);width:52%;height:0;padding-top:calc(52% - 4px);border-radius:50%;border:2px dashed rgba(255,255,255,.95);background:rgba(255,255,255,.1);pointer-events:none;box-sizing:border-box}
+.ppitch.rv .pt.me .ava{box-shadow:0 0 0 3px #ffd34f;border-radius:50%}
+.prmk{position:absolute;z-index:5;pointer-events:none;width:30px;height:30px;margin:-44px 0 0 10px;box-sizing:border-box} /* up and right of his face: a ring (the pass comes) or a cross */
+.prmk.ok{border:6px solid #57e389;border-radius:50%;box-shadow:0 0 0 2px #0d2b17,inset 0 0 0 2px #0d2b17}
+.prmk.ng::before,.prmk.ng::after{content:"";position:absolute;left:11px;top:-4px;width:8px;height:38px;border-radius:3px;background:#ff5a4d;box-shadow:0 0 0 2px #3b0d09} .prmk.ng::before{transform:rotate(45deg)} .prmk.ng::after{transform:rotate(-45deg)}
+.pt.mine.back{opacity:.5;pointer-events:none}
+.prhint{position:absolute;transform:translate(-50%,-50%);z-index:4;width:52px;height:52px;border:3px dashed #ffd34f;border-radius:50%;background:rgba(255,211,79,.45);color:#1a1a22;font:inherit;font-weight:800;cursor:pointer;padding:0}
+.pdash{position:absolute;transform:translate(-50%,-50%);z-index:6;min-width:72px;min-height:52px;border:3px solid #1a1a22;border-radius:26px;background:#ffd34f;color:#1a1a22;font:inherit;font-weight:900;cursor:pointer;padding:2px 10px 8px;overflow:hidden;white-space:nowrap}
+.pdash i{position:absolute;left:0;bottom:0;height:6px;width:100%;background:#e23424;transform-origin:left}
+.pbonus{margin:0;font-weight:800}
+.prhint.kb{opacity:0;pointer-events:none;animation:none} .prhint.kb:focus-visible{opacity:1}
+.pdash i{animation:pdbar linear forwards}@keyframes pdbar{to{transform:scaleX(0)}} /* the time that is left: shown with reduced motion too (in four steps) */
+@media (prefers-reduced-motion:reduce){.pdash i{animation-timing-function:steps(4,end)}}
+.pbadge{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:7;pointer-events:none;font-style:normal;font-weight:900;white-space:nowrap;background:#ffd34f;color:#1a1a22;border:2px solid #1a1a22;border-radius:16px;padding:4px 12px}
+@media (prefers-reduced-motion:reduce){.pbadge{animation:pbadgeOff 2.4s steps(1,end) forwards}}@keyframes pbadgeOff{to{opacity:0}}
+.prhint:focus-visible,.pdash:focus-visible{outline:3px solid #fff;outline-offset:2px} .ppitch:focus{outline:none}
+@media (prefers-reduced-motion:no-preference){.pdash{animation:ptap .6s ease-in-out infinite} .prhint{animation:ptap 1.2s ease-in-out infinite} .prmk{animation:prmk .25s ease-out}@keyframes prmk{from{transform:scale(.3);opacity:.2}}
+  .pbadge{animation:pbadge 2.4s ease-out forwards}@keyframes pbadge{0%{opacity:0;transform:translateX(-50%) scale(.5)}12%{opacity:1;transform:translateX(-50%) scale(1.12)}20%{transform:translateX(-50%) scale(1)}85%{opacity:1}100%{opacity:0}}}
 .mk.k-msn{width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:0 4px 8px;border-color:transparent transparent var(--msn)} .cal-grid .cd i{gap:2px}
 .ms,.msf,.msbox,.msclear,.pbest,.trygoal,.lifts,.stampnews,.handoff .phint{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 /* v14, beside the spec's block: the note form's .lift rule is scoped to its boxes (.lifts>.lift), so it does not restyle the ⚽ card (class "msc lift");
@@ -1479,6 +1498,7 @@ function compute(list,ms){
   const ml=mealPass(typeof profile==="object"&&profile?profile.meal:null); stats.stamina+=ml.pt; // v22.3 ごはん
   const bkp=bikePass(typeof profile==="object"&&profile?profile.bike:null); stats.stamina+=bkp.pt; stats.speed+=bkp.sp; // v24.9 自転車
   let lpN=0; try{lpN=lpOf(live&&!live.done?live.base:game);}catch(e){} PTKINDS.forEach(([t])=>{pts[t]+=lpN*(LOSSPT[t]||0);}); // v23.3 lost matches
+  let pbG=null; try{pbG=live&&!live.done?live.base:game;}catch(e){} Object.keys(PLAYBONUS).forEach(k=>{const q=PLAYBONUS[k]; pts[q[0]]+=pbOf(pbG,k)*q[1];}); // v25.1
   const ps=ptState(), base=Object.assign({},stats), left={}; STATS.forEach(([k])=>{stats[k]+=ps.pt[k];}); PTKINDS.forEach(([t])=>{left[t]=pts[t]-ps.spent[t];}); // v23 what he raised
   let level=1,rest=xp; while(level<MAXLV&&rest>=need(level)){rest-=need(level);level++;}
   const stars=level>=MAXLV?Math.floor(rest/STARXP):0;
@@ -1622,13 +1642,60 @@ function playBest(sc,st){let best=0; playOptions(sc,st).forEach(o=>{const p=o.q=
     best=Math.max(best,p*playBest(sc,playMove(sc,st,o.t,o.to)));});
   return best;}
 const playFlip=t=>{const fx=p=>[100-p[0],p[1]], fk={L:"R",C:"C",R:"L"}; return {h:fx(t.h),a:fx(t.a),b:fx(t.b),s:t.s?fx(t.s):null,d:t.d.map(fx),k:fk[t.k]};};
+// v25.1 フリーの 場所を さがせ: the first RECVN sure chances of a match he plays start before he has the ball. A mate behind him (P,
+// RECVBACK below the scene's spot of the ball) has it, and he stands marked, just beside the opponent nearest to that spot (m). He taps
+// where to run (no further than RECVR, inside RECVBOX: the faces and names stay clear of the edges and of the goal's buttons). A spot outside every red circle (PLAYOPEN), not on top of a mate (RECVNEAR from P and from the
+// two others) and with an open way from P (laneOf 2) brings the pass, and the chance goes on from there (recvScene).
+// After RECVHINT misses the scene's own spot (h0, always such a spot) shines. (That spot is a button from the start for keys, a switch or a
+// screen reader, seen only while it has the focus; it brings no bonus.) RECVMARK: how far from his marker he starts (inside the
+// outer red circle, far enough for both faces to be seen).
+const RECVN=1, RECVR=26, RECVBACK=24, RECVNEAR=10, RECVHINT=2, RECVMARK=7.5, RECVBOX=[10,90,30,104];
+const recvSet=sc=>{const h=sc.h, dd=q=>Math.hypot(q[0]-h[0],q[1]-h[1]), o=sc.d.slice().sort((p,q)=>dd(p)-dd(q))[0], l=dd(o)||1;
+  return {P:[h[0],Math.min(108,h[1]+RECVBACK)],m:[Math.round(o[0]+(h[0]-o[0])/l*RECVMARK),Math.round(o[1]+(h[1]-o[1])/l*RECVMARK)],h0:h.slice()};};
+function recvTo(at,p){let x=p[0]-at[0], y=p[1]-at[1]; const l=Math.hypot(x,y); if(l>RECVR){x*=RECVR/l; y*=RECVR/l;} return [clamp(Math.round(at[0]+x),RECVBOX[0],RECVBOX[1]),clamp(Math.round(at[1]+y),RECVBOX[2],RECVBOX[3])];}
+function recvOf(sc,P,p){const dn=q=>Math.hypot(q[0]-p[0],q[1]-p[1]); if(sc.d.some(q=>dn(q)<PLAYOPEN))return "mark"; if([P,sc.a,sc.b].some(q=>q&&dn(q)<RECVNEAR))return "near";
+  return laneOf({d:sc.d,out:[]},P,p)===2?"ok":"lane";}
+// The scene from where he took the ball. A sure chance stays sure, and the dribble is never a trap. recvDrib: his dribble from p is the
+// scene's own while that still goes forward on an open way and leaves a way that always scores after it (playBest 1 from where the
+// dribble ends) and its button stands clear of him and of his mates; else a new spot for it is looked for (RECVDRIB: from 12 to 30 away
+// from him, not more than 10 behind him, inside PLAYBOX and not above y 40 (the keeper's picture), outside every red circle, RECVGAP from
+// each mate so that no button lies on another, an open way to it) that leaves such a way: the one nearest to 20 away (as far as the
+// scenes' own dribbles go) and forward rather than sideways (a step towards the goal line counts as .3 of a step nearer to 20); null when there is none. recvPlan: when the picture from p holds no way that always
+// scores (about 1 spot in 100), the pass is played a little into space: he takes it at the nearest spot within RECVNUDGE that brings
+// the pass too and holds such a way, and steps there while the ball comes. recvScene puts the plan into the scene.
+const RECVDRIB=[12,30,20,10,40,.3], RECVGAP=14, RECVNUDGE=8;
+function recvDrib(sc,p,P){const lane=s=>laneOf({d:sc.d,out:[]},p,s)===2, sure=s=>{const c=Object.assign({},sc,{h:p,s}); return playBest(c,playMove(c,playStart(c),"drib","s"))===1;},
+    far=s=>![sc.a,sc.b,P].some(q=>q&&Math.hypot(q[0]-s[0],q[1]-s[1])<RECVGAP);
+  let s=sc.s&&sc.s[1]<=p[1]-6&&Math.hypot(sc.s[0]-p[0],sc.s[1]-p[1])>=RECVDRIB[0]&&far(sc.s)&&lane(sc.s)&&sure(sc.s)?sc.s:null;
+  if(!s){let bv=1e9;
+    for(let x=PLAYBOX[0];x<=PLAYBOX[1];x+=2)for(let y=Math.max(PLAYBOX[2],RECVDRIB[4]);y<=PLAYBOX[3];y+=2){const l=Math.hypot(x-p[0],y-p[1]); if(l<RECVDRIB[0]||l>RECVDRIB[1]||y>p[1]+RECVDRIB[3])continue;
+      const v=Math.abs(l-RECVDRIB[2])+(y-p[1])*RECVDRIB[5]; if(v>=bv||sc.d.some(q=>Math.hypot(q[0]-x,q[1]-y)<PLAYOPEN)||!far([x,y])||!lane([x,y])||!sure([x,y]))continue; s=[x,y]; bv=v;}}
+  return s;}
+function recvPlan(sc,p,P){const at=q=>{const c=Object.assign({},sc,{h:q,s:recvDrib(sc,q,P)}); return playBest(c,playStart(c))===1?c:null;};
+  let c=at(p);
+  if(!c&&P){let bl=1e9; for(let x=p[0]-RECVNUDGE;x<=p[0]+RECVNUDGE;x++)for(let y=p[1]-RECVNUDGE;y<=p[1]+RECVNUDGE;y++){const l=Math.hypot(x-p[0],y-p[1]);
+      if(l>RECVNUDGE||l>=bl||x<RECVBOX[0]||x>RECVBOX[1]||y<RECVBOX[2]||y>RECVBOX[3]||recvOf(sc,P,[x,y])!=="ok")continue; const n=at([x,y]); if(n){c=n; bl=l;}}}
+  if(!c)c={h:p,s:recvDrib(sc,p,P)};
+  return {h:c.h.slice(),s:c.s};}
+const recvScene=(sc,p,P)=>Object.assign(sc,recvPlan(sc,p,P));
+// v25.1 こぼれ球ダッシュ: when a play of his ends with the ball loose (a pass cut, a dribble stopped, a shot blocked or saved; not a shot
+// wide: that ball is out) the ball lies there for DASHMS, and a tap in time wins it back. What follows is as before (a sure chance: again,
+// then a mate scores; a hard one: over), so a match comes out as it did. A dash in time and a spot found at the first tap bring
+// PLAYBONUS (practice points) once a match each, counted in game.pr and game.pd.
+const DASHMS=2000, DASHWAIT=1300, PBADGEMS=2400, PLAYBONUS={pr:["o",1],pd:["b",1]}, pbOf=(x,k)=>x&&Number.isInteger(x[k])&&x[k]>0&&x[k]<=1e6?x[k]:0;
+const RVMSG={title:"味方から パスを もらおう!",start:"赤い 丸から はなれて、パスの 道が 空いた ところを タップ! 君が そこへ 走るよ。",
+  run:"そこへ 走るよ!",come:"ナイス ポジション! パスが 来るよ!",ok:"ナイス ポジション! フリーで パスを もらった!",first:"1回で 見つけた!",next:"次は どうする?",
+  mark:"そこは 相手の 近く(赤い 丸の 中)… パスが 来ないよ。 相手から はなれよう!",lane:"パスの 道に 相手が いるよ… 味方と 君の 間に 相手が いない ところへ 動こう!",
+  near:"味方に 近すぎるよ。 少し はなれて もらおう!",hint:"光って いる ところは どう?",help:"ピッチを タップすると、君が 走るよ(点線の 丸の 中まで)。 赤い 丸は 相手の 足が とどく ところ。"};
+const DASHMSG={go:"こぼれ球だ! すぐ「ダッシュ!」\u2060を タップ!",ok:"こぼれ球ダッシュ! 君が 取りかえした!",late:"相手が 先に さわった… こぼれ球には すぐ 走ろう!",
+  again:"もう 一度 チャンス!",mate:"味方が 拾って くれた! もう 一度 チャンス!",hard:"ナイス ダッシュ! でも 相手が もどって きた…"};
 // a scene for one chance: a picture (mirrored half of the time) and who stands in it. The ball starts with him; when he is the keeper it
 // starts with a teammate and he calls the play from the back (coach).
 function playScene(kind,lu,hero){const t=rnd(PLAYT[kind]), sc=Object.assign({kind},Math.random()<.5?playFlip(t):{h:t.h,a:t.a,b:t.b,s:t.s,d:t.d,k:t.k});
   const nm=x=>x.who.hero?{n:hero,hero:true}:x.who.mate?{n:x.who.mate.n,mate:x.who.mate}:{n:"すけっと",helper:true};
   const field=lu.filter(x=>x.pos!=="GK"), me=field.find(x=>x.who.hero), ord=["FW","MF","DF"];
   const rest=shuffle(field.filter(x=>x!==me)).sort((x,y)=>ord.indexOf(x.pos)-ord.indexOf(y.pos)), first=me||rest.shift();
-  sc.who={h:nm(first),a:nm(rest[0]),b:nm(rest[1])}; sc.coach=!me; sc.done=false; return sc;}
+  sc.who={h:nm(first),a:nm(rest[0]),b:nm(rest[1]),p:rest[2]?nm(rest[2]):{n:"すけっと",helper:true}}; sc.coach=!me; sc.done=false; return sc;}
 const PLAYAUTO="チャンスを 作ったけれど、シュートは キーパーに 止められた…"; // a hard scene that went by itself
 // what he is told: [what happened, what to look at next time] (never a scolding)
 const PLAYMSG={cut:["相手に カットされた…","赤い 丸に かからない 道を さがそう。"],stop:["相手に 止められた…","相手の いない 方へ 運ぼう。"],
@@ -2064,6 +2131,7 @@ function cleanGame(x){
   g.made=cleanMade(x.made);
   ptPut(g,ptStateOf(x)); // v23
   if(lpOf(x))g.lp=lpOf(x); // v23.3
+  Object.keys(PLAYBONUS).forEach(k=>{if(pbOf(x,k))g[k]=pbOf(x,k);}); // v25.1
   if(x.equip&&typeof x.equip==="object")Object.keys(x.equip).forEach(k=>{const id=x.equip[k];if(g.items.includes(id)||(typeof id==="string"&&own(GEAR,id)&&own(g.made,id)))g.equip[slotOf(id)]=id;});
   g.trophies=(Array.isArray(x.trophies)?x.trophies:[]).filter((t,i,a)=>Number.isInteger(t)&&t>=0&&t<CUPS.length&&a.indexOf(t)===i);
   g.log=(Array.isArray(x.log)?x.log:[]).filter(l=>l&&typeof l==="object").slice(0,12).map(l=>{const k=v=>Number.isInteger(v)&&v>=0&&v<100?v:0;
@@ -2103,7 +2171,7 @@ function bkPlan(d){
   Object.keys(bp).forEach(k=>{prep[k]=(pp[k]||0)|bp[k];}); const addPrep=Object.keys(bp).filter(k=>prep[k]!==pp[k]);
   const bb=cleanBike(d.profile&&d.profile.bike), pb=cleanBike(profile.bike), bike=Object.assign({},pb); // v24.9
   Object.keys(bb).forEach(k=>{bike[k]=(pb[k]||0)|bb[k];}); const addBike=Object.keys(bb).filter(k=>bike[k]!==pb[k]);
-  return {add,addM,fixJ,addMade,addNames,addMeal,addPrep,addBike,meal:cleanMeal(Object.assign({},bm,pm)),prep:cleanPrep(prep),bike:cleanBike(bike),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),usePt:!!d.game&&ptSpentOf(d.game)>ptSpentOf(game),useLp:!!d.game&&lpOf(d.game)>lpOf(game),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
+  return {add,addM,fixJ,addMade,addNames,addMeal,addPrep,addBike,meal:cleanMeal(Object.assign({},bm,pm)),prep:cleanPrep(prep),bike:cleanBike(bike),names:Object.assign({},bn,mn),useGame:!!d.game&&ahead(d.game,game),usePt:!!d.game&&ptSpentOf(d.game)>ptSpentOf(game),useLp:!!d.game&&lpOf(d.game)>lpOf(game),usePb:!!d.game&&Object.keys(PLAYBONUS).some(k=>pbOf(d.game,k)>pbOf(game,k)),useProfile:!!d.profile&&!profile.name&&!profile.pos&&!!(d.profile.name||d.profile.pos)};
 }
 // v14 the notes with the file's counts put back on the notes in fixJ (only {jug} changes), and what the device would hold after a restore.
 const withJug=(list,fixJ)=>{const f=new Map(fixJ.map(e=>[e.id,e])); return list.map(e=>f.has(e.id)?Object.assign({},e,{jug:cleanJug(f.get(e.id).jug)}):e);};
@@ -2115,6 +2183,7 @@ function bkGame(p,d){
   else{g.made=Object.assign({},g.made); p.addMade.forEach(id=>{if(!own(g.made,id))g.made[id]=Object.assign({},d.game.made[id]);});}
   ptPut(g,ptStateOf(p.usePt?d.game:game)); // v23
   const lp=Math.max(lpOf(d.game),lpOf(game)); if(lp)g.lp=lp; else delete g.lp; // v23.3
+  Object.keys(PLAYBONUS).forEach(k=>{const v=Math.max(pbOf(d.game,k),pbOf(game,k)); if(v)g[k]=v; else delete g[k];}); // v25.1
   return g;
 }
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -3086,7 +3155,7 @@ function bkConfirm(){
   return `<div class="bkbox" id="bkbox"><b>${d.at?`${esc(fmtDate(localDay(d.at)))}の バックアップ`:"この バックアップ"}から もどします。</b><ul>
   <li>ノート:${p.add.length?`${p.add.length}さつ ふえます`:"ふえる ノートは ありません"}${dup&&!p.fixJ.length?`(もう ある ${dup}さつは そのまま)`:""}</li>
   <li>しあいの きろく:${p.useGame?"バックアップの 方が 進んでいるので、そちらに します":"今の まま"}</li>
-  ${p.usePt?`<li>練習ポイントで 上げた のうりょく:バックアップの 方が 多いので、そちらに します</li>`:""}${p.useLp?`<li>しあいで もらった 練習ポイント:バックアップの 方が 多いので、そちらに します</li>`:""}
+  ${p.usePt?`<li>練習ポイントで 上げた のうりょく:バックアップの 方が 多いので、そちらに します</li>`:""}${p.useLp?`<li>しあいで もらった 練習ポイント:バックアップの 方が 多いので、そちらに します</li>`:""}${p.usePb?`<li>ナイス プレー ボーナス:バックアップの 方が 多いので、そちらに します</li>`:""}
   <li>せんしゅの 名前と 見た目:${p.useProfile?"バックアップの ものに します":"今の まま"}</li>
   ${p.addMade.length?`<li>作った そうび:${p.addMade.length}こ もどります</li>`:""}
   ${p.addNames.length?`<li>なかまの 名前:${p.addNames.length}人 もどります</li>`:""}${bkConfirmM(d,p)}</ul>
@@ -3138,7 +3207,7 @@ function bkPrepare(text){
 }
 // v14 what to say when a backup brings nothing new (records and counts included), or "" when it does.
 const BKMNOW="ミッションの きろくは 今は 読みこめないので、もどせません。後で もう一度 ためしてください。";
-function bkNothing(d,p){if(p.add.length||p.fixJ.length||p.addM.length||p.useGame||p.useProfile||p.addMade.length||p.addNames.length||p.usePt||p.useLp)return "";
+function bkNothing(d,p){if(p.add.length||p.fixJ.length||p.addM.length||p.useGame||p.useProfile||p.addMade.length||p.addNames.length||p.usePt||p.useLp||p.usePb)return "";
   return !d.entries.length&&!d.missions.length?"この バックアップには ノートが ありません。"
     :d.missions.length&&msErr?(d.entries.length?"この バックアップの ノートは、もう 全部 入っています。":"")+BKMNOW
     :d.missions.length?"この バックアップの ノートと ミッションは、もう 全部 入っています。":"この バックアップの ノートは、もう 全部 入っています。";}
@@ -3160,12 +3229,12 @@ async function bkApply(){
       {const add=p.add, addM=p.addM, fixJ=p.fixJ; p=bkPlan(d); p.add=add; p.addM=addM; p.fixJ=fixJ;} // a name changed or a match record that came in meanwhile is not overwritten
       if(p.useProfile)await store.setProfile(Object.assign({},d.profile,{mnames:p.names,meal:p.meal,prep:p.prep,bike:p.bike}));
       else if(p.addNames.length||p.addMeal.length||p.addPrep.length||p.addBike.length)await store.setProfile({mnames:p.names,meal:p.meal,prep:p.prep,bike:p.bike});
-      {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade; p.usePt=q.usePt; p.useLp=q.useLp;} // and the match record as it is after that write
-      if(p.useGame||p.addMade.length||p.usePt||p.useLp){game=bkGame(p,d);await store.setGame();}
+      {const q=bkPlan(d); p.useGame=q.useGame; p.addMade=q.addMade; p.usePt=q.usePt; p.useLp=q.useLp; p.usePb=q.usePb;} // and the match record as it is after that write
+      if(p.useGame||p.addMade.length||p.usePt||p.useLp||p.usePb){game=bkGame(p,d);await store.setGame();}
     }else{
       const before=[entries,game,profile];
       entries=withJug(entries,p.fixJ).concat(p.add); // v14: a new array (and new objects for the counts put back), so the roll-back below still holds
-      if(p.useGame||p.addMade.length||p.usePt||p.useLp)game=bkGame(p,d);
+      if(p.useGame||p.addMade.length||p.usePt||p.useLp||p.usePb)game=bkGame(p,d);
       if(p.useProfile)profile=cleanProfile(Object.assign({},profile,d.profile,{mnames:p.names,meal:p.meal,prep:p.prep,bike:p.bike}));
       else if(p.addNames.length||p.addMeal.length||p.addPrep.length||p.addBike.length)profile=cleanProfile(Object.assign({},profile,{mnames:p.names,meal:p.meal,prep:p.prep,bike:p.bike}));
       if(!lsSave()){[entries,game,profile]=before;throw new Error("local");}
@@ -3435,6 +3504,7 @@ function viewLive(){
     result=`<div class="result"><div class="big${L.res.win?" win":""}">${L.res.win?(L.cupWon?"ゆうしょう!!":"勝った!"):"ナイスチャレンジ!"}</div>
       ${L.cupWon?`<div class="got">${trophyIcon(L.ctx?L.ctx.cupI:4).replace("<svg",'<svg style="width:36px;height:36px"')}${esc(L.cupName)}の トロフィー</div>`:""}${got}
       ${!L.res.win&&lpOf(game)>lpOf(L.base)?`<div class="matgot ptgot" id="lossPt"><b>練習ポイント ゲット!</b>${PTKINDS.filter(([t])=>LOSSPT[t]).map(([t,n,i])=>`<span>${i}${n} +${LOSSPT[t]}</span>`).join("")}</div>`:""}
+      ${L.ctx&&L.ctx.got&&Object.keys(PLAYBONUS).some(k=>L.ctx.got[k])?`<div class="matgot ptgot" id="playPt"><b>ナイス プレー ボーナス!</b>${Object.keys(PLAYBONUS).filter(k=>L.ctx.got[k]).map(k=>{const q=PLAYBONUS[k], x=PTKINDS.find(y=>y[0]===q[0]); return `<span>${x[2]}${x[1]} +${q[1]}</span>`;}).join("")}</div>`:""}
       <p class="muted">${L.res.win?(L.cupWon?(L.ctx&&L.ctx.cupI===REDEYE-1?"世界一だ! でも まだ 先が ある… 赤い 目の 強い 相手が 待つ「うら世界大会」\u2060が 始まるよ!":L.ctx&&isWC(L.ctx.cupI+1)?"レジェンドカップで ゆうしょう! ワールドカップへの 道が 開いたよ。 まずは アジアよせんだ!":L.ctx&&isWC(L.ctx.cupI)?"ワールドカップで ゆうしょう! 本当の 世界一だ! さいきょうチームが 君を 待って いるよ!":L.ctx&&L.ctx.cupI===CUPS.length-1?"全部の 大会で ゆうしょうだ! さいきょうチームが 君を 待って いるよ!":"次の 大会に 進めるよ。"):"次の しあいに 進めるよ。"):lpOf(game)>lpOf(L.base)?"負けても だいじょうぶ。 ポイントで のうりょくを 上げよう! 次は「くやしさパワー」\u2060でも 少し 強くなるよ。":"負けても だいじょうぶ。次は「くやしさパワー」\u2060で 少し 強くなるよ。"}</p>
       ${L.res.win?"":`<p><b>${esc(L.hint)}</b></p>`}
       ${L.res.win?"":revOpen(game)?`<div class="revbox" id="revBox"><b>🔥 リベンジ チャンス!</b><span>チケット なしで、もう 一度 できるよ!</span>
@@ -3962,6 +4032,7 @@ function settle(base,res,c){const opp=c.opp, ex=c.ex, cupI=c.cupI, round=c.round
       next.round=round+1; if(next.round>=nR){next.cup=cupI+1;next.round=0;}
     }
   }else{next.lossStreak=(next.lossStreak||0)+1; if(c.t>=Date.parse(PTGATE))next.lp=lpOf(next)+1;} // v23.3
+  const got=c.got||{}; Object.keys(PLAYBONUS).forEach(k=>{if(got[k])next[k]=pbOf(next,k)+1;}); // v25.1
   next.log=[{t:c.t,opp:opp.n,gm:res.gm,go:res.go,pk:res.pk,win:res.win}].concat(next.log||[]).slice(0,12);
   return {next,rewards,cupWon,keep};}
 function kickoff(auto){
@@ -3984,7 +4055,8 @@ function kickoff(auto){
 function liveTick(){if(!live||live.done)return;
   if(live.shown>=live.res.ev.length-1){finishLive();return;}
   const nx=live.res.ev[live.shown+1];
-  if(nx.play&&!nx.play.done){clearInterval(live.timer);live.timer=null;live.scene={ei:live.shown+1,st:playStart(nx.play),from:"",drib:false,msg:"",over:null,busy:false,lost:false,tries:0,ball:null,wz:"",wzUsed:0,wzd:"",wzp:""};
+  if(nx.play&&!nx.play.done){clearInterval(live.timer);live.timer=null;live.scene={ei:live.shown+1,st:playStart(nx.play),from:"",drib:false,msg:"",over:null,busy:false,lost:false,tries:0,ball:null,wz:"",wzUsed:0,wzd:"",wzp:"",rv:null,rvP:null,dash:null,bonus:"",badge:null};
+    if(nx.play.kind==="sure"&&!nx.play.coach&&(live.rvN||0)<RECVN){live.rvN=(live.rvN||0)+1; const r=recvSet(nx.play); live.scene.rv={P:r.P,at:r.m,h0:r.h0,n:0,mk:null,busy:false,fr:null}; holdUntil=Date.now()+400;} // v25.1 (a tap that was on its way when the pitch came up is not his first try)
     say(nx.play.kind==="hard"?"むずかしい チャンス!":"大チャンス!"); if(tab==="match"){renderView(); playShow();} return;}
   if(nx.pk&&!live.auto&&!live.pkd){clearInterval(live.timer);live.timer=null;live.pk=pkStart(); // v22: the shoot-out of a match he plays
     say("同点! PKせん!"); if(tab==="match"){renderView(); playShow();} return;}
@@ -4015,12 +4087,12 @@ function playShow(){const pk=!!(live&&live.pk), S=live&&(live.pk||live.scene), e
   S.sy=window.pageYOffset; window.scrollTo(0,Math.max(0,Math.round(S.sy+r.top-(parseFloat(getComputedStyle(el).scrollMarginTop)||12))));} // the page's own scroll only (no scrollIntoView: it could move a page around this one)
 function playWaza(sc,S,ops){if(S.wzUsed>=PLAYWAZA||!sc.who[S.st.car].hero)return [];
   const d=ops.some(o=>o.t==="drib"), p=ops.some(o=>o.t==="pass"); return wazaList(lastG).filter(x=>x.lv>0&&((x.grp==="drib"&&d)||(x.grp==="pass"&&p)));}
-function playArm(id){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over||S.lost)return;
+function playArm(id){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over||S.lost||S.rv)return;
   const sc=L.res.ev[S.ei].play, w=playWaza(sc,S,playOptions(sc,S.st)).find(x=>x.id===id); if(!w)return;
   const now=Date.now(); if(S.wz===id&&S.wzAt&&now-S.wzAt<PLAYWZTAP)return; S.wzAt=now; // a second tap right after the first is a double tap, not a change of mind
   S.wz=S.wz===id?"":id; S.msg=S.wz?`${w.n}を 使うよ! ${w.grp==="drib"?PLAYMSG.wzDrib:PLAYMSG.wzPass}`:PLAYMSG.wzOff; say(S.msg);
   if(tab==="match"){renderView(); const b=document.querySelector(`#pwz [data-wz="${id}"]`); if(b)b.focus({preventScroll:true});}}
-function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over||S.lost)return; // v22.1 S.lost: no move while he looks at a mistake (no button is on then)
+function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over||S.lost||S.rv)return; // v22.1 S.lost: no move while he looks at a mistake (no button is on then)
   const sc=L.res.ev[S.ei].play, st=S.st, wz=t!=="shot"&&S.wz?playWaza(sc,S,playOptions(sc,st)).find(x=>x.id===S.wz&&x.grp===t)||null:null; // the chosen one, when it fits this tap
   const r=playAct(sc,st,t,to,Math.random(),wz?wz.lv:0); if(!r)return;
   if(wz){S.wzUsed++; S.wz="";} else if(t==="pass"&&S.wz&&WZ[S.wz]&&WZ[S.wz][1]==="drib")S.wz=""; // a ドリブル わざ chosen, then a pass: the dribble is gone with the first move
@@ -4038,9 +4110,10 @@ function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S
       S.st=r.st; S.msg=(t==="pass"?`${wz?wz.n+(wz.id==="first"?"から ":"! "):""}ナイス パス! ${sc.who[to].n}に 通った!`:wz?`${wz.n}で 相手を ${r.st.out.length-(st.out||[]).length}人 かわした! もう じゃま できないよ。`:"ドリブルで 前へ 進んだ!")+(r.st.moves>=PLAYMOVES?" "+PLAYMSG.last:t==="drib"&&wz?" 次は どうする?":" "+PLAYMSG.moved);
       say(S.msg); if(tab==="match")renderView(); S.mv=null; return;}
     const o=playOver(sc,S,t,to,r,cn,wz); S.msg=o.msg; S.ball=end; S.fx=fxk?{k:fxk,at:fxk==="goal"?[end[0],9]:end}:null;
+    if(!o.goal&&!sc.coach&&DASHMS>0&&(fxk==="block"||fxk==="save")){playDash(L,S,o,end);return;} // v25.1
     if(!o.goal&&sc.kind==="sure"&&S.tries<PLAYRETRY){ // こぼれ球: in a sure scene the ball comes back, and he plays it again from the start with the tip
       S.tries++; S.lost=true; say(S.msg); if(tab==="match")renderView();
-      L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.lost=false; S.st=playStart(sc); S.from=""; S.drib=false; S.ball=null; S.fx=null; S.wz=""; S.wzUsed=0; S.wzd=""; S.wzp=""; S.msg=PLAYMSG.again+" "+o.tip; say(S.msg); if(tab==="match")renderView();},1800);
+      L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.lost=false; S.st=playStart(sc); S.from=""; S.drib=false; S.ball=null; S.fx=null; S.wz=""; S.wzUsed=0; S.wzd=""; S.wzp=""; S.msg=(DASHMS>0&&!sc.coach?DASHMSG.again:PLAYMSG.again)+" "+o.tip; say(S.msg); if(tab==="match")renderView();},1800);
       return;}
     if(!o.goal&&sc.kind==="sure"){ // v22.1: the second mistake: he sees what went wrong, then a mate scores (playRescue)
       S.lost=true; say(S.msg); if(tab==="match")renderView();
@@ -4052,12 +4125,49 @@ function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S
 // v22.1: a sure chance is a goal the match already had. When his second try fails too, a mate (not the one who lost the ball; a mate
 // with a name rather than a すけっと, when there is one) puts the loose ball in on the side away from the keeper: playing a chance
 // never costs his team a goal.
-function playRescue(sc,st){const ks=["a","b","h"].filter(k=>!sc.who[k].hero&&k!==st.car), k=ks.find(x=>sc.who[x].mate)||ks[0], n=sc.who[k].n;
+function playRescue(sc,st,fast){const ks=["a","b","h"].filter(k=>!sc.who[k].hero&&k!==st.car), k=ks.find(x=>sc.who[x].mate)||ks[0], n=sc.who[k].n;
+  if(fast){const me=heroName(); return {z:sc.k==="L"?"R":"L",over:{goal:true,t:`${me}が こぼれ球を 取りかえして、${n}が おしこんだ! ゴール!!`,msg:`${me}が こぼれ球を 取りかえして、${n}が おしこんだ! ゴール!! ナイス ダッシュ!`}};} // v25.1
   return {z:sc.k==="L"?"R":"L",over:{goal:true,t:`こぼれ球を ${n}が おしこんだ! ゴール!!`,msg:`${n}が こぼれ球を おしこんだ! ゴール!! ${PLAYMSG.rescue}`}};}
+// v25.1 a bonus of his moves: once a match each (L.ctx.got), saved at once, and its words under the message. The count is the one
+// settle gives (the match's start + 1; a later liveSettle counts it again from L.base and ends with the same number); nothing else
+// of the game is touched.
+function playGot(S,k){const L=live; if(!L||L.done||!L.ctx||!PLAYBONUS[k])return; L.ctx.got=L.ctx.got||{}; if(L.ctx.got[k])return; L.ctx.got[k]=1;
+  game[k]=pbOf(L.base,k)+1; store.setGame().catch(()=>flash("しあいの きろくを ほぞんできませんでした。"));
+  const q=PLAYBONUS[k], x=PTKINDS.find(y=>y[0]===q[0]); S.bonus=`${x[2]} 練習ポイント ${x[1]} +${q[1]} ゲット!`; S.badge={t:`${x[2]}${x[1]} +${q[1]}`,at:Date.now()}; return true;} // S.badge: on the pitch for PBADGEMS
+// v25.1 こぼれ球ダッシュ: the ball bounces a little off where his play ended and lies there for DASHMS
+function playDash(L,S,o,end){const at=[clamp(Math.round(end[0]+(end[0]<50?7:-7)),8,92),clamp(Math.round(end[1]+9),14,104)];
+  S.lost=true; S.dash={at,o,res:"",t0:Date.now()}; S.msg=o.head+" "+DASHMSG.go; say(S.msg);
+  if(tab==="match"){renderView(); const f=document.getElementById("pdash"); if(f){try{f.focus({preventScroll:true});}catch(e){f.focus();}}} // Enter or Space wins the ball too
+  setTimeout(()=>{const b=document.getElementById("pball"); if(b&&live===L&&L.scene===S&&S.dash){b.classList.remove("fly"); b.style.transform=""; b.style.left=at[0]+"%"; b.style.top=(at[1]/1.15).toFixed(2)+"%";}},30); S.ball=at;
+  clearTimeout(L.ptimer); L.ptimer=setTimeout(()=>dashEnd(L,S,false),DASHMS);}
+function playDashTap(kb){const L=live, S=L&&!L.done?L.scene:null; if(!S||!S.dash||S.dash.res)return; clearTimeout(L.ptimer); S.dash.kb=!!kb; dashEnd(L,S,true);}
+const pitchFocus=()=>{const f=tab==="match"&&document.getElementById("pitch"); if(f){f.tabIndex=-1; try{f.focus({preventScroll:true});}catch(e){f.focus();}}}; // the pitch itself: the next Tab is its first button (tabindex only here: with it in the page a finger's tap would give the pitch the focus, and a redraw would pull the page to it)
+// what follows a loose ball is what followed before v25.1: a sure chance again (PLAYRETRY), then a mate scores; a hard one is over
+function dashEnd(L,S,fast){if(live!==L||L.scene!==S||L.done||!S.dash||S.dash.res)return; const sc=L.res.ev[S.ei].play, o=S.dash.o;
+  S.dash.res=fast?"ok":"late"; const got=fast&&playGot(S,"pd"); S.msg=fast?DASHMSG.ok:DASHMSG.late; say(S.msg+(got?" "+S.bonus:"")); if(tab==="match")renderView();
+  if(fast){const hp=S.st.pos.h, to=S.dash.at; setTimeout(()=>{if(live!==L||L.scene!==S||!S.dash)return; // he runs to the ball (the way the dribbler runs: .pt.mine has the transition)
+    const me=[].slice.call(document.querySelectorAll("#pitch .pt.mine:not(.back)")).find(e=>Math.abs(parseFloat(e.style.left)-hp[0])<.01&&Math.abs(parseFloat(e.style.top)-hp[1]/1.15)<.01); if(me){me.style.left=to[0]+"%"; me.style.top=((to[1]-PLAYFEET)/1.15).toFixed(2)+"%";}},30);}
+  L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; const kb=S.dash.kb; S.dash=null;
+    if(sc.kind==="sure"&&S.tries<PLAYRETRY){S.tries++; S.lost=false; S.st=playStart(sc); S.from=""; S.drib=false; S.ball=null; S.fx=null; S.wz=""; S.wzUsed=0; S.wzd=""; S.wzp="";
+      S.msg=(fast?DASHMSG.again:DASHMSG.mate)+" "+o.tip; say(S.msg); if(tab==="match"){renderView(); if(kb)pitchFocus();} return;}
+    if(sc.kind==="sure"){const q=playRescue(sc,S.st,fast); S.lost=false; S.ball=PZ[q.z]; S.fx={k:"goal",at:[PZ[q.z][0],9]}; S.over=q.over; S.msg=q.over.msg;}
+    else{S.lost=false; S.over=o; S.msg=fast?DASHMSG.hard+" "+o.tip:o.msg;}
+    say(S.msg); if(tab==="match")renderView(); L.ptimer=setTimeout(()=>{if(live===L&&L.scene===S)playEnd();},1800);},DASHWAIT);}
+// v25.1 フリーの 場所を さがせ: a tap on the pitch (x, y in its units) or on the spot that shines (exact): he runs, then the pass comes or not
+function recvTap(p,exact){const L=live, S=L&&!L.done?L.scene:null, rv=S&&S.rv; if(!rv||rv.busy||S.busy||Date.now()<holdUntil||!isFinite(p[0])||!isFinite(p[1]))return;
+  const sc=L.res.ev[S.ei].play, to=exact?p.slice():recvTo(rv.at,p), k=recvOf(sc,rv.P,to);
+  rv.busy=true; rv.fr=rv.at; rv.at=to; rv.mk=null; S.msg=RVMSG.run; if(tab==="match")renderView(); rv.fr=null;
+  clearTimeout(L.ptimer); L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done||S.rv!==rv)return;
+    if(k!=="ok"){rv.n++; rv.busy=false; rv.mk={at:to,ok:false}; S.msg=RVMSG[k]+(rv.n>=RECVHINT?" "+RVMSG.hint:""); say(S.msg); if(tab==="match")renderView(); return;}
+    const pl=recvPlan(sc,to,rv.P), first=!rv.n&&!exact; rv.mk={at:to,ok:true}; if(pl.h[0]!==to[0]||pl.h[1]!==to[1]){rv.fr=to; rv.at=pl.h;} // the pass comes a little into space: he steps to it
+    S.msg=RVMSG.come; say(S.msg); if(tab==="match")renderView(); rv.fr=null;
+    setTimeout(()=>{const b=document.getElementById("pball"); if(b&&S.rv===rv){b.style.left=pl.h[0]+"%"; b.style.top=((pl.h[1]+PLAYFEET)/1.15).toFixed(2)+"%";}},30);
+    L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done||S.rv!==rv)return; Object.assign(sc,pl); S.rv=null; S.rvP=rv.P; S.st=playStart(sc); holdUntil=Date.now()+300; // the buttons of the chance come up under his finger: a tap on the pitch still on its way is not one of them
+      const got=first&&playGot(S,"pr"); S.msg=RVMSG.ok+(first?" "+RVMSG.first:"")+" "+RVMSG.next; say(S.msg+(got?" "+S.bonus:"")); if(tab==="match")renderView();},650);},550);}
 // how a play ended: the line for the match and the words for him
 function playOver(sc,S,t,to,r,cn,wz){const from=S.st.pos[S.st.car], clear=t==="shot"&&laneOf(S.st,from,PZ[to])===2; // clear: no opponent made the shot tight
   const why=!clear?PLAYMSG.tight:sc.kind==="hard"?PLAYMSG.hard:from[1]>PLAYFAR?PLAYMSG.far:PLAYMSG.side; // so the tip names what did: a hard scene, the distance, the keeper beside
-  const miss=(line,m)=>({goal:false,t:line,msg:m.join(" "),tip:m[1]});
+  const miss=(line,m)=>({goal:false,t:line,msg:m.join(" "),tip:m[1],head:m[0]});
   if(t==="pass")return miss(wz?`${cn}は ${wz.n}を 使ったけれど、相手に カットされた…`:`${cn}の パスは 相手に カットされた…`,r.q?PLAYMSG.tight:PLAYMSG.cut);
   if(t==="drib")return miss(wz?`${cn}は ${wz.n}を 使ったけれど、相手に 止められた…`:`${cn}の ドリブルは 相手に 止められた…`,r.q?PLAYMSG.tight:PLAYMSG.stop);
   if(!r.goal)return miss(r.q?`${cn}の シュートは おしくも 外れた…`:to===sc.k?`${cn}の シュートは キーパーの 正面…`:`${cn}の シュートは 相手に ブロックされた…`,r.q?why:to===sc.k?PLAYMSG.keeper:PLAYMSG.block);
@@ -4079,11 +4189,13 @@ function playEnd(){const L=live, S=L&&!L.done?L.scene:null; if(!S)return; clearT
 const MXOPP=["a","b","c","d"], OPPFIG=(k,r)=>`<span class="ava"><i class="mx mx-opp_${k}${r?"r":""}" aria-hidden="true"></i></span>`;
 const oppRed=L=>!!(L&&L.ctx&&(L.ctx.ex||(L.ctx.cupI>=REDEYE&&!(CUPS[L.ctx.cupI]||{}).fair))); // v24 赤い 目
 const MXICON=k=>`<i class="mx mx-fx_${k} pico" aria-hidden="true"></i>`;
-function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.pos[st.car], ops=S.over||S.busy||S.lost?[]:playOptions(sc,st);
+function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.pos[st.car], ops=S.over||S.busy||S.lost||S.rv?[]:playOptions(sc,st), rv=S.rv;
   const xy=p=>`left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%`;
   const mv=S.mv, from=(p,q)=>mv&&q&&(q[0]!==p[0]||q[1]!==p[1])?`;--fx:${q[0]}%;--fy:${(q[1]/1.15).toFixed(2)}%`:"", mc=(p,q)=>from(p,q)?" pmv":""; // v21: drawn once after a move: slides from q to p
   const face=k=>{const w=sc.who[k]; return w.hero?heroBust(lastG,"pp"+k):w.mate?pixSVG(mateOpts(w.mate),"pp"+k):`<div class="helper">?</div>`;};
-  const pl=["h","a","b"].map(k=>{const w=sc.who[k], inner=`<span class="ava">${face(k)}</span><span class="pn">${esc(w.n)}</span>`;
+  const rvp=(k,p,c,fr)=>`<span class="pt mine${c}${fr?" pmv":""}" style="${xy(p)}${fr?`;--fx:${fr[0]}%;--fy:${(fr[1]/1.15).toFixed(2)}%`:""}"><span class="ava">${face(k)}</span><span class="pn">${esc(sc.who[k].n)}</span></span>`;
+  const back=!rv&&S.rvP?`<span class="pt mine back" aria-hidden="true" style="${xy(S.rvP)}"><span class="ava">${face("p")}</span></span>`:""; // the mate who passed to him
+  const pl=rv?rvp("p",rv.P," has","")+rvp("a",st.pos.a,"","")+rvp("b",st.pos.b,"","")+rvp("h",rv.at," me",rv.fr):["h","a","b"].map(k=>{const w=sc.who[k], inner=`<span class="ava">${face(k)}</span><span class="pn">${esc(w.n)}</span>`;
     return ops.some(o=>o.t==="pass"&&o.to===k)?`<button type="button" class="pt mine${mc(st.pos[k],mv&&mv.pos[k])}" id="pp-${k}" data-pp="${k}" style="${xy(st.pos[k])}${from(st.pos[k],mv&&mv.pos[k])}" aria-label="${esc(w.n)}に パス">${inner}</button>`
       :`<span class="pt mine${st.car===k?" has":""}${mc(st.pos[k],mv&&mv.pos[k])}" style="${xy(st.pos[k])}${from(st.pos[k],mv&&mv.pos[k])}">${inner}</span>`;}).join("");
   const out=st.out||[]; // v21: beaten by a dribble with a わざ: no red circles, the face is pale
@@ -4092,22 +4204,26 @@ function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.po
   const fx=S.fx?`<i class="pfx pfx-${S.fx.k} mx mx-fx_${S.fx.k}${S.fx.m?" flip":""}${S.fx.old?" old":""}" id="pfx" style="${xy(S.fx.at)}" aria-hidden="true"></i>`:""; if(S.fx)S.fx.old=true;
   const zones=["L","C","R"].map(z=>`<button type="button" class="pz" id="pz-${z}" data-pz="${z}"${ops.length?"":" disabled"} aria-label="ゴールの ${PZN[z]}へ シュート">${PZN[z]}</button>`).join("");
   const dr=ops.some(o=>o.t==="drib")?`<button type="button" class="pd" id="pd-s" data-pd="s" style="${xy(sc.s)}" aria-label="空いた ところへ ドリブル">ドリブル</button>`:"";
-  const bp=S.ball||[at[0],at[1]+PLAYFEET];
+  const bp=rv?[rv.P[0],rv.P[1]+PLAYFEET]:S.ball||[at[0],at[1]+PLAYFEET];
+  // v25.1: the run (dotted circle, the mark of the last try, the spot that shines, the pitch as one big tap) and the loose ball
+  const rvx=rv?`<i class="prun" style="${xy(rv.at)}" aria-hidden="true"></i>${rv.mk?`<i class="prmk ${rv.mk.ok?"ok":"ng"}" style="${xy(rv.mk.at)}" aria-hidden="true"></i>`:""}<div class="prtap" id="prtap"${rv.busy?" data-busy":""}></div>${rv.busy?"":`<button type="button" class="prhint${rv.n>=RECVHINT?"":" kb"}" id="prhint" data-prh="1" style="${xy(rv.h0)}" aria-label="ここ(${rv.n>=RECVHINT?"光って いる ところ":"パスを もらえる ところ"})へ 走る">ここ</button>`}`:"";
+  const bdAge=S.badge?Date.now()-S.badge.at:0, bdx=S.badge&&bdAge>=0&&bdAge<PBADGEMS?`<i class="pbadge" id="pbadge" style="animation-delay:-${bdAge}ms" aria-hidden="true">${esc(S.badge.t)}</i>`:""; // a redraw goes on where the fade was
+  const dsx=S.dash&&!S.dash.res?`<button type="button" class="pdash" id="pdash" data-pdash="1" style="${xy(S.dash.at)}" aria-label="こぼれ球へ ダッシュ">⚽ダッシュ!<i style="animation-duration:${DASHMS}ms;animation-delay:-${clamp(Date.now()-S.dash.t0,0,DASHMS)}ms" aria-hidden="true"></i></button>`:"";
   // v21.1 わざ: above the pitch. The same chips through the whole chance (every ドリブル and パス わざ he has learned), so that the pitch
   // never moves under his finger: the ones he cannot use now are disabled, and the line above them says where he stands.
-  const mine=!sc.coach&&!S.over&&!S.lost&&sc.who[st.car].hero, wops=S.busy?playOptions(sc,st):ops, wl=mine?playWaza(sc,S,wops):[];
+  const mine=!sc.coach&&!S.over&&!S.lost&&!rv&&sc.who[st.car].hero, wops=S.busy?playOptions(sc,st):ops, wl=mine?playWaza(sc,S,wops):[];
   const wall=sc.coach?[]:wazaList(lastG).filter(x=>x.lv>0&&x.grp!=="shoot");
-  const ptsub=sc.coach?`${esc(sc.who.h.n)}が ボールを 持った! キーパーの 君が 声で 教えよう。`:"君が ボールを 持った! どうする?"; // the title's second half: its room is kept (.pth) when the ball is lost or the chance is over
+  const ptsub=sc.coach?`${esc(sc.who.h.n)}が ボールを 持った! キーパーの 君が 声で 教えよう。`:rv?RVMSG.title:"君が ボールを 持った! どうする?"; // the title's second half: its room is kept (.pth) when the ball is lost or the chance is over
   const wzt=S.wzUsed>=PLAYWAZA?PLAYMSG.wzUsed:wl.length||S.over||S.lost?`わざを 使う(1つの チャンスで ${PLAYWAZA}回)`:PLAYMSG.wzNot;
   const wzbox=sc.coach?"":wall.length?`<div class="pwzbox" id="pwz"><p class="pwzt" id="pwzt">${wzt}</p><div class="chips pwz${MOREWAZA&&wall.length>8?" many":""}">${wall.map(x=>{const on=!S.busy&&wl.some(y=>y.id===x.id);
       return `<button type="button" data-wz="${x.id}" aria-pressed="${on&&x.id===S.wz}"${on?"":" disabled"} aria-label="${x.grp==="drib"?"ドリブル":"パス"}の わざ ${esc(x.n)}${x.lv===2?" ゴールド":""}"><small>${x.grp==="drib"?"ドリブル":"パス"}</small>${esc(x.n)}${x.lv===2?" ★":""}</button>`;}).join("")}</div></div>`
     :`<p class="pwzt" id="pwzNote">ドリブルや パスの わざを おぼえると、ここで 使えるよ。</p>`;
   return `<div class="pitchbox" id="pitchBox"><p class="ptitle"><b>${sc.kind==="hard"?"むずかしい チャンス!":"大チャンス!"}</b>${S.over||S.lost?`<span class="pth" aria-hidden="true" data-t="${ptsub}">${sc.coach?MXICON("voice"):""}</span>`:`<span>${sc.coach?MXICON("voice"):""}${ptsub}</span>`}</p>
     ${wzbox}
-    <div class="ppitch" id="pitch"><svg class="plines" viewBox="0 0 100 115" preserveAspectRatio="none" aria-hidden="true"><path d="M14 0v36h72V0M0 113h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 36a12 9 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/></svg>
-    <div class="pgoal">${zones}</div>${rings}${opp}${dr}${pl}<span class="pball" id="pball" style="${xy(bp)}"></span>${fx}</div>
-    <p class="pmsg" id="pmsg">${esc(S.msg||(at[1]>PLAYFAR?PLAYMSG.startFar:PLAYMSG.start))}</p>
-    <p class="plhint">味方を タップで パス、ゴールを タップで シュート。 赤い 丸は 相手の 足が とどく ところ。 パスや ドリブルの あとは、みんなが 動くよ。</p>
+    <div class="ppitch${rv?" rv":""}" id="pitch"><svg class="plines" viewBox="0 0 100 115" preserveAspectRatio="none" aria-hidden="true"><path d="M14 0v36h72V0M0 113h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 36a12 9 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/></svg>
+    <div class="pgoal">${zones}</div>${rings}${opp}${dr}${back}${pl}<span class="pball" id="pball" style="${xy(bp)}"></span>${fx}${rvx}${dsx}${bdx}</div>
+    <p class="pmsg" id="pmsg">${esc(S.msg||(rv?RVMSG.start:at[1]>PLAYFAR?PLAYMSG.startFar:PLAYMSG.start))}</p>${S.bonus?`<p class="pbonus" id="pbonus">${esc(S.bonus)}</p>`:""}
+    <p class="plhint">${rv?RVMSG.help:"味方を タップで パス、ゴールを タップで シュート。 赤い 丸は 相手の 足が とどく ところ。 パスや ドリブルの あとは、みんなが 動くよ。"}</p>
     </div>`;}
 
 // v22: the PK shoot-out he plays (the rules: pkSpread, pkKeeper, pkRate, pkKick, pkDecided above, from v22/pk.js).
@@ -4246,6 +4362,8 @@ const pressOnly=(sel,b)=>document.querySelectorAll(sel).forEach(x=>x.setAttribut
 // v22: a tap in the picture of the goal aims there; the arrow keys move the aim, Enter or the space bar kicks
 $("#view").addEventListener("click",e=>{const v=e.target.closest("#pkView"); if(!v||Date.now()<holdUntil)return; const q=v.getBoundingClientRect(), w=v.clientWidth, h=v.clientHeight; if(!w||!h)return; // the picture inside its border
   pkAim(PKV[0]+(e.clientX-q.left-v.clientLeft)/w*PKV[2],PKV[1]+(e.clientY-q.top-v.clientTop)/h*PKV[3]);});
+$("#view").addEventListener("click",e=>{const v=e.target.closest("#prtap"); if(!v)return; const q=v.getBoundingClientRect(); if(!q.width||!q.height)return; // v25.1 where he runs
+  recvTap([(e.clientX-q.left)/q.width*100,(e.clientY-q.top)/q.height*115]);});
 $("#view").addEventListener("keydown",e=>{if(e.target.id!=="pkView")return; const d={ArrowLeft:[-4,0],ArrowRight:[4,0],ArrowUp:[0,-4],ArrowDown:[0,4]}[e.key];
   if(d){e.preventDefault(); const P=live&&live.pk, a=P&&P.aim?P.aim:[50,PKH/2]; pkAim(a[0]+d[0],a[1]+d[1]);}
   else if(e.key==="Enter"||e.key===" "){e.preventDefault(); pkGo();}});
@@ -4284,6 +4402,8 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.pd){playTap("drib","s");return;}
   if(b.dataset.wz){playArm(b.dataset.wz);return;} // v21
   if(b.dataset.pz){playTap("shot",b.dataset.pz);return;}
+  if(b.dataset.pdash){playDashTap(e.detail===0);return;} // v25.1 (detail 0: a key, not a finger)
+  if(b.dataset.prh){const S=live&&!live.done&&live.scene; if(S&&S.rv)recvTap(S.rv.h0,true);return;}
   if(b.id==="pkGo"){pkGo();return;} // v22
   if(b.id==="skipLive"){if(live&&skipOk(live))finishLive();return;} // v17: not in the middle of a scene he plays
   if(b.id==="closeLive"){live=null;render();window.scrollTo(0,0);return;}
