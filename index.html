@@ -698,7 +698,7 @@ button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z
       <div class="pname" id="pname">せんしゅ</div>
       <div class="lv"><small>Lv.</small><span id="lv">1</span></div>
       <div class="xpbar" aria-hidden="true"><i id="xpfill" style="width:0%"></i></div>
-      <div class="xptext" id="xptext">次のレベルまで 40 XP</div>
+      <div class="xptext" id="xptext">次のレベルまで 30 XP</div>
       <div class="unlock" id="unlock"></div>
     </div>
     <button class="zoom" id="zoomBtn" type="button">アップで 見る</button>
@@ -1234,8 +1234,10 @@ const UNLOCKS=[[2,"プロの スーツ"],[3,"青い目"],[4,"せばんごう"],[
   [25,"かがやく ライン"],[30,"両目の 光"],[35,"ダブル いなずま","full"],[40,"赤と 金の 目"],[45,"にじいろ オーラ"],[50,STAR50?"レジェンドの 金の 星":"レジェンドの かんむり"]];
 // XP from level l to l+1: v12's steps up to Lv.27, then 300 a level, never more than v12 asked, so nobody loses a level. Lv.50 is the cap;
 // after it every 300 XP adds a ★ (a ★ is only for show: no power, nothing to spend).
-const MAXLV=50, STARXP=300;
-const need=l=>Math.min(40+10*(l-1),300);
+// v25.3 (EASYLV): 30+7 a level up to 200, and a ★ every 200 XP. Never more than before at any level, so nobody loses one.
+const EASYLV=1;
+const MAXLV=50, STARXP=EASYLV?200:300;
+const need=l=>EASYLV?Math.min(30+7*(l-1),200):Math.min(40+10*(l-1),300);
 const toNext=g=>g.level<MAXLV?need(g.level)-g.rest:STARXP-g.rest%STARXP;
 
 // Teammates join as キズナ grows (thresholds in KIZUNA), then keep getting stronger.
@@ -1564,8 +1566,12 @@ function teamPower(g){
 }
 // v22.1: a note is one ticket, and so is a cleared mission (g.mtk, counted from the records: the earlier ones count as well)
 // v22.2: of the missions cleared after a note only TKPERNOTE are tickets (ticketPass): g.mtk counts those, g.mleft is how many are open
-const tickets=g=>Math.max(0,g.es.length+(g.mtk||0)-(game.used||0));
-const ticketsOf=(es,ms)=>es.length+ticketPass(es,missionPass(ms)).tk;
+// v25.3: a note written from NOTETKGATE (2026-11-25 00:00 in Japan) on is NOTETK tickets; an older one stays one, so nothing earlier changes much.
+const NOTETK=2, NOTETKGATE="2026-11-24T15:00:00.000Z";
+const noteTkOf=e=>NOTETK>1&&isoOr(e&&e.createdAt,"")>=NOTETKGATE?NOTETK:1;
+const noteTk=es=>es.reduce((a,e)=>a+noteTkOf(e),0);
+const tickets=g=>Math.max(0,noteTk(g.es)+(g.mtk||0)-(game.used||0));
+const ticketsOf=(es,ms)=>noteTk(es)+ticketPass(es,missionPass(ms)).tk;
 const ticketCap=()=>ticketsOf(entries,missions); // every ticket there has been: game.used is never more
 // After a record is deleted game.used comes down to it, so that the deleted record's used ticket does not cost the next one its ticket.
 // Not while the mission records are unknown (not read yet, or unreadable now): the tickets of those records would be handed back.
@@ -2544,11 +2550,12 @@ function viewHome(g){
   const hp=handGet(), he=hp&&(g.es.find(e=>e.id===hp.id)||g.ms.find(m=>m.id===hp.id)), hm=he&&g.ms.includes(he)?he.kind:"", hb=he&&!stampsOf(he).length&&!String(he.parent||"").trim()
     ?`<button class="stampnews handnote" id="handBtn" data-note="${esc(he.id)}" type="button">${hm==="video"?"👪 今日の 動画 ふり返りを おうちの人に 見せよう!":hm==="learn"?"👪 調べた ことを おうちの人に 教えよう!":hm==="pro"?"👪 プロの しあいで 見つけた ことを おうちの人に 見せよう!":hm==="home"?"👪 今日の ボール遊びを おうちの人に 話そう!":hm==="run"?"👪 今日の かけっこ 練習を おうちの人に 話そう!":"👪 今日の ノートを おうちの人に 見せよう!"}<small>タップで おうちの人の 番に なるよ</small></button>`:"";
   const ng=goalCard(g), nw=stampNews(g), sn=nw?`<button class="stampnews" id="newsBtn" data-note="${esc(nw.id)}" type="button">🎉 おうちの人から ${nw.stamp&&nw.comment?"コメントと スタンプが":nw.comment?"コメントが":"スタンプが"} とどいたよ!<small>タップで 見てね</small></button>`:"";
+  const ez=(EASYLV||NOTETK>1)&&ready&&g.es.length&&!easySeen()?`<button class="stampnews" id="easyBtn" type="button">🎉 レベルが 上がりやすく なったよ!<small>ノートを 書くと、しあいチケットが ${NOTETK}まい もらえるよ! (タップで とじる)</small></button>`:""; // v25.3
   const rv=gameReady&&!live&&revOpen(game), tkb=tk||rv?`<div class="ticket"><div><span class="label">${rv?"🔥 リベンジ チャンス":"しあいチケット"}</span><b>${rv?(tk?`+ チケット × ${tk}`:""):`× ${tk}`}</b></div><button class="ghost" data-go="match" type="button">しあいに 行く</button></div>`:"";
   const max=Math.max(10,...Object.values(g.stats));
   const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
   const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに 大事。</p>`:"";
-  return `${settingsOpen?viewSettings():""}${setup}${empty}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${bikeCard(g)}${prepCard(g)}${tkb}${shopNews(g)}
+  return `${settingsOpen?viewSettings():""}${setup}${empty}${ez}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${bikeCard(g)}${prepCard(g)}${tkb}${shopNews(g)}
   <section class="panel" id="ability"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   ${ptBox(g)}
   ${g.stats.speed?"":`<p class="muted" id="speedHint">🏃 スピード(足の 速さ)は 新しい のうりょく。 体ポイントで 上げられるよ!</p>`}
@@ -2659,6 +2666,10 @@ async function setMeal(n){if(mealBusy||!loaded()||!profReady)return; n=n===1||n=
   let f=document.querySelector(`[data-meal="${n}"]`); if(f&&f.closest("details:not([open])"))f=document.querySelector("#fold-mealCard>summary"); if(f)f.focus();}
 // v13 ways into the workshop from home: a one-time NEW note on each device, then a reminder while a piece can be made.
 const SHOPINTRO="soccer-note-shop-intro";
+// v25.3 the card that says levels come quicker and a note is two tickets: once, until tapped.
+const EASYNEWS="soccer-note-easy253"; let easyClosed=false;
+function easySeen(){if(easyClosed)return true;try{return localStorage.getItem(EASYNEWS)==="1";}catch(e){return false;}}
+function easyDone(){easyClosed=true;try{localStorage.setItem(EASYNEWS,"1");}catch(e){}}
 function introSeen(){if(introClosed)return true;try{return localStorage.getItem(SHOPINTRO)==="1";}catch(e){return false;}}
 function introDone(){introClosed=true;try{localStorage.setItem(SHOPINTRO,"1");}catch(e){}}
 function shopNews(g){
@@ -3446,7 +3457,7 @@ function viewWrite(){
     <div class="chips" id="nextPresets">${presetBtns(nextPresets(d),"ng",d.next)}</div>
     <p class="stepup" id="nextCue"${cueOf(d.next)?"":" hidden"}><span aria-hidden="true">🗣️ </span>次の 合いことば <span id="nextCueW">「${esc(cueOf(d.next))}」</span></p></div>
   <div class="field"><label class="q" for="f-parent">おうちの人から<small>後で書いてもOK</small></label><div class="voice"><textarea id="f-parent" maxlength="300" placeholder="一言 ほめてあげてください">${esc(d.parent)}</textarea>${micBtn("f-parent")}</div></div>
-  <p class="xpprev" id="xpprev">このノートで <b>+${draftXP()} XP</b> と しあいチケット 1まい</p>
+  <p class="xpprev" id="xpprev">このノートで <b>+${draftXP()} XP</b> と しあいチケット ${NOTETK}まい</p>
   <p class="formmsg${formAsk?" ask":""}" id="saveMsg" role="alert"${formNote?"":" hidden"}>${esc(formNote)}</p>
   <button class="ghost" id="jugBack" type="button"${formAsk?"":" hidden"}><span aria-hidden="true">⚽ </span>数を 見る</button>
   <button class="primary" id="saveBtn" type="button"${saving?" disabled":""}>${saving?"ほぞん中…":"ノートをつける!"}</button></section>`;
@@ -3538,7 +3549,7 @@ function viewMatch(g){
     ${steps}
     <div class="vs"><span>${esc(myTeam())}</span><span class="b"><i style="width:${Math.round(me/mx*100)}%"></i></span><em>${me}</em>
       <span>${esc(opp.n)}</span><span class="b opp"><i style="width:${Math.round(opp.r/mx*100)}%"></i></span><em>${opp.r}</em></div>
-    <div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><span class="muted">${Date.now()>=Date.parse(TKFREEGATE)?"ノートを 書くと 1まい。ミッションも クリアするたびに 1まい":`ノートを 書くと 1まい。ミッションは ノート 1さつで ${TKPERNOTE}まいまで もらえる`}</span></div>
+    <div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><span class="muted">${Date.now()>=Date.parse(TKFREEGATE)?`ノートを 書くと ${NOTETK}まい。ミッションも クリアするたびに 1まい`:`ノートを 書くと 1まい。ミッションは ノート 1さつで ${TKPERNOTE}まいまで もらえる`}</span></div>
     ${revOpen(game)?`<div class="revbox" id="revWait"><b>🔥 リベンジ チャンス!</b><span>次の しあいは チケット なしで できるよ!</span>
       <div class="kickrow"><button class="primary" id="kick" type="button">${MXICON("whistle")}リベンジ キックオフ!</button><button class="ghost" id="kickAuto" type="button">見るだけで リベンジ する</button></div></div>`
     :tk?`<div class="kickrow"><button class="primary" id="kick" type="button">${MXICON("whistle")}キックオフ!</button><p class="muted" id="playHint">チャンスが きたら、君が ピッチで プレーするよ。</p><button class="ghost" id="kickAuto" type="button">見るだけで しあいを する</button></div>`:`<button class="primary" data-go="write" type="button">ノートを 書いて チケットを もらう</button>`}
@@ -3999,7 +4010,7 @@ function render(){
 function newDay(){if(document.hidden||today()===drawnDay)return; if(tab==="home"&&!missionOpen&&!settingsOpen&&!chalOpen&&!live&&!document.querySelector(".overlay"))render();}
 document.addEventListener("visibilitychange",newDay); window.addEventListener("pageshow",newDay); window.addEventListener("focus",newDay); setInterval(newDay,60000);
 // After every change to the draft: keep a copy in this browser and refresh the XP preview.
-function draftChanged(){if(draft)touchedId=draft.id;keepDraft();const el=$("#xpprev");if(!el||!draft)return;el.innerHTML=`このノートで <b>+${draftXP()} XP</b> と しあいチケット 1まい`;}
+function draftChanged(){if(draft)touchedId=draft.id;keepDraft();const el=$("#xpprev");if(!el||!draft)return;el.innerHTML=`このノートで <b>+${draftXP()} XP</b> と しあいチケット ${NOTETK}まい`;}
 // Words for screen readers: the region is emptied first, so the same words are read again.
 let sayT=null;
 function say(t){const el=$("#say"); if(!el)return; el.textContent=""; clearTimeout(sayT); if(t)sayT=setTimeout(()=>{el.textContent=t;},60);}
@@ -4375,6 +4386,7 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.mic){toggleMic(b.dataset.mic);return;} // before any await
   if(b.dataset.go){go(b.dataset.go);return;}
   if(b.id==="handBtn"){openParent(b.dataset.note);return;}
+  if(b.id==="easyBtn"){easyDone();render();return;} // v25.3
   if(b.id==="newsBtn"){const id=b.dataset.note;go("notes");showNote(a=>a.dataset.id===id);return;}
   if(b.id==="gcEdit"){chalOpen=true;render();const f=document.querySelector("#gcPresets button");if(f)f.focus();return;}
   if(b.dataset.gc!==undefined&&b.closest("#gcPresets")){setChal(b.dataset.gc);return;}
@@ -4602,7 +4614,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
     ${newSkills.map(s=>`<div><span class="sk${s.lv===2?" gold":""}">${s.lv===2?"★ ":""}${esc(s.n)}</span> ${s.lv===2?"が ゴールドスキルに なった!":"を おぼえた!"}</div>`).join("")}
     ${newWaza.map(x=>`<div class="wzget"><span class="sk${x.lv===2?" gold":""}">${x.lv===2?"★ ":""}${x.n}</span> ${x.lv===2?"が ゴールドに なった!":"を おぼえた! しあいで 使えるよ!"}</div>`).join("")}
     ${newMates.map(m=>`<div class="newmate"><div class="ava">${pixSVG(mateOpts(m),"n"+m.id)}</div><div><b>${esc(m.n)}(${m.pos})が なかまに なった!</b><br><span class="muted">${esc(m.cat)}</span><br><button class="ghost mini" type="button" data-ovmname="${m.id}" style="margin:6px 0 0">名前を かえる</button></div></div>`).join("")}
-    ${ticket?`<div><b>しあいチケット +1</b> <span class="muted">(今 ${tickets(after)}まい)</span></div>`:""}
+    ${ticket?`<div><b>しあいチケット +${Math.max(1,tickets(after)-tickets(before))}</b> <span class="muted">(今 ${tickets(after)}まい)</span></div>`:""}
     ${ticket&&o.note&&Date.now()<Date.parse(TKFREEGATE)&&(before.mleft||0)<TKPERNOTE?`<div class="muted tkask" id="ovtkm">ミッションを クリアしても、しあいチケットを もらえるよ! (${TKPERNOTE}まいまで)</div>`:""}
     ${o.noTk?`<div class="tkask" id="ovtkn"><b>${dayFull()?"明日 ":""}ノートを 書くと、ミッションで また しあいチケットを もらえるよ!</b></div>`:""}
     ${newMake.length?`<div class="craft-ask"><b>🔨 ${esc(GEAR[newMake[0]].n)}${newMake.length>1?" など":""}が 作れるよ!</b><button class="ghost" type="button" id="ovcraft">こうぼうへ</button></div>`:""}
