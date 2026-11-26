@@ -645,8 +645,15 @@ button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z
 @media (prefers-reduced-motion:reduce){.pdash i{animation-timing-function:steps(4,end)}}
 .pbadge{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:7;pointer-events:none;font-style:normal;font-weight:900;white-space:nowrap;background:#ffd34f;color:#1a1a22;border:2px solid #1a1a22;border-radius:16px;padding:4px 12px}
 @media (prefers-reduced-motion:reduce){.pbadge{animation:pbadgeOff 2.4s steps(1,end) forwards}}@keyframes pbadgeOff{to{opacity:0}}
-.prhint:focus-visible,.pdash:focus-visible{outline:3px solid #fff;outline-offset:2px} .ppitch:focus{outline:none}
-@media (prefers-reduced-motion:no-preference){.pdash{animation:ptap .6s ease-in-out infinite} .prhint{animation:ptap 1.2s ease-in-out infinite} .prmk{animation:prmk .25s ease-out}@keyframes prmk{from{transform:scale(.3);opacity:.2}}
+.ppitch{cursor:pointer;-webkit-tap-highlight-color:transparent} .ppitch button{-webkit-tap-highlight-color:initial} /* the grass is a place to tap (iOS: the pitch itself answers the tap, with no grey flash; as .prtap). The property is inherited: the buttons on the pitch keep the flash they had */
+.ppitch .pspl{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.pspl path{fill:none;stroke-linecap:round} .pspl .b{stroke:#fff;stroke-width:1.1;stroke-dasharray:3 2.4} .pspl .r{stroke:#ffd34f;stroke-width:1.1;stroke-dasharray:.2 2.6}
+.psrun{position:absolute;transform:translate(-50%,-50%);height:0;border-radius:50%;border:2px dashed rgba(255,211,79,.95);background:rgba(255,211,79,.1);pointer-events:none;box-sizing:border-box}
+.psp{position:absolute;transform:translate(-50%,-50%);z-index:4;width:52px;height:52px;border:3px solid #1a1a22;border-radius:50%;background:#fff;color:#1a1a22;font:inherit;font-size:.8rem;font-weight:900;cursor:pointer;padding:0;box-shadow:0 0 0 3px #ffd34f}
+.psp:disabled{opacity:1;cursor:default} .psp.go{background:none;color:transparent;border-style:dashed;border-color:#fff;box-shadow:none}
+.prmk.psx{margin:-15px 0 0 -15px} /* the cross lies on the ball (not beside a face, as the cross of a run does) */
+.prhint:focus-visible,.pdash:focus-visible,.psp:focus-visible{outline:3px solid #fff;outline-offset:2px} .ppitch:focus{outline:none}
+@media (prefers-reduced-motion:no-preference){.pdash{animation:ptap .6s ease-in-out infinite} .prhint{animation:ptap 1.2s ease-in-out infinite} .prmk{animation:prmk .25s ease-out}@keyframes prmk{from{transform:scale(.3);opacity:.2}} .psp{animation:ptap 1.2s ease-in-out infinite}
   .pbadge{animation:pbadge 2.4s ease-out forwards}@keyframes pbadge{0%{opacity:0;transform:translateX(-50%) scale(.5)}12%{opacity:1;transform:translateX(-50%) scale(1.12)}20%{transform:translateX(-50%) scale(1)}85%{opacity:1}100%{opacity:0}}}
 .mk.k-msn{width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:0 4px 8px;border-color:transparent transparent var(--msn)} .cal-grid .cd i{gap:2px}
 .ms,.msf,.msbox,.msclear,.pbest,.trygoal,.lifts,.stampnews,.handoff .phint{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
@@ -1649,6 +1656,56 @@ function playBest(sc,st){let best=0; playOptions(sc,st).forEach(o=>{const p=o.q=
     best=Math.max(best,p*playBest(sc,playMove(sc,st,o.t,o.to)));});
   return best;}
 const playFlip=t=>{const fx=p=>[100-p[0],p[1]], fk={L:"R",C:"C",R:"L"}; return {h:fx(t.h),a:fx(t.a),b:fx(t.b),s:t.s?fx(t.s):null,d:t.d.map(fx),k:fk[t.k]};};
+// v25.4 スペースへ パス: with the ball he can play it into space, not only to a mate's feet. A tap on the grass puts a sign there (S.sp),
+// a tap on the sign plays the ball. The mate without the ball nearest to that place runs onto it, SPRUN at most: further away nobody
+// gets there and the ball is gone. The ball's way is measured as a pass's is (laneOf from the ball to the place; the place is the
+// end of the way, so a place inside a red circle is cut). SPMIN: nearer than that to the ball or to a mate it is no pass into
+// space (a tap on the mate is the pass to his feet; on the widest pitch the sign then stays clear of his team's faces, on a narrower one it can cover the rim of a mate's button). SPBOX: where a place may be (a face there stays clear of the edges and of the goal's buttons); a tap up to
+// SPEDGE outside it counts as one on its edge, a tap further out as none (he is told why: SPMSG.goal, SPMSG.edge). SPTAP: a second tap sooner than this is a double tap,
+// not his yes. playOptions and playBest do not know the pass into space: a sure chance keeps its sure way, and what a hard one is
+// worth stays what shotOf makes it. SPACE 0: the page before.
+const SPACE=1, SPRUN=20, SPMIN=10, SPGAP=14, SPTAP=350, SPEDGE=6, SPBOX=PLAYBOX;
+const spaceTo=p=>p[0]<SPBOX[0]-SPEDGE||p[0]>SPBOX[1]+SPEDGE||p[1]<SPBOX[2]-SPEDGE||p[1]>SPBOX[3]+SPEDGE?null:[clamp(Math.round(p[0]),SPBOX[0],SPBOX[1]),clamp(Math.round(p[1]),SPBOX[2],SPBOX[3])];
+// who runs: [how far, who]. The nearer of the two without the ball (a before b before h when both are as near).
+const spaceWho=(st,p)=>["a","b","h"].filter(k=>k!==st.car).map(k=>[Math.hypot(st.pos[k][0]-p[0],st.pos[k][1]-p[1]),k]).sort((x,y)=>x[0]-y[0]||(x[1]<y[1]?-1:1))[0];
+// a pass into space to p as the picture stands: null (no pass is left), or {k: who runs, q: the ball's way (0 cut / 1 luck / 2 open),
+// far: the runner does not get there, core: the place itself lies in the inner red circle of an opponent (it is no space: he
+// stands there), why: "near" (no pass into space) | "on" (none either) | "cut" | "far" | "tight" | "ok"}. A way that is cut is cut however far the
+// place is (the ball never gets past a red circle); "far" is a ball that gets through with nobody to run onto it. "on": the place
+// lies on an opponent he has beaten (the pale one, nearer than PLAYBLOCK). The ball's way past him is free, as for any pass, but
+// he still stands there, and the runner would stand on his face: no sign, and he is told to tap beside him.
+function spaceOf(sc,st,p){if(!SPACE||st.moves>=PLAYMOVES)return null; const at=st.pos[st.car], w=spaceWho(st,p), dn=q=>Math.hypot(q[0]-p[0],q[1]-p[1]), bt=st.out||[];
+  if(dn(at)<SPMIN||w[0]<SPMIN)return {k:w[1],q:0,far:false,core:false,why:"near"}; // w is the nearer mate: the other one is no nearer
+  if(st.d.some((d,i)=>bt.indexOf(i)>=0&&dn(d)<PLAYBLOCK))return {k:w[1],q:0,far:false,core:false,why:"on"};
+  const q=laneOf(st,at,p), far=w[0]>SPRUN; return {k:w[1],q,far,core:!laneOf(st,p,p),why:!q?"cut":far?"far":q===2?"ok":"tight"};}
+// the picture after one that worked: the runner stands on the place with the ball, then everybody moves as after any pass. Then
+// the two without the ball stand clear, as they do in every picture of a pass to the feet: no two of his team nearer than SPGAP
+// (their faces would lie on each other), and nobody without the ball nearer than PLAYKEEP to an opponent (the ball can land
+// anywhere, so a run could end beside one, or on his face). A mate whose own run ends nearer stops at the nearest spot inside
+// PLAYBOX that is clear of the runner, of the mate looked at before him, and of the other team.
+function spaceMove(sc,st,k,p){const n=playMove(sc,Object.assign({},st,{pos:Object.assign({},st.pos,{[k]:p})}),"pass",k), dd=(u,v)=>Math.hypot(u[0]-v[0],u[1]-v[1]), fix=[p];
+  ["a","b","h"].forEach(j=>{if(j===k)return; const q=n.pos[j], gap=c=>fix.every(f=>dd(c,f)>=SPGAP), free=c=>gap(c)&&n.d.every(o=>dd(c,o)>=PLAYKEEP);
+    const spot=ok=>{let best=null, bl=1e9; for(let x=PLAYBOX[0];x<=PLAYBOX[1];x++)for(let y=PLAYBOX[2];y<=PLAYBOX[3];y++){const l=dd([x,y],q); if(l<bl&&ok([x,y])){bl=l; best=[x,y];}} return best;};
+    if(!free(q)){const best=spot(free)||(gap(q)?null:spot(gap)); if(best)n.pos[j]=best;} // (no spot clear of everybody: clear of his own team at least)
+    fix.push(n.pos[j]);});
+  return n;}
+// one pass into space with the luck r (0-1): null (none now), or {ok, k, q, q0, why, st (the next state, when it worked)}.
+// up: a パス わざ he chose makes the ball's way better, as with a pass. It never makes the runner faster: too far stays too far
+// (the ball gets through, with luck or without, and nobody is there). And it never makes a place free: one in the inner red circle
+// of an opponent (core) is cut with any わざ (with a pass to the feet no mate stands there; here he could aim at it, and the
+// runner would hold the ball on an opponent's face).
+function spaceAct(sc,st,p,r,up){const o=spaceOf(sc,st,p); if(!o||o.why==="near"||o.why==="on")return null;
+  const q=o.core?0:Math.min(2,o.q+(up>0?up:0)), ok=!o.far&&(q===2||(q===1&&r<PLAYTIGHT.move));
+  return ok?{ok:true,k:o.k,q,q0:o.q,why:"ok",st:spaceMove(sc,st,o.k,p)}:{ok:false,k:o.k,q,q0:o.q,why:!q?"cut":o.far?"far":"tight"};}
+// where the ball is cut: the spot of its way nearest to the opponent who stands nearest to that way
+function spaceCut(st,a,p){const o=st.out||[], dx=p[0]-a[0], dy=p[1]-a[1], l=dx*dx+dy*dy; let c=[(a[0]+p[0])/2,(a[1]+p[1])/2], bl=1e9;
+  st.d.forEach((q,i)=>{if(o.indexOf(i)>=0)return; const t=l?clamp(((q[0]-a[0])*dx+(q[1]-a[1])*dy)/l,0,1):0, x=a[0]+t*dx, y=a[1]+t*dy, dl=Math.hypot(x-q[0],y-q[1]); if(dl<bl){bl=dl; c=[Math.round(x*10)/10,Math.round(y*10)/10];}});
+  return c;}
+const SPMSG={tip:"空いた ところを タップすると、スペースへ パスも 出せるよ!",aim:"が 走るよ。 しるしを もう 一度 タップで、スペースへ パス!",
+  near:"そこは 近すぎるよ。 味方を タップすると、足元へ パスできるよ。",on:"そこには 相手が いるよ。 すぐ 横の 空いた ところを タップしよう。",ok:"スペースへ ナイス パス!",got:"が 走りこんで 受けた!",
+  far:"点線の 丸の 中(味方が 走って とどく ところ)へ 出そう。",cut:"赤い 丸に かからない スペースと 道を さがそう。",
+  goal:"ゴールの すぐ 近くは キーパーに 取られるよ。 もう 少し 手前の 空いた ところを タップしよう。",edge:"そこは ピッチの はしだよ。 もう 少し 中の 空いた ところを タップしよう。",
+  help:"空いた ところを タップで スペースへ パス(味方が 走るよ)。 "};
 // v25.1 フリーの 場所を さがせ: the first RECVN sure chances of a match he plays start before he has the ball. A mate behind him (P,
 // RECVBACK below the scene's spot of the ball) has it, and he stands marked, just beside the opponent nearest to that spot (m). He taps
 // where to run (no further than RECVR, inside RECVBOX: the faces and names stay clear of the edges and of the goal's buttons). A spot outside every red circle (PLAYOPEN), not on top of a mate (RECVNEAR from P and from the
@@ -1689,7 +1746,7 @@ const recvScene=(sc,p,P)=>Object.assign(sc,recvPlan(sc,p,P));
 // wide: that ball is out) the ball lies there for DASHMS, and a tap in time wins it back. What follows is as before (a sure chance: again,
 // then a mate scores; a hard one: over), so a match comes out as it did. A dash in time and a spot found at the first tap bring
 // PLAYBONUS (practice points) once a match each, counted in game.pr and game.pd.
-const DASHMS=2000, DASHWAIT=1300, PBADGEMS=2400, PLAYBONUS={pr:["o",1],pd:["b",1]}, pbOf=(x,k)=>x&&Number.isInteger(x[k])&&x[k]>0&&x[k]<=1e6?x[k]:0;
+const DASHMS=2000, DASHWAIT=1300, PBADGEMS=2400, PLAYBONUS=Object.assign({pr:["o",1],pd:["b",1]},SPACE?{ps:["h",1]}:null), pbOf=(x,k)=>x&&Number.isInteger(x[k])&&x[k]>0&&x[k]<=1e6?x[k]:0;
 const RVMSG={title:"味方から パスを もらおう!",start:"赤い 丸から はなれて、パスの 道が 空いた ところを タップ! 君が そこへ 走るよ。",
   run:"そこへ 走るよ!",come:"ナイス ポジション! パスが 来るよ!",ok:"ナイス ポジション! フリーで パスを もらった!",first:"1回で 見つけた!",next:"次は どうする?",
   mark:"そこは 相手の 近く(赤い 丸の 中)… パスが 来ないよ。 相手から はなれよう!",lane:"パスの 道に 相手が いるよ… 味方と 君の 間に 相手が いない ところへ 動こう!",
@@ -4067,7 +4124,7 @@ function kickoff(auto){
 function liveTick(){if(!live||live.done)return;
   if(live.shown>=live.res.ev.length-1){finishLive();return;}
   const nx=live.res.ev[live.shown+1];
-  if(nx.play&&!nx.play.done){clearInterval(live.timer);live.timer=null;live.scene={ei:live.shown+1,st:playStart(nx.play),from:"",drib:false,msg:"",over:null,busy:false,lost:false,tries:0,ball:null,wz:"",wzUsed:0,wzd:"",wzp:"",rv:null,rvP:null,dash:null,bonus:"",badge:null};
+  if(nx.play&&!nx.play.done){clearInterval(live.timer);live.timer=null;live.scene={ei:live.shown+1,st:playStart(nx.play),from:"",drib:false,msg:"",over:null,busy:false,lost:false,tries:0,ball:null,wz:"",wzUsed:0,wzd:"",wzp:"",rv:null,rvP:null,dash:null,bonus:"",badge:null,sp:null,spd:false};
     if(nx.play.kind==="sure"&&!nx.play.coach&&(live.rvN||0)<RECVN){live.rvN=(live.rvN||0)+1; const r=recvSet(nx.play); live.scene.rv={P:r.P,at:r.m,h0:r.h0,n:0,mk:null,busy:false,fr:null}; holdUntil=Date.now()+400;} // v25.1 (a tap that was on its way when the pitch came up is not his first try)
     say(nx.play.kind==="hard"?"むずかしい チャンス!":"大チャンス!"); if(tab==="match"){renderView(); playShow();} return;}
   if(nx.pk&&!live.auto&&!live.pkd){clearInterval(live.timer);live.timer=null;live.pk=pkStart(); // v22: the shoot-out of a match he plays
@@ -4106,7 +4163,7 @@ function playArm(id){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.o
   if(tab==="match"){renderView(); const b=document.querySelector(`#pwz [data-wz="${id}"]`); if(b)b.focus({preventScroll:true});}}
 function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over||S.lost||S.rv)return; // v22.1 S.lost: no move while he looks at a mistake (no button is on then)
   const sc=L.res.ev[S.ei].play, st=S.st, wz=t!=="shot"&&S.wz?playWaza(sc,S,playOptions(sc,st)).find(x=>x.id===S.wz&&x.grp===t)||null:null; // the chosen one, when it fits this tap
-  const r=playAct(sc,st,t,to,Math.random(),wz?wz.lv:0); if(!r)return;
+  const r=playAct(sc,st,t,to,Math.random(),wz?wz.lv:0); if(!r)return; S.sp=null; // the sign of a pass into space goes with any other play
   if(wz){S.wzUsed++; S.wz="";} else if(t==="pass"&&S.wz&&WZ[S.wz]&&WZ[S.wz][1]==="drib")S.wz=""; // a ドリブル わざ chosen, then a pass: the dribble is gone with the first move
   const cn=sc.who[st.car].n, at=st.pos[st.car], aim=t==="shot"?PZ[to]:t==="drib"?sc.s:st.pos[to], end=r.ok?aim:t!=="shot"||(!r.q&&to!==sc.k)?[(at[0]+aim[0])/2,(at[1]+aim[1])/2]:to===sc.k||to==="C"?[PKX[sc.k],15]:[to==="L"?13:87,2]; // cut half way; a shot: caught by the keeper or wide of the post
   const fxk=r.ok?(t==="shot"?"goal":""):t!=="shot"||(!r.q&&to!==sc.k)?"block":to===sc.k?"save":""; // v19: the picture at the end of the ball's way (none for a shot that missed: the words say 外れた)
@@ -4117,23 +4174,52 @@ function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S
   document.querySelectorAll("#pitchBox button,#skipLive").forEach(x=>{x.disabled=true;});
   clearTimeout(L.ptimer); L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.busy=false;
     if(t!=="shot"&&r.ok){
-      if(t==="pass"){S.from=st.car; S.wzp=wz?wz.id:"";} else{S.drib=true; S.wzd=wz?wz.id:""; S.fx={k:"dribble",at:[at[0],at[1]+PLAYFEET],m:sc.s[0]<at[0]};} // the dust where he set off; the boot of the picture runs to the right, so it is mirrored when he went left
+      if(t==="pass"){S.from=st.car; S.wzp=wz?wz.id:""; S.spd=false;} else{S.drib=true; S.wzd=wz?wz.id:""; S.fx={k:"dribble",at:[at[0],at[1]+PLAYFEET],m:sc.s[0]<at[0]};} // the dust where he set off; the boot of the picture runs to the right, so it is mirrored when he went left
       S.mv={pos:t==="drib"?Object.assign({},st.pos,{h:sc.s}):st.pos,d:st.d}; // where everybody stood (the dribbler already ran)
       S.st=r.st; S.msg=(t==="pass"?`${wz?wz.n+(wz.id==="first"?"から ":"! "):""}ナイス パス! ${sc.who[to].n}に 通った!`:wz?`${wz.n}で 相手を ${r.st.out.length-(st.out||[]).length}人 かわした! もう じゃま できないよ。`:"ドリブルで 前へ 進んだ!")+(r.st.moves>=PLAYMOVES?" "+PLAYMSG.last:t==="drib"&&wz?" 次は どうする?":" "+PLAYMSG.moved);
       say(S.msg); if(tab==="match")renderView(); S.mv=null; return;}
-    const o=playOver(sc,S,t,to,r,cn,wz); S.msg=o.msg; S.ball=end; S.fx=fxk?{k:fxk,at:fxk==="goal"?[end[0],9]:end}:null;
+    playDone(L,S,sc,playOver(sc,S,t,to,r,cn,wz),end,fxk);},650);}
+// a play that is over (o: playOver's words; end: where the ball lies; fxk: the picture there): a goal, or what follows a ball lost
+function playDone(L,S,sc,o,end,fxk){
+    S.msg=o.msg; S.ball=end; S.fx=fxk?{k:fxk,at:fxk==="goal"?[end[0],9]:end}:null;
     if(!o.goal&&!sc.coach&&DASHMS>0&&(fxk==="block"||fxk==="save")){playDash(L,S,o,end);return;} // v25.1
     if(!o.goal&&sc.kind==="sure"&&S.tries<PLAYRETRY){ // こぼれ球: in a sure scene the ball comes back, and he plays it again from the start with the tip
       S.tries++; S.lost=true; say(S.msg); if(tab==="match")renderView();
-      L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.lost=false; S.st=playStart(sc); S.from=""; S.drib=false; S.ball=null; S.fx=null; S.wz=""; S.wzUsed=0; S.wzd=""; S.wzp=""; S.msg=(DASHMS>0&&!sc.coach?DASHMSG.again:PLAYMSG.again)+" "+o.tip; say(S.msg); if(tab==="match")renderView();},1800);
+      L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.lost=false; S.sp=null; S.st=playStart(sc); S.from=""; S.drib=false; S.ball=null; S.fx=null; S.wz=""; S.wzUsed=0; S.wzd=""; S.wzp=""; S.msg=(DASHMS>0&&!sc.coach?DASHMSG.again:PLAYMSG.again)+" "+o.tip; say(S.msg); if(tab==="match")renderView();},1800);
       return;}
     if(!o.goal&&sc.kind==="sure"){ // v22.1: the second mistake: he sees what went wrong, then a mate scores (playRescue)
       S.lost=true; say(S.msg); if(tab==="match")renderView();
-      L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; const q=playRescue(sc,S.st); S.lost=false; S.ball=PZ[q.z]; S.fx={k:"goal",at:[PZ[q.z][0],9]}; S.over=q.over; S.msg=q.over.msg; say(S.msg); if(tab==="match")renderView();
+      L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; const q=playRescue(sc,S.st); S.lost=false; S.sp=null; S.ball=PZ[q.z]; S.fx={k:"goal",at:[PZ[q.z][0],9]}; S.over=q.over; S.msg=q.over.msg; say(S.msg); if(tab==="match")renderView();
         L.ptimer=setTimeout(()=>{if(live===L&&L.scene===S)playEnd();},1800);},1800);
       return;}
     S.over=o; say(S.msg); if(tab==="match")renderView();
-    L.ptimer=setTimeout(()=>{if(live===L&&L.scene===S)playEnd();},1800);},650);}
+    L.ptimer=setTimeout(()=>{if(live===L&&L.scene===S)playEnd();},1800);}
+// v25.4 スペースへ パス: a tap on the grass (x, y in the pitch's units) puts the sign there, or moves it
+function spaceAim(p){const L=live, S=L&&!L.done?L.scene:null; if(!SPACE||!S||S.busy||S.over||S.lost||S.rv||S.dash||Date.now()<holdUntil||!isFinite(p[0])||!isFinite(p[1]))return; // holdUntil: a tap still on its way when the chance came up (v25.1) is no sign
+  const sc=L.res.ev[S.ei].play, st=S.st; if(st.moves>=PLAYMOVES)return; // no pass is left: the grass is no button
+  const to=spaceTo(p), o=to&&spaceOf(sc,st,to);
+  if(!o){S.sp=null; S.msg=p[1]<SPBOX[2]-SPEDGE?SPMSG.goal:SPMSG.edge;} // further out than the box's edge (before the goal, the pitch's rim): no sign, and he is told why (a tap that does nothing looks broken)
+  else if(o.why==="near"||o.why==="on"){S.sp=null; S.msg=SPMSG[o.why];} // beside the ball or a mate, or on an opponent he has beaten: no sign (one that is up goes), and he is told what to tap
+  else{S.sp={at:to,k:o.k,t:Date.now()}; S.msg=sc.who[o.k].n+SPMSG.aim;}
+  say(S.msg); if(tab==="match")renderView();}
+// a tap on the sign: the ball goes there and the mate runs. It worked: the chance goes on from that place. Else: playDone.
+function spaceGo(kb){const L=live, S=L&&!L.done?L.scene:null; if(!S||!S.sp||S.sp.far||S.busy||S.over||S.lost||S.rv||(!kb&&Date.now()-S.sp.t<SPTAP))return;
+  const sc=L.res.ev[S.ei].play, st=S.st, p=S.sp.at, wz=S.wz?playWaza(sc,S,playOptions(sc,st)).find(x=>x.id===S.wz&&x.grp==="pass")||null:null;
+  const r=spaceAct(sc,st,p,Math.random(),wz?wz.lv:0); S.sp=null; if(!r){if(tab==="match")renderView(); return;}
+  if(wz){S.wzUsed++; S.wz="";} else if(S.wz&&WZ[S.wz]&&WZ[S.wz][1]==="drib")S.wz=""; // as with a pass: a ドリブル わざ chosen is gone with the first move
+  const cn=sc.who[st.car].n, rn=sc.who[r.k].n, at=st.pos[st.car], end=r.ok||r.why==="far"?p:spaceCut(st,at,p), fxk=r.ok||r.why==="far"?"":"block";
+  S.busy=true; S.fx=null; const ofx=document.getElementById("pfx"); if(ofx)ofx.remove();
+  const ball=document.getElementById("pball"); if(ball){ball.style.left=end[0]+"%"; ball.style.top=(end[1]/1.15).toFixed(2)+"%";}
+  if(r.ok){const me=document.getElementById("pp-"+r.k), sg=document.getElementById("psp"); if(me){me.style.left=p[0]+"%"; me.style.top=(p[1]/1.15).toFixed(2)+"%";} if(sg)sg.classList.add("go");} // he runs onto the ball (.pt.mine has the transition)
+  document.querySelectorAll("#pitchBox button,#skipLive").forEach(x=>{x.disabled=true;});
+  clearTimeout(L.ptimer); L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.busy=false;
+    if(r.ok){S.from=st.car; S.wzp=wz?wz.id:""; S.spd=true; S.mv={pos:Object.assign({},st.pos,{[r.k]:p}),d:st.d}; S.st=r.st; const got=playGot(S,"ps");
+      S.msg=`${wz?wz.n+(wz.id==="first"?"から ":"! "):""}${SPMSG.ok} ${rn}${SPMSG.got}`+(r.st.moves>=PLAYMOVES?" "+PLAYMSG.last:" "+PLAYMSG.moved);
+      say(S.msg+(got?" "+S.bonus:"")); if(tab==="match"){renderView(); if(kb)pitchFocus();} S.mv=null; return;} // kb: the sign he pressed is gone, so the pitch takes the focus (the next Tab is its first button)
+    const m=r.why==="far"?[`遠すぎて ${rn}が 追いつけなかった…`,SPMSG.far]:r.why==="tight"?PLAYMSG.tight:[PLAYMSG.cut[0],SPMSG.cut];
+    const line=r.why==="far"?`${cn}の スペースへの パスは 遠すぎた…`:wz?`${cn}は ${wz.n}を 使ったけれど、相手に カットされた…`:`${cn}の スペースへの パスは 相手に カットされた…`;
+    if(r.why==="far")S.sp={at:p,k:r.k,far:1}; // the picture of why: the ball lies outside the runner's circle
+    playDone(L,S,sc,{goal:false,t:line,msg:m.join(" "),tip:m[1],head:m[0]},end,fxk); if(kb&&!S.dash)pitchFocus();},650);} // (a dash's button took the focus itself)
 // v22.1: a sure chance is a goal the match already had. When his second try fails too, a mate (not the one who lost the ball; a mate
 // with a name rather than a すけっと, when there is one) puts the loose ball in on the side away from the keeper: playing a chance
 // never costs his team a goal.
@@ -4186,7 +4272,7 @@ function playOver(sc,S,t,to,r,cn,wz){const from=S.st.pos[S.st.car], clear=t==="s
   const wl=wazaList(lastG).filter(x=>x.lv>0), sco=sc.who[S.st.car], pas=S.from?sc.who[S.from]:null; let line="";
   if(pas&&pas.hero){if(S.wzp&&own(WAZAAST,S.wzp))line=WAZAAST[S.wzp];} // v21: his pass is named after the わざ he chose for it (v17: one he knows, by chance)
   else if(pas&&sco.hero){const c=wl.filter(x=>own(WAZAGOAL,x.id)); if(c.length&&Math.random()<WAZAUSE)line=WAZAGOAL[rnd(c).id];}
-  const text=line?line.replace(/\{([ahs])\}/g,(m,k)=>k==="h"?heroName():k==="a"?pas.n:sco.n):pas?`${pas.n}の パスから ${sco.n}が ゴール!!`:S.drib?`${sco.n}が ${S.wzd&&WZ[S.wzd]?WZ[S.wzd][2]:"ドリブル"}から シュート! ゴール!!`:`${sco.n}が 思い切って シュート! ゴール!!`;
+  const text=line?line.replace(/\{([ahs])\}/g,(m,k)=>k==="h"?heroName():k==="a"?pas.n:sco.n):pas?`${pas.n}の ${S.spd?"スペースへの ":""}パスから ${sco.n}が ゴール!!`:S.drib?`${sco.n}が ${S.wzd&&WZ[S.wzd]?WZ[S.wzd][2]:"ドリブル"}から シュート! ゴール!!`:`${sco.n}が 思い切って シュート! ゴール!!`;
   return {goal:true,t:text,waza:!!line||(!pas&&S.drib&&!!S.wzd),msg:r.q===2?PLAYMSG.goal:PLAYMSG.goalTight};}
 // the scene is over: its line goes into the match and the clock runs again
 const playApply=(e,o)=>{e.t=o.t; e.side="me"; e.played=1; if(o.goal)e.goal=1; else delete e.goal; if(o.waza)e.waza=1; else delete e.waza;};
@@ -4217,6 +4303,10 @@ function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.po
   const zones=["L","C","R"].map(z=>`<button type="button" class="pz" id="pz-${z}" data-pz="${z}"${ops.length?"":" disabled"} aria-label="ゴールの ${PZN[z]}へ シュート">${PZN[z]}</button>`).join("");
   const dr=ops.some(o=>o.t==="drib")?`<button type="button" class="pd" id="pd-s" data-pd="s" style="${xy(sc.s)}" aria-label="空いた ところへ ドリブル">ドリブル</button>`:"";
   const bp=rv?[rv.P[0],rv.P[1]+PLAYFEET]:S.ball||[at[0],at[1]+PLAYFEET];
+  // v25.4 スペースへ パス: the runner's circle (how far he gets), the ball's way and his run, and the sign (a button: his yes), or a cross on a ball that went too far
+  const sp=SPACE&&S.sp&&!rv&&!S.dash?S.sp:null, spf=sp?st.pos[sp.k]:null;
+  const spl=sp?`<svg class="pspl" viewBox="0 0 100 115" preserveAspectRatio="none" aria-hidden="true"><path class="b" d="M${at[0]} ${at[1]}L${sp.at[0]} ${sp.at[1]}"/><path class="r" d="M${spf[0]} ${spf[1]}L${sp.at[0]} ${sp.at[1]}"/></svg><i class="psrun" style="${xy(spf)};width:${SPRUN*2}%;padding-top:calc(${SPRUN*2}% - 4px)" aria-hidden="true"></i>`:"";
+  const spb=sp?sp.far?`<i class="prmk ng psx" style="${xy(sp.at)}" aria-hidden="true"></i>`:`<button type="button" class="psp" id="psp" data-psp="1" style="${xy(sp.at)}" aria-label="ここ(スペース)へ パス。 ${esc(sc.who[sp.k].n)}が 走る">パス</button>`:"";
   // v25.1: the run (dotted circle, the mark of the last try, the spot that shines, the pitch as one big tap) and the loose ball
   const rvx=rv?`<i class="prun" style="${xy(rv.at)}" aria-hidden="true"></i>${rv.mk?`<i class="prmk ${rv.mk.ok?"ok":"ng"}" style="${xy(rv.mk.at)}" aria-hidden="true"></i>`:""}<div class="prtap" id="prtap"${rv.busy?" data-busy":""}></div>${rv.busy?"":`<button type="button" class="prhint${rv.n>=RECVHINT?"":" kb"}" id="prhint" data-prh="1" style="${xy(rv.h0)}" aria-label="ここ(${rv.n>=RECVHINT?"光って いる ところ":"パスを もらえる ところ"})へ 走る">ここ</button>`}`:"";
   const bdAge=S.badge?Date.now()-S.badge.at:0, bdx=S.badge&&bdAge>=0&&bdAge<PBADGEMS?`<i class="pbadge" id="pbadge" style="animation-delay:-${bdAge}ms" aria-hidden="true">${esc(S.badge.t)}</i>`:""; // a redraw goes on where the fade was
@@ -4233,9 +4323,9 @@ function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.po
   return `<div class="pitchbox" id="pitchBox"><p class="ptitle"><b>${sc.kind==="hard"?"むずかしい チャンス!":"大チャンス!"}</b>${S.over||S.lost?`<span class="pth" aria-hidden="true" data-t="${ptsub}">${sc.coach?MXICON("voice"):""}</span>`:`<span>${sc.coach?MXICON("voice"):""}${ptsub}</span>`}</p>
     ${wzbox}
     <div class="ppitch${rv?" rv":""}" id="pitch"><svg class="plines" viewBox="0 0 100 115" preserveAspectRatio="none" aria-hidden="true"><path d="M14 0v36h72V0M0 113h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 36a12 9 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/></svg>
-    <div class="pgoal">${zones}</div>${rings}${opp}${dr}${back}${pl}<span class="pball" id="pball" style="${xy(bp)}"></span>${fx}${rvx}${dsx}${bdx}</div>
-    <p class="pmsg" id="pmsg">${esc(S.msg||(rv?RVMSG.start:at[1]>PLAYFAR?PLAYMSG.startFar:PLAYMSG.start))}</p>${S.bonus?`<p class="pbonus" id="pbonus">${esc(S.bonus)}</p>`:""}
-    <p class="plhint">${rv?RVMSG.help:"味方を タップで パス、ゴールを タップで シュート。 赤い 丸は 相手の 足が とどく ところ。 パスや ドリブルの あとは、みんなが 動くよ。"}</p>
+    <div class="pgoal">${zones}</div>${rings}${spl}${opp}${dr}${back}${pl}<span class="pball" id="pball" style="${xy(bp)}"></span>${fx}${rvx}${spb}${dsx}${bdx}</div>
+    <p class="pmsg" id="pmsg">${esc(S.msg||(rv?RVMSG.start:(at[1]>PLAYFAR?PLAYMSG.startFar:PLAYMSG.start)+(SPACE&&st.moves<PLAYMOVES&&!pbOf(game,"ps")?" "+SPMSG.tip:"")))}</p>${S.bonus?`<p class="pbonus" id="pbonus">${esc(S.bonus)}</p>`:""}
+    <p class="plhint">${rv?RVMSG.help:"味方を タップで パス、ゴールを タップで シュート。 "+(SPACE?SPMSG.help:"")+"赤い 丸は 相手の 足が とどく ところ。 パスや ドリブルの あとは、みんなが 動くよ。"}</p>
     </div>`;}
 
 // v22: the PK shoot-out he plays (the rules: pkSpread, pkKeeper, pkRate, pkKick, pkDecided above, from v22/pk.js).
@@ -4376,6 +4466,8 @@ $("#view").addEventListener("click",e=>{const v=e.target.closest("#pkView"); if(
   pkAim(PKV[0]+(e.clientX-q.left-v.clientLeft)/w*PKV[2],PKV[1]+(e.clientY-q.top-v.clientTop)/h*PKV[3]);});
 $("#view").addEventListener("click",e=>{const v=e.target.closest("#prtap"); if(!v)return; const q=v.getBoundingClientRect(); if(!q.width||!q.height)return; // v25.1 where he runs
   recvTap([(e.clientX-q.left)/q.width*100,(e.clientY-q.top)/q.height*115]);});
+$("#view").addEventListener("click",e=>{if(!SPACE||!e.target.closest)return; const v=e.target.closest("#pitch"); if(!v||e.target.closest("button,.pt,.pgoal,#prtap"))return; // a tap on the grass: a pass into space
+  const q=v.getBoundingClientRect(); if(!q.width||!q.height)return; spaceAim([(e.clientX-q.left)/q.width*100,(e.clientY-q.top)/q.height*115]);});
 $("#view").addEventListener("keydown",e=>{if(e.target.id!=="pkView")return; const d={ArrowLeft:[-4,0],ArrowRight:[4,0],ArrowUp:[0,-4],ArrowDown:[0,4]}[e.key];
   if(d){e.preventDefault(); const P=live&&live.pk, a=P&&P.aim?P.aim:[50,PKH/2]; pkAim(a[0]+d[0],a[1]+d[1]);}
   else if(e.key==="Enter"||e.key===" "){e.preventDefault(); pkGo();}});
@@ -4415,6 +4507,7 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.pd){playTap("drib","s");return;}
   if(b.dataset.wz){playArm(b.dataset.wz);return;} // v21
   if(b.dataset.pz){playTap("shot",b.dataset.pz);return;}
+  if(b.dataset.psp){spaceGo(e.detail===0);return;} // the sign of a pass into space (detail 0: a key, which is no double tap)
   if(b.dataset.pdash){playDashTap(e.detail===0);return;} // v25.1 (detail 0: a key, not a finger)
   if(b.dataset.prh){const S=live&&!live.done&&live.scene; if(S&&S.rv)recvTap(S.rv.h0,true);return;}
   if(b.id==="pkGo"){pkGo();return;} // v22
