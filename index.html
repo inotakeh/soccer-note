@@ -628,6 +628,12 @@ button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z
   .pt.mine{transition:left .5s ease-out,top .5s ease-out} /* v21: the dribbler runs with the ball */
   .pfx.flip{animation-name:pfxm}@keyframes pfxm{from{transform:translate(-50%,-50%) scale(-.4,.4);opacity:.3}}
   .pfx.old{animation:none}}
+/* v25.5: the dribble's dust while he runs: it grows pale and is gone (without motion it stands there for that time, then goes) */
+.pfx.run{animation:none}
+@media (prefers-reduced-motion:no-preference){.pfx.run{animation:pfxrun .5s ease-out forwards}@keyframes pfxrun{from{transform:translate(-50%,-50%) scale(.6);opacity:.95}to{transform:translate(-50%,-50%) scale(1.3);opacity:0}}
+  .pfx.run.flip{animation-name:pfxrunm}@keyframes pfxrunm{from{transform:translate(-50%,-50%) scale(-.6,.6);opacity:.95}to{transform:translate(-50%,-50%) scale(-1.3,1.3);opacity:0}}}
+.note .showline{font-size:.85rem;word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict} #xpprev small{font-weight:600;white-space:nowrap}
+#mxNote,#mxUp{word-break:keep-all;overflow-wrap:break-word;overflow-wrap:anywhere;line-break:strict}
 .kickrow{display:flex;flex-direction:column;gap:8px} #playHint{margin:0}
 .prtap{position:absolute;left:0;top:0;width:100%;height:100%;z-index:3;cursor:pointer;-webkit-tap-highlight-color:transparent} .prtap[data-busy]{cursor:default}
 .prun{position:absolute;transform:translate(-50%,-50%);width:52%;height:0;padding-top:calc(52% - 4px);border-radius:50%;border:2px dashed rgba(255,255,255,.95);background:rgba(255,255,255,.1);pointer-events:none;box-sizing:border-box}
@@ -1250,6 +1256,13 @@ const toNext=g=>g.level<MAXLV?need(g.level)-g.rest:STARXP-g.rest%STARXP;
 // Teammates join as キズナ grows (thresholds in KIZUNA), then keep getting stronger.
 const KIZUNA=[2,5,9,14,20,27,35,44,54,65];
 const HELPER=13;
+// v25.5 しあいの けいけん: every match played (a ticket used: game.used; a リベンジ is none) makes every teammate, the helpers too, one
+// stronger, up to MXCAP. The line-up is chosen without it, so it is who it was and the team is 0.7 × that stronger. Nothing new is
+// stored and the matches played before count. While a match is played back it is as at kick-off. MATEXP=0 gives the page before.
+const MATEXP=1, MXCAP=100;
+const mxOf=x=>{const u=+((x&&x.used)||0); return MATEXP>0&&Number.isFinite(u)?Math.min(MXCAP,Math.max(0,Math.floor(u*MATEXP))):0;};
+const mateExp=()=>{let x=null; try{x=live&&!live.done?live.base:game;}catch(e){} return mxOf(x);};
+const mxLine=()=>{if(!(MATEXP>0))return ""; const x=mateExp(); return `<p class="muted" id="mxNote"><b>しあいの けいけん +${x}${x>=MXCAP?" MAX!":""}</b> しあいを 1回 すると、なかま みんなの 強さが +${MATEXP} (+${MXCAP} まで)。 すけっとも 強く なるよ。 リベンジは 数えないよ。</p>`;};
 const MATES=[
   {id:"haru",n:"ハル",pos:"MF",cat:"パスの 名人",skill:"スルーパス",line:"するどい パスが 通った!",base:20,num:8,hair:2,hc:1,skin:0,iris:"#8a6a3a",mood:"calm"},
   {id:"daichi",n:"ダイチ",pos:"DF",cat:"かべのような 守り",skill:"てっぺきブロック",line:"体を はって シュートを ブロック!",base:21,num:4,hair:1,hc:5,skin:1,iris:"#4a3a2a",mood:"fierce"},
@@ -1543,9 +1556,9 @@ function ptPlanCost(g,plan){const c={b:0,o:0,h:0};
   return c;}
 const ptFree=(g,plan)=>{const c=ptPlanCost(g,plan), o={}; PTKINDS.forEach(([t])=>{o[t]=Math.max(0,g.left[t])-c[t];}); return o;};
 const ptFits=(g,plan)=>{const f=ptFree(g,plan); return PTKINDS.every(([t])=>f[t]>=0);};
-function squad(g){
-  return MATES.map((m,i)=>{const th=KIZUNA[i], joined=g.kizuna>=th;
-    return Object.assign({},m,{n:mateName(m),th,joined,power:joined?m.base+Math.min(40,Math.round(4*Math.sqrt(g.kizuna-th))):0});});
+function squad(g){const mx=mateExp(); // v25.5 p0: his strength without the matches played
+  return MATES.map((m,i)=>{const th=KIZUNA[i], joined=g.kizuna>=th, p0=joined?m.base+Math.min(40,Math.round(4*Math.sqrt(g.kizuna-th))):0;
+    return Object.assign({},m,{n:mateName(m),th,joined,p0,power:joined?p0+mx:0});});
 }
 function heroPower(g){const w=POS[profile.pos||"MF"].w; let s=0; for(const k in w)s+=w[k]*(g.stats[k]||0); return 12+1.8*g.level+0.6*s;}
 // 8-a-side in the team's 2-3-2.
@@ -1555,9 +1568,9 @@ function lineup(g){
   const pos=profile.pos||"MF", side=sideOf(pos,profile.side,TEAMSHAPE), out=SHAPES[TEAMSHAPE].map(p=>({pos:p,who:null}));
   const at=out.map((s,i)=>s.pos===pos?i:-1).filter(i=>i>=0);
   out[at[side==="R"?at.length-1:side==="C"?(at.length-1)>>1:0]].who={hero:true,power:heroPower(g)};
-  const pool=squad(g).filter(m=>m.joined).sort((a,b)=>b.power-a.power), used={};
+  const mx=mateExp(), pool=squad(g).filter(m=>m.joined).sort((a,b)=>b.power-a.power), used={}; // v25.5 mx: on top of the choice below, so the line-up is who it was
   out.forEach(s=>{if(s.who)return; const m=pool.find(m=>!used[m.id]&&m.pos===s.pos); if(m){used[m.id]=1; s.who={mate:m,power:m.power};}});
-  out.forEach(s=>{if(s.who)return; const m=pool.find(m=>!used[m.id]&&m.power*.85>HELPER); if(m){used[m.id]=1; s.who={mate:m,power:m.power*.85};} else s.who={helper:true,power:HELPER};});
+  out.forEach(s=>{if(s.who)return; const m=pool.find(m=>!used[m.id]&&m.p0*.85>HELPER); if(m){used[m.id]=1; s.who={mate:m,power:m.p0*.85+mx};} else s.who={helper:true,power:HELPER+mx};});
   return out;
 }
 function teamPower(g){
@@ -1575,7 +1588,20 @@ function teamPower(g){
 // v22.2: of the missions cleared after a note only TKPERNOTE are tickets (ticketPass): g.mtk counts those, g.mleft is how many are open
 // v25.3: a note written from NOTETKGATE (2026-11-25 00:00 in Japan) on is NOTETK tickets; an older one stays one, so nothing earlier changes much.
 const NOTETK=2, NOTETKGATE="2026-11-24T15:00:00.000Z";
-const noteTkOf=e=>NOTETK>1&&isoOr(e&&e.createdAt,"")>=NOTETKGATE?NOTETK:1;
+// v25.5 見せたら チケット: a note written from SHOWGATE (2026-11-26 00:00 in Japan) on that the family has looked at is SHOWTK ticket more.
+// Looked at = a stamp or a comment of theirs on it. A stamp or a comment put on or removed writes shownAt on the note when it has
+// none, so the ticket stays when they are removed again (nothing is gained by removing one and putting it back). Once a note; a
+// mission record does not count.
+const SHOWTK=1, SHOWGATE="2026-11-25T15:00:00.000Z";
+const showCan=e=>SHOWTK>0&&isoOr(e&&e.createdAt,"")>=SHOWGATE;
+const showSeen=e=>!!(e&&(isoOr(e.shownAt,"")||stampsOf(e).length||String(e.parent||"").trim()));
+const showTkOf=e=>showCan(e)&&showSeen(e)?SHOWTK:0;
+const showMark=e=>showCan(e)&&!isoOr(e.shownAt,"")?{shownAt:new Date().toISOString()}:{};
+const SHOWMSG=`おうちの人に 見せたね! しあいチケット +${SHOWTK}`, SHOWASK=`スタンプか コメントを つけて くださると、しあいチケットが ${SHOWTK}まい ふえます。`, SHOWDONE=`✓ この ノートで しあいチケットが ${SHOWTK}まい ふえました。`;
+const showLine=e=>showCan(e)?`<p class="muted showline">${showSeen(e)?`✓ おうちの人に 見せたよ! しあいチケット +${SHOWTK}`:`👪 おうちの人に 見せて、スタンプか コメントを もらうと、しあいチケット +${SHOWTK}`}</p>`:"";
+const draftTk=()=>NOTETK+(SHOWTK>0&&draft&&String(draft.parent||"").trim()?SHOWTK:0); // the note being written: with the family's words in it, it is shown already
+const showTip=()=>SHOWTK>0&&!(draft&&String(draft.parent||"").trim())?` <small class="muted" id="showTip">(おうちの人に 見せると +${SHOWTK})</small>`:"";
+const noteTkOf=e=>(NOTETK>1&&isoOr(e&&e.createdAt,"")>=NOTETKGATE?NOTETK:1)+showTkOf(e);
 const noteTk=es=>es.reduce((a,e)=>a+noteTkOf(e),0);
 const tickets=g=>Math.max(0,noteTk(g.es)+(g.mtk||0)-(game.used||0));
 const ticketsOf=(es,ms)=>noteTk(es)+ticketPass(es,missionPass(ms)).tk;
@@ -2150,6 +2176,7 @@ function noteExtras(x){
     games:(Array.isArray(x.games)?x.games:[]).filter(g=>g&&typeof g==="object").slice(0,20).map(g=>({opp:s(g.opp,20),gf:n2(g.gf),ga:n2(g.ga)})),
     npos,nside,nshape,focus:focusOf({npos,nside,nshape,focus:x.focus}).slice(0,pointsOf(npos,nside,nshape).length),
     hard:s(x.hard,200),coach:s(x.coach,200),stamps:stampsOf(x),stampAt:isoOr(x.stampAt,""),parentAt:isoOr(x.parentAt,""),jug:cleanJug(x.jug)}, wz=wazaOf(x);
+  const shn=isoOr(x.shownAt,""); if(shn)o.shownAt=shn; // v25.5: only when the family has looked at the note
   if(wz.length)o.waza=wz; // v16: only when he tapped one, so a note without techniques keeps its v15 shape
   Object.assign(o,feelFields(Object.assign({},x,{goal:s(kjOld(x.goal),40)}))); // v24.5, only when set (the goal as the note keeps it)
   const gl=glvOf({goal:s(x.goal,40),glv:x.glv}); if(gl)o.glv=gl; // v24.8, only with a goal
@@ -2605,14 +2632,16 @@ function viewHome(g){
   const setup=ready&&profReady&&(!profile.name||!profile.pos)&&!settingsOpen?`<section class="panel empty"><h2>はじめに</h2><p class="muted">せんしゅの 名前と ポジションを 決めよう!</p><button class="primary" id="openSettings" type="button">せっていを 開く</button></section>`:"";
   const empty=ready&&!g.es.length?`<section class="panel empty"><h2>さいしょのノートを書こう!</h2><p class="muted">練習や しあいのあとに 書くと、せんしゅが 育って、なかまが ふえて、しあいにも 出られるよ。</p><button class="primary" data-go="write" type="button">ノートを書く</button></section>`:"";
   const hp=handGet(), he=hp&&(g.es.find(e=>e.id===hp.id)||g.ms.find(m=>m.id===hp.id)), hm=he&&g.ms.includes(he)?he.kind:"", hb=he&&!stampsOf(he).length&&!String(he.parent||"").trim()
-    ?`<button class="stampnews handnote" id="handBtn" data-note="${esc(he.id)}" type="button">${hm==="video"?"👪 今日の 動画 ふり返りを おうちの人に 見せよう!":hm==="learn"?"👪 調べた ことを おうちの人に 教えよう!":hm==="pro"?"👪 プロの しあいで 見つけた ことを おうちの人に 見せよう!":hm==="home"?"👪 今日の ボール遊びを おうちの人に 話そう!":hm==="run"?"👪 今日の かけっこ 練習を おうちの人に 話そう!":"👪 今日の ノートを おうちの人に 見せよう!"}<small>タップで おうちの人の 番に なるよ</small></button>`:"";
-  const ng=goalCard(g), nw=stampNews(g), sn=nw?`<button class="stampnews" id="newsBtn" data-note="${esc(nw.id)}" type="button">🎉 おうちの人から ${nw.stamp&&nw.comment?"コメントと スタンプが":nw.comment?"コメントが":"スタンプが"} とどいたよ!<small>タップで 見てね</small></button>`:"";
+    ?`<button class="stampnews handnote" id="handBtn" data-note="${esc(he.id)}" type="button">${hm==="video"?"👪 今日の 動画 ふり返りを おうちの人に 見せよう!":hm==="learn"?"👪 調べた ことを おうちの人に 教えよう!":hm==="pro"?"👪 プロの しあいで 見つけた ことを おうちの人に 見せよう!":hm==="home"?"👪 今日の ボール遊びを おうちの人に 話そう!":hm==="run"?"👪 今日の かけっこ 練習を おうちの人に 話そう!":"👪 今日の ノートを おうちの人に 見せよう!"}<small>タップで おうちの人の 番に なるよ${!hm&&showCan(he)&&!showSeen(he)?`。 スタンプか コメントを もらうと、しあいチケット +${SHOWTK}!`:""}</small></button>`:"";
+  const ng=goalCard(g), nw=stampNews(g), nwE=nw?g.es.find(e=>e.id===nw.id):null, nwTk=!!nwE&&showTkOf(nwE)>0&&(Date.parse(nwE.shownAt||"")||0)>seenNow().at, // v25.5 nwTk: the ticket for showing the note came since his last look
+    sn=nw?`<button class="stampnews" id="newsBtn" data-note="${esc(nw.id)}" type="button">🎉 おうちの人から ${nw.stamp&&nw.comment?"コメントと スタンプが":nw.comment?"コメントが":"スタンプが"} とどいたよ!<small>${nwTk?`しあいチケットも +${SHOWTK}! `:""}タップで 見てね</small></button>`:"";
   const ez=(EASYLV||NOTETK>1)&&ready&&g.es.length&&!easySeen()?`<button class="stampnews" id="easyBtn" type="button">🎉 レベルが 上がりやすく なったよ!<small>ノートを 書くと、しあいチケットが ${NOTETK}まい もらえるよ! (タップで とじる)</small></button>`:""; // v25.3
+  const nz=(MATEXP>0||SHOWTK>0)&&ready&&g.es.length&&!ez&&!news255Seen()?`<button class="stampnews" id="news255" type="button">🎉 新しく なったよ!<small>${MATEXP>0?"しあいを すると、なかまも 強く なるよ。 ":""}${SHOWTK>0?`これから 書く ノートを おうちの人に 見せて、スタンプか コメントを もらうと、しあいチケットが もう ${SHOWTK}まい! `:""}(タップで とじる)</small></button>`:""; // v25.5
   const rv=gameReady&&!live&&revOpen(game), tkb=tk||rv?`<div class="ticket"><div><span class="label">${rv?"🔥 リベンジ チャンス":"しあいチケット"}</span><b>${rv?(tk?`+ チケット × ${tk}`:""):`× ${tk}`}</b></div><button class="ghost" data-go="match" type="button">しあいに 行く</button></div>`:"";
   const max=Math.max(10,...Object.values(g.stats));
   const list=STATS.map(([k,t])=>`<div><span>${t}</span><span class="b"><i style="width:${Math.round(g.stats[k]/max*100)}%"></i></span><em>${g.stats[k]}</em></div>`).join("");
   const pw=profile.pos?`<p class="muted">${POS[profile.pos].n}は ${Object.entries(POS[profile.pos].w).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k])=>STATS.find(s=>s[0]===k)[1]).join("と ")}が とくに 大事。</p>`:"";
-  return `${settingsOpen?viewSettings():""}${setup}${empty}${ez}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${bikeCard(g)}${prepCard(g)}${tkb}${shopNews(g)}
+  return `${settingsOpen?viewSettings():""}${setup}${empty}${ez}${nz}${sn}${hb}${ng}${missionPanel(g)}${streakPanel(g)}${growthCard(g)}${mealCard(g)}${bikeCard(g)}${prepCard(g)}${tkb}${shopNews(g)}
   <section class="panel" id="ability"><h2>のうりょく</h2><div class="stats">${radar(g.stats)}<div class="statlist">${list}</div></div>
   ${ptBox(g)}
   ${g.stats.speed?"":`<p class="muted" id="speedHint">🏃 スピード(足の 速さ)は 新しい のうりょく。 体ポイントで 上げられるよ!</p>`}
@@ -2727,6 +2756,10 @@ const SHOPINTRO="soccer-note-shop-intro";
 const EASYNEWS="soccer-note-easy253"; let easyClosed=false;
 function easySeen(){if(easyClosed)return true;try{return localStorage.getItem(EASYNEWS)==="1";}catch(e){return false;}}
 function easyDone(){easyClosed=true;try{localStorage.setItem(EASYNEWS,"1");}catch(e){}}
+// v25.5 the card that says the mates grow with the matches and that showing the note is a ticket: once, until tapped (after the v25.3 card).
+const NEWS255="soccer-note-news255"; let news255Closed=false;
+function news255Seen(){if(news255Closed)return true;try{return localStorage.getItem(NEWS255)==="1";}catch(e){return false;}}
+function news255Done(){news255Closed=true;try{localStorage.setItem(NEWS255,"1");}catch(e){}}
 function introSeen(){if(introClosed)return true;try{return localStorage.getItem(SHOPINTRO)==="1";}catch(e){return false;}}
 function introDone(){introClosed=true;try{localStorage.setItem(SHOPINTRO,"1");}catch(e){}}
 function shopNews(g){
@@ -3514,7 +3547,7 @@ function viewWrite(){
     <div class="chips" id="nextPresets">${presetBtns(nextPresets(d),"ng",d.next)}</div>
     <p class="stepup" id="nextCue"${cueOf(d.next)?"":" hidden"}><span aria-hidden="true">🗣️ </span>次の 合いことば <span id="nextCueW">「${esc(cueOf(d.next))}」</span></p></div>
   <div class="field"><label class="q" for="f-parent">おうちの人から<small>後で書いてもOK</small></label><div class="voice"><textarea id="f-parent" maxlength="300" placeholder="一言 ほめてあげてください">${esc(d.parent)}</textarea>${micBtn("f-parent")}</div></div>
-  <p class="xpprev" id="xpprev">このノートで <b>+${draftXP()} XP</b> と しあいチケット ${NOTETK}まい</p>
+  <p class="xpprev" id="xpprev">このノートで <b>+${draftXP()} XP</b> と しあいチケット ${draftTk()}まい${showTip()}</p>
   <p class="formmsg${formAsk?" ask":""}" id="saveMsg" role="alert"${formNote?"":" hidden"}>${esc(formNote)}</p>
   <button class="ghost" id="jugBack" type="button"${formAsk?"":" hidden"}><span aria-hidden="true">⚽ </span>数を 見る</button>
   <button class="primary" id="saveBtn" type="button"${saving?" disabled":""}>${saving?"ほぞん中…":"ノートをつける!"}</button></section>`;
@@ -3542,10 +3575,10 @@ function viewTeam(g){
     ${nx?`<span class="b bond"><i style="width:${Math.round((g.kizuna-prev)/(nx.th-prev)*100)}%"></i></span><div class="row2"><b>次の なかまは ${POS[nx.pos].n}</b><span class="muted">あと ${nx.th-g.kizuna} キズナ</span></div>`:`<b>全員 なかまに なった!</b>`}</section>
   <section class="panel"><h2>スタメン</h2><div class="pitch">${rows}</div>
     <p class="muted">8人せい(${sh})。なかまが 足りない ところは「すけっと」が 入るよ。</p></section>
-  <section class="panel"><h2>なかま <span class="muted">${sq.filter(m=>m.joined).length} / ${sq.length}</span></h2><div class="mates">${mates}</div></section>
+  <section class="panel"><h2>なかま <span class="muted">${sq.filter(m=>m.joined).length} / ${sq.length}</span></h2>${mxLine()}<div class="mates">${mates}</div></section>
   <section class="panel"><h2>チームの 強さ</h2><div class="powers">
     <span>${esc(heroName())}(${esc(posLabel(profile.pos||"MF",profile.side,TEAMSHAPE))})</span><em>${r1(tp.hero)}</em>
-    <span>なかまの へいきん</span><em>${r1(tp.avg)}</em>
+    <span>なかまの へいきん${mateExp()?` <small class="muted" id="mxAvg">(けいけん +${mateExp()} を 足した 数)</small>`:""}</span><em>${r1(tp.avg)}</em>
     <span>スキル ボーナス</span><em>+${r1(tp.sk)}</em>
     ${tp.wz?`<span>わざ ボーナス</span><em>+${r1(tp.wz)}</em>`:""}
     ${tp.sp?`<span>スペシャル ボーナス</span><em>+${r1(tp.sp)}</em>`:""}
@@ -3572,6 +3605,7 @@ function viewLive(){
       +(L.keep?`<p class="muted keepmsg">作った スパイクを はいて いるので、そのままに したよ。もらった スパイクは「そうび」で はけるよ。</p>`:"");
     result=`<div class="result"><div class="big${L.res.win?" win":""}">${L.res.win?(L.cupWon?"ゆうしょう!!":"勝った!"):"ナイスチャレンジ!"}</div>
       ${L.cupWon?`<div class="got">${trophyIcon(L.ctx?L.ctx.cupI:4).replace("<svg",'<svg style="width:36px;height:36px"')}${esc(L.cupName)}の トロフィー</div>`:""}${got}
+      ${mxOf(game)>mxOf(L.base)?`<div class="matgot" id="mxUp"><b>なかまが 強く なった!</b><span>しあいの けいけん みんな +${mxOf(game)-mxOf(L.base)}</span></div>`:""}
       ${!L.res.win&&lpOf(game)>lpOf(L.base)?`<div class="matgot ptgot" id="lossPt"><b>練習ポイント ゲット!</b>${PTKINDS.filter(([t])=>LOSSPT[t]).map(([t,n,i])=>`<span>${i}${n} +${LOSSPT[t]}</span>`).join("")}</div>`:""}
       ${L.ctx&&L.ctx.got&&Object.keys(PLAYBONUS).some(k=>L.ctx.got[k])?`<div class="matgot ptgot" id="playPt"><b>ナイス プレー ボーナス!</b>${Object.keys(PLAYBONUS).filter(k=>L.ctx.got[k]).map(k=>{const q=PLAYBONUS[k], x=PTKINDS.find(y=>y[0]===q[0]); return `<span>${x[2]}${x[1]} +${q[1]}</span>`;}).join("")}</div>`:""}
       <p class="muted">${L.res.win?(L.cupWon?(L.ctx&&L.ctx.cupI===REDEYE-1?"世界一だ! でも まだ 先が ある… 赤い 目の 強い 相手が 待つ「うら世界大会」\u2060が 始まるよ!":L.ctx&&isWC(L.ctx.cupI+1)?"レジェンドカップで ゆうしょう! ワールドカップへの 道が 開いたよ。 まずは アジアよせんだ!":L.ctx&&isWC(L.ctx.cupI)?"ワールドカップで ゆうしょう! 本当の 世界一だ! さいきょうチームが 君を 待って いるよ!":L.ctx&&L.ctx.cupI===CUPS.length-1?"全部の 大会で ゆうしょうだ! さいきょうチームが 君を 待って いるよ!":"次の 大会に 進めるよ。"):"次の しあいに 進めるよ。"):lpOf(game)>lpOf(L.base)?"負けても だいじょうぶ。 ポイントで のうりょくを 上げよう! 次は「くやしさパワー」\u2060でも 少し 強くなるよ。":"負けても だいじょうぶ。次は「くやしさパワー」\u2060で 少し 強くなるよ。"}</p>
@@ -3606,7 +3640,7 @@ function viewMatch(g){
     ${steps}
     <div class="vs"><span>${esc(myTeam())}</span><span class="b"><i style="width:${Math.round(me/mx*100)}%"></i></span><em>${me}</em>
       <span>${esc(opp.n)}</span><span class="b opp"><i style="width:${Math.round(opp.r/mx*100)}%"></i></span><em>${opp.r}</em></div>
-    <div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><span class="muted">${Date.now()>=Date.parse(TKFREEGATE)?`ノートを 書くと ${NOTETK}まい。ミッションも クリアするたびに 1まい`:`ノートを 書くと 1まい。ミッションは ノート 1さつで ${TKPERNOTE}まいまで もらえる`}</span></div>
+    <div class="ticket"><div><span class="label">しあいチケット</span><b>× ${tk}</b></div><span class="muted">${Date.now()>=Date.parse(TKFREEGATE)?`ノートを 書くと ${NOTETK}まい${SHOWTK>0?`、おうちの人に 見せると もう ${SHOWTK}まい`:""}。ミッションも クリアするたびに 1まい`:`ノートを 書くと 1まい。ミッションは ノート 1さつで ${TKPERNOTE}まいまで もらえる`}</span></div>
     ${revOpen(game)?`<div class="revbox" id="revWait"><b>🔥 リベンジ チャンス!</b><span>次の しあいは チケット なしで できるよ!</span>
       <div class="kickrow"><button class="primary" id="kick" type="button">${MXICON("whistle")}リベンジ キックオフ!</button><button class="ghost" id="kickAuto" type="button">見るだけで リベンジ する</button></div></div>`
     :tk?`<div class="kickrow"><button class="primary" id="kick" type="button">${MXICON("whistle")}キックオフ!</button><p class="muted" id="playHint">チャンスが きたら、君が ピッチで プレーするよ。</p><button class="ghost" id="kickAuto" type="button">見るだけで しあいを する</button></div>`:`<button class="primary" data-go="write" type="button">ノートを 書いて チケットを もらう</button>`}
@@ -3786,7 +3820,7 @@ function viewNotes(g){
     ${f.cueR?`<p><span class="k">合いことば</span>「${esc(cueOf(e.goal))}」 ${esc(optName(CUERS,f.cueR))}</p>`:""}`)(feelFields(e))}
     ${e.next?`<p><span class="k">次</span>${esc(e.next)}</p>`:""}
     ${e.kind==="match"&&isDay(e.date)&&revs[e.date]?revLine(revs[e.date]):""}
-    ${handoff===e.id?`<div class="handoff" id="handoffBox"><b>${msi("parent","👪")} おうちの人の 番</b>${stampBlock(e,true)}${parentBlock}</div>`:stampBlock(e)+parentBlock}${del}</article>`;
+    ${handoff===e.id?`<div class="handoff" id="handoffBox"><b>${msi("parent","👪")} おうちの人の 番</b>${showCan(e)?`<p class="phint" id="showHint">${showSeen(e)?SHOWDONE:SHOWASK}</p>`:""}${stampBlock(e,true)}${parentBlock}</div>`:showLine(e)+stampBlock(e)+parentBlock}${del}</article>`;
   }).join("");
   const credit=g.es.some(e=>Number.isFinite(e.temp))?`<p class="muted">気温と 天気の データ:${WXCREDIT}(CC BY 4.0)</p>`:"";
   const hd=g.ms.length?(g.es.length?`${g.es.length}さつめ・ミッション ${g.ms.length}回`:`ミッション ${g.ms.length}回`):`${g.es.length}さつめ`;
@@ -3866,7 +3900,8 @@ async function toggleStamp(nid,x){
   const rec=isMission(nid), e=rec?missions.find(n=>n.id===nid):entries.find(n=>n.id===nid), st=rec?mstore:store; if(!e||!isStamp(x))return; // v14: a record keeps its stamps in its own store
   const cur=stampsOf(e), next=cur.includes(x)?cur.filter(y=>y!==x):cur.concat([x]); if(next.length>MAXSTAMPS)return;
   const patch={stamps:next}; if(!cur.includes(x))patch.stampAt=new Date().toISOString(); // only a new stamp brings the banner on home
-  try{await st.update(nid,patch);render();}catch(err){flash("ほぞんできませんでした。");}
+  const tk0=rec?0:showTkOf(e); if(!rec)Object.assign(patch,showMark(e)); // v25.5: a stamp on a note is the family's look at it; one removed was there, so the mark is written then too (a stamp from the page before has none)
+  try{await st.update(nid,patch);render();const e2=rec?null:entries.find(n=>n.id===nid);if(e2&&showTkOf(e2)>tk0)flash(SHOWMSG);}catch(err){flash("ほぞんできませんでした。");}
 }
 // v22.4 📅 今週の ふり返り: one week (Monday to Sunday) of his own growth on the notes page, for him and the family to look at
 // together. Worked out on every render from the notes, the records and the last matches; nothing is stored. Only what grew is
@@ -4067,7 +4102,7 @@ function render(){
 function newDay(){if(document.hidden||today()===drawnDay)return; if(tab==="home"&&!missionOpen&&!settingsOpen&&!chalOpen&&!live&&!document.querySelector(".overlay"))render();}
 document.addEventListener("visibilitychange",newDay); window.addEventListener("pageshow",newDay); window.addEventListener("focus",newDay); setInterval(newDay,60000);
 // After every change to the draft: keep a copy in this browser and refresh the XP preview.
-function draftChanged(){if(draft)touchedId=draft.id;keepDraft();const el=$("#xpprev");if(!el||!draft)return;el.innerHTML=`このノートで <b>+${draftXP()} XP</b> と しあいチケット ${NOTETK}まい`;}
+function draftChanged(){if(draft)touchedId=draft.id;keepDraft();const el=$("#xpprev");if(!el||!draft)return;el.innerHTML=`このノートで <b>+${draftXP()} XP</b> と しあいチケット ${draftTk()}まい${showTip()}`;}
 // Words for screen readers: the region is emptied first, so the same words are read again.
 let sayT=null;
 function say(t){const el=$("#say"); if(!el)return; el.textContent=""; clearTimeout(sayT); if(t)sayT=setTimeout(()=>{el.textContent=t;},60);}
@@ -4111,7 +4146,7 @@ function kickoff(auto){
   const prevEquip=Object.assign({},game.equip||{});
   const tp0=teamPower(g), joined=squad(g).filter(m=>m.joined).length;
   const hint=joined<7?"「なかまと つながる」プレーを ノートに 書くと、なかまが ふえて チームが ぐっと 強くなるよ。"
-    :tp0.hero<tp0.avg?"「自分を きたえる」プレーを ノートに 書くと、エースの 君が 強くなるよ。":"ノートを つづけると スキルが ふえて、チームが 強くなるよ。";
+    :tp0.hero<tp0.avg-mateExp()?"「自分を きたえる」プレーを ノートに 書くと、エースの 君が 強くなるよ。":"ノートを つづけると スキルが ふえて、チームが 強くなるよ。";
   // v17: the match as it goes by itself is saved now; base and ctx let finishLive() work the result out again after his plays
   const base=JSON.parse(JSON.stringify(game)), ctx={opp,ex,cupI,round,t:Date.now(),rev:rv}, sv=settle(base,res,ctx), next=sv.next, rewards=sv.rewards, cupWon=sv.cupWon, keep=sv.keep;
   live={res,opp,base,ctx,auto:!!auto,pk:null,pkd:false,scene:null,ptimer:null,shown:0,done:false,prevEquip,prevLoss:game.lossStreak||0,prevItems:(game.items||[]).length,prevMade:madeCount(game.made),rewards,cupWon,keep,hint,rev:rv,cupName:ex?"エキシビション":CUPS[cupI].n,roundName:ex?"":rnOf(CUPS[cupI])[round],timer:null};
@@ -4161,6 +4196,9 @@ function playArm(id){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.o
   const now=Date.now(); if(S.wz===id&&S.wzAt&&now-S.wzAt<PLAYWZTAP)return; S.wzAt=now; // a second tap right after the first is a double tap, not a change of mind
   S.wz=S.wz===id?"":id; S.msg=S.wz?`${w.n}を 使うよ! ${w.grp==="drib"?PLAYMSG.wzDrib:PLAYMSG.wzPass}`:PLAYMSG.wzOff; say(S.msg);
   if(tab==="match"){renderView(); const b=document.querySelector(`#pwz [data-wz="${id}"]`); if(b)b.focus({preventScroll:true});}}
+// v25.5: the picture where he set off on a dribble (a boot with dust) shows only while he runs and is gone when he is there.
+// It used to lie on the grass until the next play, and looked like a boot left behind. DRIBDUST=0 gives the page before.
+const DRIBDUST=1;
 function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S.over||S.lost||S.rv)return; // v22.1 S.lost: no move while he looks at a mistake (no button is on then)
   const sc=L.res.ev[S.ei].play, st=S.st, wz=t!=="shot"&&S.wz?playWaza(sc,S,playOptions(sc,st)).find(x=>x.id===S.wz&&x.grp===t)||null:null; // the chosen one, when it fits this tap
   const r=playAct(sc,st,t,to,Math.random(),wz?wz.lv:0); if(!r)return; S.sp=null; // the sign of a pass into space goes with any other play
@@ -4170,11 +4208,12 @@ function playTap(t,to){const L=live, S=L&&!L.done?L.scene:null; if(!S||S.busy||S
   S.busy=true; S.fx=null; const ofx=document.getElementById("pfx"); if(ofx)ofx.remove();
   const ball=document.getElementById("pball"); if(ball){if(t==="shot"){ball.classList.add("fly"); ball.style.transform=`rotate(${Math.round(Math.atan2(end[1]-at[1]-PLAYFEET,end[0]-at[0])*180/Math.PI)}deg)`;} // one unit is as long both ways, so this is the way it flies
     ball.style.left=end[0]+"%"; ball.style.top=(end[1]/1.15).toFixed(2)+"%";}
-  if(t==="drib"&&r.ok){const me=document.querySelector("#pitch .pt.mine.has"); if(me){me.style.left=sc.s[0]+"%"; me.style.top=(sc.s[1]/1.15).toFixed(2)+"%";}}
+  if(t==="drib"&&r.ok){const me=document.querySelector("#pitch .pt.mine.has"); if(me){me.style.left=sc.s[0]+"%"; me.style.top=(sc.s[1]/1.15).toFixed(2)+"%";}
+    if(DRIBDUST){const pi=document.getElementById("pitch"); if(pi)pi.insertAdjacentHTML("beforeend",`<i class="pfx pfx-dribble mx mx-fx_dribble run${sc.s[0]<at[0]?" flip":""}" id="pfx" style="left:${at[0]}%;top:${((at[1]+PLAYFEET)/1.15).toFixed(2)}%" aria-hidden="true"></i>`);}} // v25.5: the redraw when he is there removes it
   document.querySelectorAll("#pitchBox button,#skipLive").forEach(x=>{x.disabled=true;});
   clearTimeout(L.ptimer); L.ptimer=setTimeout(()=>{if(live!==L||L.scene!==S||L.done)return; S.busy=false;
     if(t!=="shot"&&r.ok){
-      if(t==="pass"){S.from=st.car; S.wzp=wz?wz.id:""; S.spd=false;} else{S.drib=true; S.wzd=wz?wz.id:""; S.fx={k:"dribble",at:[at[0],at[1]+PLAYFEET],m:sc.s[0]<at[0]};} // the dust where he set off; the boot of the picture runs to the right, so it is mirrored when he went left
+      if(t==="pass"){S.from=st.car; S.wzp=wz?wz.id:""; S.spd=false;} else{S.drib=true; S.wzd=wz?wz.id:""; S.fx=DRIBDUST?null:{k:"dribble",at:[at[0],at[1]+PLAYFEET],m:sc.s[0]<at[0]};} // the dust where he set off; the boot of the picture runs to the right, so it is mirrored when he went left
       S.mv={pos:t==="drib"?Object.assign({},st.pos,{h:sc.s}):st.pos,d:st.d}; // where everybody stood (the dribbler already ran)
       S.st=r.st; S.msg=(t==="pass"?`${wz?wz.n+(wz.id==="first"?"から ":"! "):""}ナイス パス! ${sc.who[to].n}に 通った!`:wz?`${wz.n}で 相手を ${r.st.out.length-(st.out||[]).length}人 かわした! もう じゃま できないよ。`:"ドリブルで 前へ 進んだ!")+(r.st.moves>=PLAYMOVES?" "+PLAYMSG.last:t==="drib"&&wz?" 次は どうする?":" "+PLAYMSG.moved);
       say(S.msg); if(tab==="match")renderView(); S.mv=null; return;}
@@ -4479,6 +4518,7 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.go){go(b.dataset.go);return;}
   if(b.id==="handBtn"){openParent(b.dataset.note);return;}
   if(b.id==="easyBtn"){easyDone();render();return;} // v25.3
+  if(b.id==="news255"){news255Done();render();return;} // v25.5
   if(b.id==="newsBtn"){const id=b.dataset.note;go("notes");showNote(a=>a.dataset.id===id);return;}
   if(b.id==="gcEdit"){chalOpen=true;render();const f=document.querySelector("#gcPresets button");if(f)f.focus();return;}
   if(b.dataset.gc!==undefined&&b.closest("#gcPresets")){setChal(b.dataset.gc);return;}
@@ -4620,9 +4660,9 @@ $("#view").addEventListener("click",async e=>{
     if(handoff&&handoff===id){handoff=null;stampOpen=null;editingParent=null;render();const f=document.getElementById("so-"+id);if(f)f.focus();return;} // とじる ends the parents' turn; the words typed stay
     delete pcText[id];editingParent=null;render();const f=document.querySelector(`[data-pc="${id}"]`)||document.getElementById("note-"+id);if(f)f.focus();return;}
   if(b.dataset.pcsave){if(pcBusy)return;const id=b.dataset.pcsave;pcBusy=id;b.disabled=true;b.textContent="ほぞん中…";
-    try{await stopVoice();const pcEl=$("#pc-"+id);if(!pcEl)return;const v=pcEl.value.trim();const was=(isMission(id)?missions:entries).find(x=>x.id===id), oldP=was?was.parent:"";
-      await (isMission(id)?mstore:store).update(id,{parent:v,parentAt:v?new Date().toISOString():""});pcBusy=null;delete pcText[id];editingParent=null;if(handoff===id){handoff=null;stampOpen=null;}render();if(v){const back=a=>a.map(x=>x.id===id?Object.assign({},x,{parent:oldP}):x), before=compute(back(entries),back(missions)), gn=parGain(before,lastG,id);
-        if(gn.sum>0)celebrate(before,gn,lastG,false,null,{par:gn.par}); else flash("コメントを ほぞんしたよ。");}}
+    try{await stopVoice();const pcEl=$("#pc-"+id);if(!pcEl)return;const v=pcEl.value.trim();const was=(isMission(id)?missions:entries).find(x=>x.id===id), oldP=was?was.parent:"", oldS=was&&was.shownAt||"", isNote=!isMission(id);
+      await (isMission(id)?mstore:store).update(id,Object.assign({parent:v,parentAt:v?new Date().toISOString():""},isNote&&was&&(v||showSeen(was))?showMark(was):null));pcBusy=null;delete pcText[id];editingParent=null;if(handoff===id){handoff=null;stampOpen=null;}render();if(v){const back=a=>a.map(x=>x.id===id?Object.assign({},x,{parent:oldP},isNote?{shownAt:oldS}:null):x), before=compute(back(entries),back(missions)), gn=parGain(before,lastG,id), tkUp=isNote&&tickets(lastG)>tickets(before); // v25.5 tkUp: the comment was the family's first look at the note
+        if(gn.sum>0)celebrate(before,gn,lastG,tkUp,null,{par:gn.par}); else flash(tkUp?"コメントを ほぞんしたよ。 "+SHOWMSG:"コメントを ほぞんしたよ。");}}
     catch(err){flash("ほぞんできませんでした。");}
     finally{if(pcBusy===id){pcBusy=null;render();}}return;}
   if(b.dataset.del){confirmDel=b.dataset.del;render();return;}
@@ -4658,6 +4698,7 @@ async function save(){
   const before=compute(entries.filter(x=>x.id!==d.id),missions);
   // The draft keeps one id, so pressing the button again after a slow or failed save rewrites the same note instead of adding a copy.
   const e=noteOf(d,d.createdAt||(d.createdAt=new Date().toISOString())); // v14: the note exactly as the preview scored it
+  if(String(e.parent||"").trim())Object.assign(e,showMark(e)); // v25.5: the family's words written with the note are their look at it
   const slow=setTimeout(()=>{if(draft===d)setSaving(false,"まだ ほぞんできていません。電波を たしかめて、もう一度 おしてね。");},10000);
   try{await store.add(e);}catch(err){clearTimeout(slow);if(draft===d)setSaving(false,"ほぞんできませんでした。もう一度 ためしてね。");return;}
   clearTimeout(slow);
@@ -4711,7 +4752,7 @@ function celebrate(before,gain,after,ticket,handoff,opt){
     ${ticket&&o.note&&Date.now()<Date.parse(TKFREEGATE)&&(before.mleft||0)<TKPERNOTE?`<div class="muted tkask" id="ovtkm">ミッションを クリアしても、しあいチケットを もらえるよ! (${TKPERNOTE}まいまで)</div>`:""}
     ${o.noTk?`<div class="tkask" id="ovtkn"><b>${dayFull()?"明日 ":""}ノートを 書くと、ミッションで また しあいチケットを もらえるよ!</b></div>`:""}
     ${newMake.length?`<div class="craft-ask"><b>🔨 ${esc(GEAR[newMake[0]].n)}${newMake.length>1?" など":""}が 作れるよ!</b><button class="ghost" type="button" id="ovcraft">こうぼうへ</button></div>`:""}
-    ${handoff?`<div class="handoff-ask"><b>${o.mk==="learn"?"👪 おうちの人に 教えて あげよう!":o.mk==="pro"?"👪 見た プレーを おうちの人と 話そう!":o.mk==="home"?"👪 やった 遊びを おうちの人に 話そう!":o.mk==="run"?"👪 やった 練習を おうちの人に 話そう!":o.mk==="video"&&vparOpen(after,handoff)?`👪 おうちの人と いっしょに ふり返ろう! コメントで +${VIDEOPARENT}\u00a0XP`:"👪 次は おうちの人の 番!"}</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
+    ${handoff?`<div class="handoff-ask"><b>${o.mk==="learn"?"👪 おうちの人に 教えて あげよう!":o.mk==="pro"?"👪 見た プレーを おうちの人と 話そう!":o.mk==="home"?"👪 やった 遊びを おうちの人に 話そう!":o.mk==="run"?"👪 やった 練習を おうちの人に 話そう!":o.mk==="video"&&vparOpen(after,handoff)?`👪 おうちの人と いっしょに ふり返ろう! コメントで +${VIDEOPARENT}\u00a0XP`:"👪 次は おうちの人の 番!"}${o.note&&showCan(o.note)&&!showSeen(o.note)?` <span id="ovshow">スタンプか コメントを もらうと、しあいチケット +${SHOWTK}!</span>`:""}</b><button class="ghost" type="button" id="ovpar">おうちの人に わたす</button></div>`:""}
     <div class="row" style="justify-content:center">${ticket?`<button class="ghost" type="button" id="ovmatch">しあいに 行く</button>`:o.noTk&&!dayFull()?`<button class="ghost" type="button" id="ovwrite">ノートを 書く</button>`:""}<button class="primary" type="button" id="ovok" style="flex:1">やったね!</button></div></div>`;
   document.body.appendChild(ov);
   // The second tap of a double tap on the save button lands on the reward, so for half a second it ignores taps: it must not vanish before it has been seen.
