@@ -656,7 +656,7 @@ button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z
 .kbfog{position:absolute;top:0;height:calc(100% * 54 / 115);width:50%;z-index:3;background:rgba(10,16,30,.9);color:#cfd6e6;font-style:normal;font-size:.75rem;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;pointer-events:none;transition:opacity .15s}
 .kbfog.l{left:0;border-right:1px dashed rgba(255,255,255,.3)} .kbfog.r{left:50%} .kbfog b{font-size:1.6rem;line-height:1}
 .kbp .kbh{visibility:hidden} .kbp.seel .kbh.l,.kbp.seer .kbh.r,.kbp.all .kbh{visibility:visible} .kbp.seel .kbfog.l,.kbp.seer .kbfog.r,.kbp.all .kbfog{opacity:.1}
-.kbme{z-index:4} .kbp .hdzone.at{left:auto;right:6px}
+.kbme{z-index:4} .hdzone.mg.mgt{bottom:auto;top:4px} .kbp .hdzone.at{left:auto;right:6px}
 .kbeye{position:absolute;transform:translate(-50%,-50%);z-index:6;min-height:44px;min-width:56px;margin:0;padding:2px 6px;border-radius:14px;border:3px solid #141a2e;background:#fff;color:#141a2e;font:inherit;font-size:.72rem;line-height:1.1;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;cursor:pointer;white-space:nowrap;box-shadow:0 2px 0 rgba(0,0,0,.4)}
 .kbeye svg{width:20px;height:20px;fill:currentColor;flex:none} .kbeye.on{background:#ffd34f} .kbeye:focus-visible{outline:3px solid #fff;outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.kbeye{animation:ptap 1.4s ease-in-out infinite}}
@@ -1721,10 +1721,12 @@ const playFlip=t=>{const fx=p=>[100-p[0],p[1]], fk={L:"R",C:"C",R:"L"}; return {
 // KUBI: KBMS the time before the pass [first, less for every right turn after a look (game.kb), the shortest], KBSEE how long one look
 // shows that side, KBTURN the time to turn once the ball is there, KBFOG the fog's bottom (behind him), KBEND where a turn takes him.
 const TORI=1, KUBI=1, TRSTEAL=[900,1700], TRRUN=4200, TRMS=[1500,2800], TRMIN=150;
-const DRAUTO=[3500,4500]; // v25.7.1: how long the result of とりかえす / 首ふり stays before the match goes on by itself (0: a button)
+const DRAUTO=[3500,4500];
+const TRUP=1; // v25.7.2: とりかえす upside down, our goal at the top (y becomes 115 - y) // v25.7.1: how long the result of とりかえす / 首ふり stays before the match goes on by itself (0: a button)
 const KBMS=[4000,500,2500], KBSEE=1100, KBTURN=3000, KBFOG=54, KBEND=[15,18];
 const trAt=(sc,e)=>{const t=clamp(e/TRRUN,0,1); return [Math.round(sc.st[0]+(sc.end[0]-sc.st[0])*t),Math.round(sc.st[1]+(sc.end[1]-sc.st[1])*t)];}; // the opponent with the ball, e ms after the steal
 function trScene(){const f=Math.random()<.5, j=Math.round(Math.random()*8-4), fx=p=>f?[100-p[0],p[1]]:p.slice();
+  if(TRUP)return {h0:fx([50+j,40]),hs:fx([50+j,60]),th:fx([63+j,77]),st:fx([57+j,65]),end:fx([62+j,14]),a:fx([16,44]),b:fx([84,40]),d:[fx([22,76]),fx([80,86])]}; // v25.7.2: he dribbles down, the opponent runs up
   return {h0:fx([50+j,84]),hs:fx([50+j,62]),th:fx([63+j,46]),st:fx([57+j,57]),end:fx([62+j,102]),a:fx([16,90]),b:fx([84,86]),d:[fx([22,44]),fx([80,34])]};}
 const kbMs=g=>Math.max(KBMS[2],KBMS[0]-KBMS[1]*pbOf(g,"kb"));
 const kbEnd=(sc,s)=>[clamp(sc.h[0]+s*KBEND[0],6,94),sc.h[1]-KBEND[1]]; // s: -1 left, 1 right (as the screen shows it)
@@ -4630,8 +4632,9 @@ function drHTML(L){const H=L.dr, sc=H.sc, who=H.who, ph=H.ph, tr=H.k==="tr", M=t
   const opp=(i,p,c)=>`<span class="pt opp${c||""}" style="${xy(p)}">${OPPFIG(MXOPP[i%MXOPP.length],oppRed(L))}</span>`, ring=(p,c)=>`<i class="reach${c||""}" style="${xy(p)}"></i><i class="reach in${c||""}" style="${xy(p)}"></i>`;
   const bdAge=H.badge?now-H.badge.at:0, bdx=H.badge&&bdAge>=0&&bdAge<PBADGEMS?`<i class="pbadge" style="animation-delay:-${bdAge}ms" aria-hidden="true">${esc(H.badge.t)}</i>`:"";
   let lines, pitch="", time="", why="";
-  if(tr){lines=`<path d="M14 115v-36h72V115M0 2h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 79a12 9 0 0 1 24 0M38 2a12 12 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/>`;
-    const goal=`<div class="pgoal hdg own" aria-hidden="true"></div><i class="hdzone mg">${TRMSG.goal}</i>`;
+  if(tr){lines=TRUP?`<path d="M14 0v36h72V0M0 113h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 36a12 9 0 0 0 24 0M38 113a12 12 0 0 1 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/>`
+      :`<path d="M14 115v-36h72V115M0 2h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 79a12 9 0 0 1 24 0M38 2a12 12 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/>`;
+    const goal=TRUP?`<div class="pgoal hdg" aria-hidden="true"></div><i class="hdzone mg mgt">${TRMSG.goal}</i>`:`<div class="pgoal hdg own" aria-hidden="true"></div><i class="hdzone mg">${TRMSG.goal}</i>`;
     const mates=(pa,pb)=>`<span class="pt mine${jump(sc.a,pa)}"><span class="ava">${face("a")}</span><span class="pn">${nm("a")}</span></span><span class="pt mine${jump(sc.b,pb)}"><span class="ava">${face("b")}</span><span class="pn">${nm("b")}</span></span>`;
     const others=sc.d.map((p,i)=>ring(p)+opp(i+1,p)).join("");
     if(ph==="ready")pitch="";
@@ -4643,11 +4646,11 @@ function drHTML(L){const H=L.dr, sc=H.sc, who=H.who, ph=H.ph, tr=H.k==="tr", M=t
         <i class="pfx pfx-block mx mx-fx_block" style="${xy(sc.st)}" aria-hidden="true"></i>
         <button type="button" class="trc drmv" id="trc" data-dr="chase" ${mv(sc.st,sc.end,TRRUN,el)} aria-label="${TRMSG.chase}">${OPPFIG(MXOPP[0],oppRed(L))}<b>${TRMSG.tap}</b></button>
         <span class="pball drmv" ${mv([sc.st[0],sc.st[1]+F],[sc.end[0],sc.end[1]+F],TRRUN,el)}></span>`;}
-    else{const c=trAt(sc,H.el), r=H.res, at=r==="fast"||r==="mid"?c:sc.end, hTo=r==="fast"?[c[0]-5,c[1]-2]:r==="mid"?[c[0]-6,c[1]-4]:r==="late"?[Math.round((sc.hs[0]+sc.end[0])/2),Math.round((sc.hs[1]+sc.end[1])/2)]:sc.hs;
-      const bTo=r==="mid"?[c[0]+(sc.b[0]>c[0]?5:-5),c[1]+3]:sc.b, ball=r==="fast"?[hTo[0],hTo[1]+F]:r==="mid"?[bTo[0],bTo[1]+F]:[sc.end[0],100];
+    else{const c=trAt(sc,H.el), r=H.res, at=r==="fast"||r==="mid"?c:sc.end, V=TRUP?-1:1, hTo=r==="fast"?[c[0]-5,c[1]-2*V]:r==="mid"?[c[0]-6,c[1]-4*V]:r==="late"?[Math.round((sc.hs[0]+sc.end[0])/2),Math.round((sc.hs[1]+sc.end[1])/2)]:sc.hs;
+      const bTo=r==="mid"?[c[0]+(sc.b[0]>c[0]?5:-5),c[1]+3*V]:sc.b, ball=r==="fast"?[hTo[0],hTo[1]+F]:r==="mid"?[bTo[0],bTo[1]+F]:[sc.end[0],TRUP?15:100];
       pitch=`${goal}${others}${mates(sc.a,bTo)}<span class="pt mine${r==="fast"?" has":""}${jump(sc.hs,hTo)}"><span class="ava">${face("h")}</span><span class="pn">${nm("h")}</span></span>
         <span class="pt opp${r==="fast"||r==="mid"?" out":""}${jump(c,at)}">${OPPFIG(MXOPP[0],oppRed(L))}</span><span class="pball${jump([c[0],c[1]+F],ball)}" id="drBall"></span>
-        ${r==="late"||r==="none"?`<i class="pfx pfx-save mx mx-fx_save" style="${xy([sc.end[0],100])}" aria-hidden="true"></i>`:""}${bdx}`;
+        ${r==="late"||r==="none"?`<i class="pfx pfx-save mx mx-fx_save" style="${xy([sc.end[0],TRUP?15:100])}" aria-hidden="true"></i>`:""}${bdx}`;
       why=`<div class="hdwhy" id="drWhy"><p class="hdans"><b>${r==="none"?TRMSG.none.split("…")[0]+"…":drSec(H.el)+TRMSG.sec}</b> ${TRMSG.tip[r]}</p><p class="hdct">${TRMSG.chk}</p><ul class="trrow">
         ${TRMSG.row.map((x,i)=>`<li class="${(r==="fast"?0:r==="mid"?1:2)===i?"on":""}"><b>${x[0]}</b> ${x[1]}</li>`).join("")}</ul><p class="hdrule">${TRMSG.rule}</p></div>`;}
     if(ph==="chase")time=`<div class="hdtime trclock" id="drTime"><b id="drLeft">${drSec(now-H.ts)}</b></div>`;}
