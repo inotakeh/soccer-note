@@ -656,7 +656,8 @@ button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z
 .hdtime i{position:absolute;left:0;top:0;bottom:0;width:100%;background:#ffd34f;transform-origin:left;animation:pdbar linear forwards} .hdtime:not(.on) i{animation:none}
 .hdtime b{position:relative;display:block;text-align:center;line-height:26px;color:var(--ink)} .hdtime.on b{color:#1a1a22}
 @media (prefers-reduced-motion:reduce){.hdtime i{animation-timing-function:steps(8,end)}}
-.hdpick{display:grid;grid-template-columns:1fr 1fr;gap:8px} .hdpick.one{grid-template-columns:1fr} .hdp button.pt:disabled{cursor:default}
+.hdpick{display:grid;grid-template-columns:1fr 1fr;gap:8px} .hdpick.one{grid-template-columns:1fr} .hdarw{position:absolute;transform:translate(-50%,-50%);z-index:4;width:44px;height:44px;margin:0;padding:0;border-radius:50%;border:3px solid #141a2e;background:#ffd34f;color:#141a2e;display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.4)} .hdarw svg{width:26px;height:26px;fill:currentColor;display:block} .hdarw:focus-visible{outline:3px solid #fff;outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.hdarw{animation:ptap 1.4s ease-in-out infinite}} .hdp button.pt:disabled{cursor:default}
 .hdb{min-height:64px;border:3px solid #1a1a22;border-radius:14px;font:inherit;font-size:1.15rem;font-weight:900;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#1a1a22;padding:4px}
 .hdb small{font-size:.75rem;font-weight:700} .hdb.drib{background:#ffad7a} .hdb.pass{background:#8fd8ff}
 .hdb:disabled{opacity:.45;cursor:default} .hdb.on{opacity:1;box-shadow:0 0 0 4px #ffd34f} .hdb:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
@@ -1712,6 +1713,13 @@ const HANDAN=1, HDMS=[8000,1000,5000], HDHOLD=600;
 // A pass is right only to the free mate (to) of a パス picture; to a marked mate it is cut by the opponent nearest to its way. 0: v25.6.
 const HDPICK=1;
 const hdCutBy=(sc,k)=>{let bi=0, bl=1e9; sc.d.forEach((p,i)=>{const l=segDist(sc.h,sc[k],p); if(l<bl){bl=l; bi=i;}}); return bi;}; // who cuts the pass to k
+// v25.6.2 HDDIR: しかける is a tap on one of two arrows beside him (HDARW: how far beside, how far down), the way past the one in front (d[0])
+// on that side: from him to hdEnd (HDLANE past the one in front). 2: a way into the red circle of another opponent (PLAYOPEN) is lost to
+// that one, and HDT2 brings two pictures with one way shut. 1: the way only shows where he goes. 0: v25.6.1 (the 「ドリブル」 button).
+const HDDIR=2, HDLANE=[11,10], HDARW=[15,2], HDTAP=350; // HDTAP: a tap on a mate or an arrow so soon after スタート is the second tap of a double tap (they come up under his finger)
+const hdEnd=(sc,s)=>[clamp(sc.d[0][0]+s*HDLANE[0],6,94),sc.d[0][1]-HDLANE[1]]; // s: -1 left, 1 right
+const hdBlock=(sc,s)=>{const e=hdEnd(sc,s); let bi=-1, bl=PLAYOPEN; sc.d.forEach((p,i)=>{if(!i)return; const l=segDist(sc.h,e,p); if(l<bl){bl=l; bi=i;}}); return bi;}; // who stands in that way (-1: nobody)
+const hdOpen=sc=>[-1,1].filter(s=>hdBlock(sc,s)<0); // the free ways
 const HDT=[
   {ans:"drib",zone:"opp",n:1,cover:false,h:[50,64],a:[16,52],b:[84,58],d:[[50,52],[27,55],[73,60]],go:[50,38],to:"a",cut:1,take:0},
   {ans:"drib",zone:"opp",n:1,cover:false,h:[70,60],a:[28,62],b:[42,88],d:[[66,48],[40,61],[51,77]],go:[60,36],to:"a",cut:1,take:0},
@@ -1719,15 +1727,25 @@ const HDT=[
   {ans:"pass",zone:"opp",n:2,cover:false,h:[50,64],a:[18,64],b:[84,62],d:[[42,54],[58,54],[30,64]],go:[50,40],to:"b",cut:2,take:1},
   {ans:"pass",zone:"own",n:1,cover:false,h:[40,88],a:[78,84],b:[22,58],d:[[42,76],[28,67]],go:[42,62],to:"a",cut:1,take:0},
   {ans:"pass",zone:"own",n:2,cover:false,h:[56,86],a:[20,90],b:[82,62],d:[[50,76],[64,77],[74,68]],go:[56,62],to:"a",cut:2,take:0}];
+// v25.6.2: two しかける pictures with one way shut (another opponent, who marks a mate, stands in it); room for the arrows in three others
+const HDT2=[
+  {ans:"drib",zone:"opp",n:1,cover:false,side:1,h:[50,64],a:[16,54],b:[76,40],d:[[50,52],[26,57],[66,45]],go:[39,42],to:"a",cut:1,take:0},
+  {ans:"drib",zone:"opp",n:1,cover:false,side:1,h:[42,62],a:[23,88],b:[73,43],d:[[48,50],[27,78],[62,46]],go:[37,40],to:"b",cut:2,take:0}];
+if(HDPICK&&HDDIR){HDT[0].b=[87,56]; HDT[0].d[2]=[76,58]; HDT[2].a=[16,52]; HDT[2].b=[86,58]; HDT[2].d[2]=[75,60]; HDT[3].a=[12,66]; HDT[3].d[2]=[22,66];}
 const hdMs=g=>Math.max(HDMS[2],HDMS[0]-HDMS[1]*pbOf(g,"hd"));
 // one picture: しかける or パス half of the time each (so that one answer every time is no way through), mirrored half of the time
-function hdScene(){const ans=Math.random()<.5?"drib":"pass", t=rnd(HDT.filter(x=>x.ans===ans)), f=Math.random()<.5, fx=p=>f?[100-p[0],p[1]]:p.slice();
+function hdScene(){const ans=Math.random()<.5?"drib":"pass", t=rnd((HDPICK&&HDDIR>1?HDT.concat(HDT2):HDT).filter(x=>x.ans===ans)), f=Math.random()<.5, fx=p=>f?[100-p[0],p[1]]:p.slice();
   return Object.assign({},t,{h:fx(t.h),a:fx(t.a),b:fx(t.b),go:fx(t.go),d:t.d.map(fx)});}
 const hdKind=sc=>sc.ans==="drib"?"drib":sc.zone==="own"?"own":sc.cover?"cover":"two"; // why it is the right pick
+const hdSide=s=>s<0?"l":"r";
+const hdWhy=sc=>{const w=HDMSG.why[hdKind(sc)], o=HDPICK&&HDDIR>1&&sc.ans==="drib"?hdOpen(sc):[]; return o.length===1?w+" "+HDMSG.sideN[hdSide(-o[0])]+HDMSG.whyS1+HDMSG.sideN[hdSide(o[0])]+HDMSG.whyS2:w;}; // v25.6.2: and the free side
 const HDMSG={title:"しかける? パス?",sub:"時間内に 決めよう!",ready:"見る ところは 3つ。",look:["どっちの ゴールに 近い?","前の 相手は 何人? カバーは いる?","フリーの 味方は いる?"],
   start:"スタート!",go:"スタートを おすと 時間が 始まるよ。",think:"しかける? パス? 早く 決めよう!",
   think1:"ドリブルで しかける? パスする 味方を タップ? 早く 決めよう!",drib1:"ドリブル",dribS1:"しかける",help1:"味方を タップで パス、「ドリブル」で しかける。 赤い 丸は 相手の 足が とどく ところ。 カバーは、前の 相手の 後ろで 待って いる 相手だよ。",
-  mark:"パスは カットされた… その 味方は マークされて いたよ。 フリーの 味方を さがそう。",to:"へ",left:"のこり",sec:"秒",
+  mark:"パスは カットされた… その 味方は マークされて いたよ。 フリーの 味方を さがそう。",to:"へ",
+  think2:"パスなら 味方を、しかけるなら やじるしを タップ! 早く 決めよう!",help2:"味方を タップで パス、やじるしを タップで その 方へ ドリブルで しかける。 赤い 丸は 相手の 足が とどく ところ。 カバーは、前の 相手の 後ろで 待って いる 相手だよ。",
+  arw:{l:"左へ ドリブル",r:"右へ ドリブル"},sideN:{l:"左",r:"右"},kara:"から",both:"左でも 右でも OK",sideNg:"1人 ぬいたけれど、そっちには ほかの 相手が いた… 相手が いない 方へ しかけよう。",
+  whyS1:"には ほかの 相手が いるよ。 相手が いない ",whyS2:"から ぬこう。",left:"のこり",sec:"秒",
   drib:"しかける",dribS:"ドリブルで ぬく",pass:"パス",passS:"フリーの 味方へ",
   ok:{drib:"ナイス はんだん! 1対1で ぬいた!",pass:"ナイス はんだん! フリーの 味方に パスが 通った!"},
   ng:{drib:"ぬいたけれど、カバーの 相手に 取られた…",two:"2人に はさまれて 取られた…",own:"自分の ゴールの 前で 取られた… ピンチ!",pass:"パスは カットされた… 味方は マークされて いたよ。"},
@@ -4434,31 +4452,35 @@ function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.po
 const hdDue=(L,p)=>!!HANDAN&&!L.auto&&!L.hdN&&!p.coach&&!(p.kind==="sure"&&(L.rvN||0)<RECVN);
 function hdStart(L,p){L.hdN=1; return {sc:hdScene(),who:p.who,ph:"ready",ms:hdMs(L.base),t0:0,t1:0,pick:"",res:"",msg:"",bonus:"",badge:null};}
 function hdTap(k,kb){const L=live, H=L&&!L.done?L.hd:null; if(!H)return;
-  if(k==="start"){if(H.ph!=="ready")return; H.ph="think"; H.t0=Date.now(); H.msg=HDPICK?HDMSG.think1:HDMSG.think; say(H.msg+" "+HDMSG.left+" "+H.ms/1000+HDMSG.sec);
-    if(tab==="match"){renderView(); if(kb){const f=document.getElementById("hdDrib"); if(f){try{f.focus({preventScroll:true});}catch(e){f.focus();}}}}
+  if(k==="start"){if(H.ph!=="ready")return; H.ph="think"; H.t0=Date.now(); if(HDPICK)holdUntil=H.t0+HDTAP; H.msg=HDPICK?(HDDIR?HDMSG.think2:HDMSG.think1):HDMSG.think; say(H.msg+" "+HDMSG.left+" "+H.ms/1000+HDMSG.sec);
+    if(tab==="match"){renderView(); if(kb){const f=document.getElementById(HDPICK&&HDDIR?"hdd-l":"hdDrib"); if(f){try{f.focus({preventScroll:true});}catch(e){f.focus();}}}}
     clearTimeout(L.ptimer); L.ptimer=setTimeout(()=>hdOver(L,H,""),H.ms);
     clearInterval(L.hdTick); L.hdTick=setInterval(()=>{if(live!==L||L.hd!==H||H.ph!=="think"){clearInterval(L.hdTick);return;}
       const el=document.getElementById("hdLeft"); if(el)el.textContent=HDMSG.left+" "+Math.max(0,Math.ceil((H.ms-(Date.now()-H.t0))/1000))+HDMSG.sec;},200);
     return;}
-  if(/^pass:[ab]$/.test(k)){if(H.ph!=="think")return; H.to=k.slice(5); k="pass";} else if(k==="pass"&&H.ph==="think")H.to=H.sc.ans==="pass"?H.sc.to:""; // v25.6.1: the mate he tapped (the old button: the free one)
+  if(/^drib:[lr]$/.test(k)){if(H.ph!=="think"||Date.now()<holdUntil)return; H.side=k==="drib:l"?-1:1; k="drib";} // v25.6.2: the way he tapped
+  if(/^pass:[ab]$/.test(k)){if(H.ph!=="think"||Date.now()<holdUntil)return; H.to=k.slice(5); k="pass";} else if(k==="pass"&&H.ph==="think")H.to=H.sc.ans==="pass"?H.sc.to:""; // v25.6.1: the mate he tapped (the old button: the free one)
   if(k==="drib"||k==="pass"){if(H.ph!=="think")return; clearTimeout(L.ptimer); hdOver(L,H,Date.now()-H.t0>=H.ms?"":k); return;} // a pick after the clock ran out is too late (a timer of a page in the background can come late)
   if(k==="next"){if(H.ph!=="show"||Date.now()-H.t1<HDHOLD)return; const sy=H.sy; clearInterval(L.hdTick); L.hd=null; holdUntil=Date.now()+400; liveTick(); // the chance comes up where the picture was, under his finger: a second tap is none of its buttons
     if(live===L&&L.scene&&typeof sy==="number")L.scene.sy=sy;}} // where the page stood before the picture
 // his pick (k: "drib" | "pass"), or the clock ran out (k ""): right picks in time bring the bonus
 function hdOver(L,H,k){if(live!==L||L.hd!==H||H.ph!=="think")return; clearInterval(L.hdTick);
-  const sc=H.sc; H.ph="show"; H.t1=Date.now(); H.pick=k; H.res=!k?"late":k===sc.ans&&(k!=="pass"||!H.to||H.to===sc.to)?"ok":"ng";
-  H.msg=H.res==="late"?HDMSG.late:H.res==="ok"?HDMSG.ok[k]:k==="pass"?(sc.ans==="pass"?HDMSG.mark:HDMSG.ng.pass):HDMSG.ng[hdKind(sc)==="cover"?"drib":hdKind(sc)];
-  const got=H.res==="ok"&&playGot(H,"hd"); say(H.msg+" "+HDMSG.why[hdKind(sc)]+(got?" "+H.bonus:""));
+  const sc=H.sc; H.ph="show"; H.t1=Date.now(); H.pick=k; H.res=!k?"late":k===sc.ans&&(k!=="pass"||!H.to||H.to===sc.to)&&(k!=="drib"||!H.side||HDDIR<2||hdBlock(sc,H.side)<0)?"ok":"ng";
+  H.msg=H.res==="late"?HDMSG.late:H.res==="ok"?HDMSG.ok[k]:k==="pass"?(sc.ans==="pass"?HDMSG.mark:HDMSG.ng.pass):sc.ans==="drib"?HDMSG.sideNg:HDMSG.ng[hdKind(sc)==="cover"?"drib":hdKind(sc)];
+  const got=H.res==="ok"&&playGot(H,"hd"); say(H.msg+" "+hdWhy(sc)+(got?" "+H.bonus:""));
   if(tab==="match"){renderView(); const f=document.getElementById("hdNext"); if(f){try{f.focus({preventScroll:true});}catch(e){f.focus();}}}} // the pick he pressed is gone: the next button has the focus
 // where everybody ends after his pick: {h, d (the other team), ball, out (beaten), fx: where the ball was lost}
 function hdAfter(H){const sc=H.sc, F=PLAYFEET, step=(p,q,l)=>{const dx=q[0]-p[0], dy=q[1]-p[1], n=Math.hypot(dx,dy)||1; return [Math.round(p[0]+dx*(n-l)/n),Math.round(p[1]+dy*(n-l)/n)];};
   const o={h:sc.h,d:sc.d.slice(),ball:[sc.h[0],sc.h[1]+F],out:[],fx:null};
   if(H.ph!=="show")return o;
   if(H.res==="late"){o.d[0]=step(sc.d[0],sc.h,7); o.ball=o.d[0].slice(); o.fx=o.ball; return o;} // the one in front comes and takes it
-  if(H.pick==="drib"){if(H.res==="ok"){o.h=sc.go; o.ball=[sc.go[0],sc.go[1]+F]; o.out=[0]; return o;}
-    const tk=sc.d[sc.take]; o.h=[clamp(tk[0]+(sc.h[0]<=tk[0]?-9:9),10,90),tk[1]+3]; o.ball=tk.slice(); o.fx=tk; if(sc.cover)o.out=[0]; return o;} // beside the one who took it (with a cover: past the first one, who is pale)
+  if(H.pick==="drib"){const sd=H.side||0, e=sd?hdEnd(sc,sd):sc.go; if(H.res==="ok"){o.h=e; o.ball=[e[0],e[1]+F]; o.out=[0]; return o;} // v25.6.2: to the end of the way he tapped
+    const bi=sd&&sc.ans==="drib"?hdBlock(sc,sd):-1, tk=sc.d[bi>=0?bi:sc.take], x=bi>=0?-sd:sd||(sc.h[0]<=tk[0]?-1:1); // the one in his way: he ends on the near side of him
+    o.h=bi>=0?[clamp(tk[0]+x*6,10,90),tk[1]+5]:[clamp(tk[0]+x*9,10,90),tk[1]+3]; o.ball=tk.slice(); o.fx=tk; if(sc.cover||bi>=0)o.out=[0]; return o;} // beside the one who took it (with a cover: past the first one, who is pale)
   if(H.res==="ok"){const m=sc[sc.to]; o.ball=[m[0],m[1]+F]; return o;}
   o.ball=sc.d[H.to?hdCutBy(sc,H.to):sc.cut].slice(); o.fx=o.ball; return o;}
+function hdArrow(sc,s){const e=hdEnd(sc,s), p=[sc.h[0]+s*HDARW[0],sc.h[1]+HDARW[1]], k=hdSide(s), deg=s*Math.max(25,Math.round(Math.abs(Math.atan2(e[0]-sc.h[0],sc.h[1]-e[1])*180/Math.PI))); // tilted 25 degrees at least, so that it reads left or right
+  return `<button type="button" class="hdarw" id="hdd-${k}" data-hd="drib:${k}" style="left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%" aria-label="${HDMSG.arw[k]}"><svg viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${deg}deg)"><path d="M12 2l9 10h-5.5v10h-7V12H3z"/></svg></button>`;}
 function hdHTML(L){const H=L.hd, sc=H.sc, who=H.who, ph=H.ph, own=sc.zone==="own", xy=p=>`left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%`;
   const A=hdAfter(H), mv=(p,q)=>p[0]!==q[0]||p[1]!==q[1]?` pmv" style="${xy(p)};--fx:${q[0]}%;--fy:${(q[1]/1.15).toFixed(2)}%`:`" style="${xy(p)}`;
   const face=k=>{const w=who[k]; return w.hero?heroBust(lastG,"hd"+k):w.mate?pixSVG(mateOpts(w.mate),"hd"+k):`<div class="helper">?</div>`;};
@@ -4474,19 +4496,19 @@ function hdHTML(L){const H=L.hd, sc=H.sc, who=H.who, ph=H.ph, own=sc.zone==="own
     const goal=own?`<div class="pgoal hdg own" aria-hidden="true"></div><i class="hdzone mg">${HDMSG.mygoal}</i><i class="hdzone up">↑ ${HDMSG.up}</i>`:`<div class="pgoal hdg" aria-hidden="true"></div>`;
     const ball0=[sc.h[0],sc.h[1]+PLAYFEET], fx=A.fx?`<i class="pfx pfx-block mx mx-fx_block" style="${xy(A.fx)}" aria-hidden="true"></i>`:"";
     const bdAge=H.badge?Date.now()-H.badge.at:0, bdx=H.badge&&bdAge>=0&&bdAge<PBADGEMS?`<i class="pbadge" style="animation-delay:-${bdAge}ms" aria-hidden="true">${esc(H.badge.t)}</i>`:"";
-    pitch=`${goal}${rings}${opp}${me("a",sc.a,sc.a,H.res==="ok"&&H.pick==="pass"&&sc.to==="a")}${me("b",sc.b,sc.b,H.res==="ok"&&H.pick==="pass"&&sc.to==="b")}${H.ph==="show"&&H.pick==="pass"&&H.to&&H.res!=="ok"?`<i class="prmk ng" style="${xy(sc[H.to])}" aria-hidden="true"></i>`:""}${me("h",A.h,sc.h,!(H.ph==="show"&&(H.res!=="ok"||H.pick==="pass")))}
+    pitch=`${goal}${rings}${opp}${me("a",sc.a,sc.a,H.res==="ok"&&H.pick==="pass"&&sc.to==="a")}${me("b",sc.b,sc.b,H.res==="ok"&&H.pick==="pass"&&sc.to==="b")}${H.ph==="show"&&H.pick==="pass"&&H.to&&H.res!=="ok"?`<i class="prmk ng" style="${xy(sc[H.to])}" aria-hidden="true"></i>`:""}${me("h",A.h,sc.h,!(H.ph==="show"&&(H.res!=="ok"||H.pick==="pass")))}${HDPICK&&HDDIR&&ph==="think"?hdArrow(sc,-1)+hdArrow(sc,1):""}
       <span class="pball${mv(A.ball,ball0)}" id="hdBall"></span>${fx}<i class="hdzone at${own?" own":""}">${HDMSG.here[sc.zone]}</i>${bdx}`;}
   const think=ph==="think", el=think?clamp(Date.now()-H.t0,0,H.ms):0;
   const time=ph==="show"?"":`<div class="hdtime${think?" on":""}" id="hdTime"><i style="${think?`animation-duration:${H.ms}ms;animation-delay:-${el}ms`:"animation:none"}" aria-hidden="true"></i><b id="hdLeft">${HDMSG.left} ${Math.max(0,Math.ceil((H.ms-el)/1000))}${HDMSG.sec}</b></div>`;
   const pick=k=>`<button type="button" class="hdb ${k}${H.pick===k?" on":""}" id="hd${k==="drib"?"Drib":"Pass"}" data-hd="${k}"${think?"":" disabled"}>${HDMSG[k]}<small>${HDMSG[k+"S"]}</small></button>`;
-  const kd=hdKind(sc), chk=ph!=="show"?"":`<div class="hdwhy" id="hdWhy"><p class="hdans"><b>${HDMSG.ans[sc.ans]}${HDPICK&&sc.ans==="pass"?`(${esc(who[sc.to].n)}${HDMSG.to})`:""}</b> ${HDMSG.why[kd]}</p><p class="hdct">${HDMSG.chk}</p><ul>
+  const kd=hdKind(sc), chk=ph!=="show"?"":`<div class="hdwhy" id="hdWhy"><p class="hdans"><b>${HDMSG.ans[sc.ans]}${HDPICK&&sc.ans==="pass"?`(${esc(who[sc.to].n)}${HDMSG.to})`:HDPICK&&HDDIR>1?(o=>o.length===2?`(${HDMSG.both})`:o.length?`(${HDMSG.sideN[hdSide(o[0])]}${HDMSG.kara})`:"")(hdOpen(sc)):""}</b> ${hdWhy(sc)}</p><p class="hdct">${HDMSG.chk}</p><ul>
       <li class="${own?"n":"y"}">${HDMSG.zone[sc.zone]}</li><li class="${sc.n===1&&!sc.cover?"y":"n"}">${sc.cover?HDMSG.cover:sc.n===2?HDMSG.two:HDMSG.one}</li><li class="m">${sc.ans==="pass"?HDMSG.free:HDMSG.none}</li></ul>
       <p class="hdrule">${HDMSG.rule}</p></div>`;
   return `<div class="pitchbox hdbox" id="hdBox"><p class="ptitle"><b>${HDMSG.title}</b><span>${HDMSG.sub}</span></p>
     <div class="ppitch hdp${own?" own":""}" id="hdPitch"><svg class="plines" viewBox="0 0 100 115" preserveAspectRatio="none" aria-hidden="true">${ph==="ready"?"":lines}</svg>${pitch}</div>
-    ${time}${HDPICK?`<div class="hdpick one"><button type="button" class="hdb drib${H.pick==="drib"?" on":""}" id="hdDrib" data-hd="drib"${think?"":" disabled"}>${HDMSG.drib1}<small>${HDMSG.dribS1}</small></button></div>`:`<div class="hdpick">${pick("drib")}${pick("pass")}</div>`}
+    ${time}${HDPICK&&HDDIR?"":HDPICK?`<div class="hdpick one"><button type="button" class="hdb drib${H.pick==="drib"?" on":""}" id="hdDrib" data-hd="drib"${think?"":" disabled"}>${HDMSG.drib1}<small>${HDMSG.dribS1}</small></button></div>`:`<div class="hdpick">${pick("drib")}${pick("pass")}</div>`}
     <p class="pmsg" id="hdMsg">${esc(H.msg||HDMSG.go)}</p>${H.bonus?`<p class="pbonus" id="hdBonus">${esc(H.bonus)}</p>`:""}${chk}
-    ${ph==="show"?`<button type="button" class="primary" id="hdNext" data-hd="next">${HDMSG.next}</button>`:`<p class="plhint">${HDPICK?HDMSG.help1:HDMSG.help}</p>`}
+    ${ph==="show"?`<button type="button" class="primary" id="hdNext" data-hd="next">${HDMSG.next}</button>`:`<p class="plhint">${HDPICK?(HDDIR?HDMSG.help2:HDMSG.help1):HDMSG.help}</p>`}
     </div>`;}
 
 // v22: the PK shoot-out he plays (the rules: pkSpread, pkKeeper, pkRate, pkKick, pkDecided above, from v22/pk.js).
