@@ -656,7 +656,7 @@ button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z
 .kbfog{position:absolute;top:0;height:calc(100% * 54 / 115);width:50%;z-index:3;background:rgba(10,16,30,.9);color:#cfd6e6;font-style:normal;font-size:.75rem;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;pointer-events:none;transition:opacity .15s}
 .kbfog.l{left:0;border-right:1px dashed rgba(255,255,255,.3)} .kbfog.r{left:50%} .kbfog b{font-size:1.6rem;line-height:1}
 .kbp .kbh{visibility:hidden} .kbp.seel .kbh.l,.kbp.seer .kbh.r,.kbp.all .kbh{visibility:visible} .kbp.seel .kbfog.l,.kbp.seer .kbfog.r,.kbp.all .kbfog{opacity:.1}
-.kbme{z-index:4} .hdzone.mg.mgt{bottom:auto;top:4px} .kbp .hdzone.at{left:auto;right:6px}
+.kbme{z-index:4} .hdzone.mg.mgt{bottom:auto;top:4px} .hdzone.up.dn{top:auto;bottom:32px} .hdp .pt.nb .pn{bottom:auto;top:100%;margin:1px 0 0} .hdp .pt.nb.has .pn{margin-top:14px} .kbp .hdzone.at{left:auto;right:6px}
 .kbeye{position:absolute;transform:translate(-50%,-50%);z-index:6;min-height:44px;min-width:56px;margin:0;padding:2px 6px;border-radius:14px;border:3px solid #141a2e;background:#fff;color:#141a2e;font:inherit;font-size:.72rem;line-height:1.1;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;cursor:pointer;white-space:nowrap;box-shadow:0 2px 0 rgba(0,0,0,.4)}
 .kbeye svg{width:20px;height:20px;fill:currentColor;flex:none} .kbeye.on{background:#ffd34f} .kbeye:focus-visible{outline:3px solid #fff;outline-offset:2px}
 @media (prefers-reduced-motion:no-preference){.kbeye{animation:ptap 1.4s ease-in-out infinite}}
@@ -1722,6 +1722,7 @@ const playFlip=t=>{const fx=p=>[100-p[0],p[1]], fk={L:"R",C:"C",R:"L"}; return {
 // shows that side, KBTURN the time to turn once the ball is there, KBFOG the fog's bottom (behind him), KBEND where a turn takes him.
 const TORI=1, KUBI=1, TRSTEAL=[900,1700], TRRUN=4200, TRMS=[1500,2800], TRMIN=150;
 const DRAUTO=[3500,4500];
+const HDUP=1; // v25.7.3: しかける? パス? near our goal upside down too, our goal at the top (sc.dn)
 const TRUP=1; // v25.7.2: とりかえす upside down, our goal at the top (y becomes 115 - y) // v25.7.1: how long the result of とりかえす / 首ふり stays before the match goes on by itself (0: a button)
 const KBMS=[4000,500,2500], KBSEE=1100, KBTURN=3000, KBFOG=54, KBEND=[15,18];
 const trAt=(sc,e)=>{const t=clamp(e/TRRUN,0,1); return [Math.round(sc.st[0]+(sc.end[0]-sc.st[0])*t),Math.round(sc.st[1]+(sc.end[1]-sc.st[1])*t)];}; // the opponent with the ball, e ms after the steal
@@ -1772,7 +1773,7 @@ const hdCutBy=(sc,k)=>{let bi=0, bl=1e9; sc.d.forEach((p,i)=>{const l=segDist(sc
 // on that side: from him to hdEnd (HDLANE past the one in front). 2: a way into the red circle of another opponent (PLAYOPEN) is lost to
 // that one, and HDT2 brings two pictures with one way shut. 1: the way only shows where he goes. 0: v25.6.1 (the 「ドリブル」 button).
 const HDDIR=2, HDLANE=[11,10], HDARW=[15,2], HDTAP=350; // HDTAP: a tap on a mate or an arrow so soon after スタート is the second tap of a double tap (they come up under his finger)
-const hdEnd=(sc,s)=>[clamp(sc.d[0][0]+s*HDLANE[0],6,94),sc.d[0][1]-HDLANE[1]]; // s: -1 left, 1 right
+const hdEnd=(sc,s)=>[clamp(sc.d[0][0]+s*HDLANE[0],6,94),sc.d[0][1]+(sc.dn?1:-1)*HDLANE[1]]; // v25.7.3 dn: he goes down // s: -1 left, 1 right
 const hdBlock=(sc,s)=>{const e=hdEnd(sc,s); let bi=-1, bl=PLAYOPEN; sc.d.forEach((p,i)=>{if(!i)return; const l=segDist(sc.h,e,p); if(l<bl){bl=l; bi=i;}}); return bi;}; // who stands in that way (-1: nobody)
 const hdOpen=sc=>[-1,1].filter(s=>hdBlock(sc,s)<0); // the free ways
 const HDT=[
@@ -1789,8 +1790,8 @@ const HDT2=[
 if(HDPICK&&HDDIR){HDT[0].b=[87,56]; HDT[0].d[2]=[76,58]; HDT[2].a=[16,52]; HDT[2].b=[86,58]; HDT[2].d[2]=[75,60]; HDT[3].a=[12,66]; HDT[3].d[2]=[22,66];}
 const hdMs=g=>Math.max(HDMS[2],HDMS[0]-HDMS[1]*pbOf(g,"hd"));
 // one picture: しかける or パス half of the time each (so that one answer every time is no way through), mirrored half of the time
-function hdScene(){const ans=Math.random()<.5?"drib":"pass", t=rnd((HDPICK&&HDDIR>1?HDT.concat(HDT2):HDT).filter(x=>x.ans===ans)), f=Math.random()<.5, fx=p=>f?[100-p[0],p[1]]:p.slice();
-  return Object.assign({},t,{h:fx(t.h),a:fx(t.a),b:fx(t.b),go:fx(t.go),d:t.d.map(fx)});}
+function hdScene(){const ans=Math.random()<.5?"drib":"pass", t=rnd((HDPICK&&HDDIR>1?HDT.concat(HDT2):HDT).filter(x=>x.ans===ans)), f=Math.random()<.5, dn=!!HDUP&&t.zone==="own", fx=p=>[f?100-p[0]:p[0],dn?115-p[1]:p[1]];
+  return Object.assign({},t,{dn,h:fx(t.h),a:fx(t.a),b:fx(t.b),go:fx(t.go),d:t.d.map(fx)});}
 const hdKind=sc=>sc.ans==="drib"?"drib":sc.zone==="own"?"own":sc.cover?"cover":"two"; // why it is the right pick
 const hdSide=s=>s<0?"l":"r";
 const hdWhy=sc=>{const w=HDMSG.why[hdKind(sc)], o=HDPICK&&HDDIR>1&&sc.ans==="drib"?hdOpen(sc):[]; return o.length===1?w+" "+HDMSG.sideN[hdSide(-o[0])]+HDMSG.whyS1+HDMSG.sideN[hdSide(o[0])]+HDMSG.whyS2:w;}; // v25.6.2: and the free side
@@ -4535,28 +4536,30 @@ function hdAfter(H){const sc=H.sc, F=PLAYFEET, step=(p,q,l)=>{const dx=q[0]-p[0]
   if(H.res==="late"){o.d[0]=step(sc.d[0],sc.h,7); o.ball=o.d[0].slice(); o.fx=o.ball; return o;} // the one in front comes and takes it
   if(H.pick==="drib"){const sd=H.side||0, e=sd?hdEnd(sc,sd):sc.go; if(H.res==="ok"){o.h=e; o.ball=[e[0],e[1]+F]; o.out=[0]; return o;} // v25.6.2: to the end of the way he tapped
     const bi=sd&&sc.ans==="drib"?hdBlock(sc,sd):-1, tk=sc.d[bi>=0?bi:sc.take], x=bi>=0?-sd:sd||(sc.h[0]<=tk[0]?-1:1); // the one in his way: he ends on the near side of him
-    o.h=bi>=0?[clamp(tk[0]+x*6,10,90),tk[1]+5]:[clamp(tk[0]+x*9,10,90),tk[1]+3]; o.ball=tk.slice(); o.fx=tk; if(sc.cover||bi>=0)o.out=[0]; return o;} // beside the one who took it (with a cover: past the first one, who is pale)
+    o.h=sc.dn?(bi>=0?[clamp(tk[0]+x*9,10,90),tk[1]-6]:[clamp(tk[0]+x*11,10,90),tk[1]-5]):bi>=0?[clamp(tk[0]+x*6,10,90),tk[1]+5]:[clamp(tk[0]+x*9,10,90),tk[1]+3]; o.ball=tk.slice(); o.fx=tk; if(sc.cover||bi>=0)o.out=[0]; return o;} // beside the one who took it (with a cover: past the first one, who is pale)
   if(H.res==="ok"){const m=sc[sc.to]; o.ball=[m[0],m[1]+F]; return o;}
   o.ball=sc.d[H.to?hdCutBy(sc,H.to):sc.cut].slice(); o.fx=o.ball; return o;}
-function hdArrow(sc,s){const e=hdEnd(sc,s), p=[sc.h[0]+s*HDARW[0],sc.h[1]+HDARW[1]], k=hdSide(s), deg=s*Math.max(25,Math.round(Math.abs(Math.atan2(e[0]-sc.h[0],sc.h[1]-e[1])*180/Math.PI))); // tilted 25 degrees at least, so that it reads left or right
+function hdArrow(sc,s){const e=hdEnd(sc,s), p=[sc.h[0]+s*HDARW[0],sc.h[1]+(sc.dn?-1:1)*HDARW[1]], k=hdSide(s), deg=s*Math.min(sc.dn?155:180,Math.max(25,Math.round(Math.abs(Math.atan2(e[0]-sc.h[0],sc.h[1]-e[1])*180/Math.PI)))); // tilted 25 degrees at least (dn: 25 from straight down), so that it reads left or right
   return `<button type="button" class="hdarw" id="hdd-${k}" data-hd="drib:${k}" style="left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%" aria-label="${HDMSG.arw[k]}"><svg viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${deg}deg)"><path d="M12 2l9 10h-5.5v10h-7V12H3z"/></svg></button>`;}
-function hdHTML(L){const H=L.hd, sc=H.sc, who=H.who, ph=H.ph, own=sc.zone==="own", xy=p=>`left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%`;
+function hdHTML(L){const H=L.hd, sc=H.sc, who=H.who, ph=H.ph, own=sc.zone==="own", dn=own&&!!sc.dn, nb=k=>dn&&k!=="h"?" nb":"", xy=p=>`left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%`;
   const A=hdAfter(H), mv=(p,q)=>p[0]!==q[0]||p[1]!==q[1]?` pmv" style="${xy(p)};--fx:${q[0]}%;--fy:${(q[1]/1.15).toFixed(2)}%`:`" style="${xy(p)}`;
   const face=k=>{const w=who[k]; return w.hero?heroBust(lastG,"hd"+k):w.mate?pixSVG(mateOpts(w.mate),"hd"+k):`<div class="helper">?</div>`;};
-  const me=(k,p,q,has)=>HDPICK&&ph==="think"&&k!=="h"?`<button type="button" class="pt mine${mv(p,q)}" id="hdp-${k}" data-hd="pass:${k}" aria-label="${esc(who[k].n)}に パス"><span class="ava">${face(k)}</span><span class="pn">${esc(who[k].n)}</span></button>`
-    :`<span class="pt mine${has?" has":""}${mv(p,q)}"><span class="ava">${face(k)}</span><span class="pn">${esc(who[k].n)}</span></span>`;
-  const lines=own?`<path d="M14 115v-36h72V115M0 2h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 79a12 9 0 0 1 24 0M38 2a12 12 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/>`
+  const me=(k,p,q,has)=>HDPICK&&ph==="think"&&k!=="h"?`<button type="button" class="pt mine${nb(k)}${mv(p,q)}" id="hdp-${k}" data-hd="pass:${k}" aria-label="${esc(who[k].n)}に パス"><span class="ava">${face(k)}</span><span class="pn">${esc(who[k].n)}</span></button>`
+    :`<span class="pt mine${nb(k)}${has?" has":""}${mv(p,q)}"><span class="ava">${face(k)}</span><span class="pn">${esc(who[k].n)}</span></span>`;
+  const lines=dn?`<path d="M14 0v36h72V0M0 113h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 36a12 9 0 0 0 24 0M38 113a12 12 0 0 1 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/>`
+    :own?`<path d="M14 115v-36h72V115M0 2h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 79a12 9 0 0 1 24 0M38 2a12 12 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/>`
     :`<path d="M14 0v36h72V0M0 113h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 36a12 9 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/>`;
   let pitch;
   if(ph==="ready")pitch=`<div class="hdready" id="hdReady"><p><b>${HDMSG.ready}</b></p><ol>${HDMSG.look.map(t=>`<li>${t}</li>`).join("")}</ol><button type="button" class="primary" id="hdStart" data-hd="start">${HDMSG.start}</button></div>`;
   else{const rings=sc.d.map((p,i)=>A.out.indexOf(i)>=0?"":`<i class="reach${mv(A.d[i],p)}"></i><i class="reach in${mv(A.d[i],p)}"></i>`).join("");
     const opp=sc.d.map((p,i)=>`<span class="pt opp${A.out.indexOf(i)>=0?" out":""}${mv(A.d[i],p)}">${OPPFIG(MXOPP[i%MXOPP.length],oppRed(L))}</span>`).join("")
       +(own?"":`<span class="pt opp gk" style="left:50%">${OPPFIG("gk",oppRed(L))}<span class="pn">キーパー</span></span>`);
-    const goal=own?`<div class="pgoal hdg own" aria-hidden="true"></div><i class="hdzone mg">${HDMSG.mygoal}</i><i class="hdzone up">↑ ${HDMSG.up}</i>`:`<div class="pgoal hdg" aria-hidden="true"></div>`;
+    const goal=dn?`<div class="pgoal hdg" aria-hidden="true"></div><i class="hdzone mg mgt">${HDMSG.mygoal}</i><i class="hdzone up dn">↓ ${HDMSG.up}</i>`
+      :own?`<div class="pgoal hdg own" aria-hidden="true"></div><i class="hdzone mg">${HDMSG.mygoal}</i><i class="hdzone up">↑ ${HDMSG.up}</i>`:`<div class="pgoal hdg" aria-hidden="true"></div>`;
     const ball0=[sc.h[0],sc.h[1]+PLAYFEET], fx=A.fx?`<i class="pfx pfx-block mx mx-fx_block" style="${xy(A.fx)}" aria-hidden="true"></i>`:"";
     const bdAge=H.badge?Date.now()-H.badge.at:0, bdx=H.badge&&bdAge>=0&&bdAge<PBADGEMS?`<i class="pbadge" style="animation-delay:-${bdAge}ms" aria-hidden="true">${esc(H.badge.t)}</i>`:"";
     pitch=`${goal}${rings}${opp}${me("a",sc.a,sc.a,H.res==="ok"&&H.pick==="pass"&&sc.to==="a")}${me("b",sc.b,sc.b,H.res==="ok"&&H.pick==="pass"&&sc.to==="b")}${H.ph==="show"&&H.pick==="pass"&&H.to&&H.res!=="ok"?`<i class="prmk ng" style="${xy(sc[H.to])}" aria-hidden="true"></i>`:""}${me("h",A.h,sc.h,!(H.ph==="show"&&(H.res!=="ok"||H.pick==="pass")))}${HDPICK&&HDDIR&&ph==="think"?hdArrow(sc,-1)+hdArrow(sc,1):""}
-      <span class="pball${mv(A.ball,ball0)}" id="hdBall"></span>${fx}<i class="hdzone at${own?" own":""}">${HDMSG.here[sc.zone]}</i>${bdx}`;}
+      <span class="pball${mv(A.ball,ball0)}" id="hdBall"></span>${fx}<i class="hdzone at${own&&!dn?" own":""}">${HDMSG.here[sc.zone]}</i>${bdx}`;}
   const think=ph==="think", el=think?clamp(Date.now()-H.t0,0,H.ms):0;
   const time=ph==="show"?"":`<div class="hdtime${think?" on":""}" id="hdTime"><i style="${think?`animation-duration:${H.ms}ms;animation-delay:-${el}ms`:"animation:none"}" aria-hidden="true"></i><b id="hdLeft">${HDMSG.left} ${Math.max(0,Math.ceil((H.ms-el)/1000))}${HDMSG.sec}</b></div>`;
   const pick=k=>`<button type="button" class="hdb ${k}${H.pick===k?" on":""}" id="hd${k==="drib"?"Drib":"Pass"}" data-hd="${k}"${think?"":" disabled"}>${HDMSG[k]}<small>${HDMSG[k+"S"]}</small></button>`;
