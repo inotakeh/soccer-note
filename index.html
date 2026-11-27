@@ -1721,6 +1721,7 @@ const playFlip=t=>{const fx=p=>[100-p[0],p[1]], fk={L:"R",C:"C",R:"L"}; return {
 // KUBI: KBMS the time before the pass [first, less for every right turn after a look (game.kb), the shortest], KBSEE how long one look
 // shows that side, KBTURN the time to turn once the ball is there, KBFOG the fog's bottom (behind him), KBEND where a turn takes him.
 const TORI=1, KUBI=1, TRSTEAL=[900,1700], TRRUN=4200, TRMS=[1500,2800], TRMIN=150;
+const DRAUTO=[3500,4500]; // v25.7.1: how long the result of とりかえす / 首ふり stays before the match goes on by itself (0: a button)
 const KBMS=[4000,500,2500], KBSEE=1100, KBTURN=3000, KBFOG=54, KBEND=[15,18];
 const trAt=(sc,e)=>{const t=clamp(e/TRRUN,0,1); return [Math.round(sc.st[0]+(sc.end[0]-sc.st[0])*t),Math.round(sc.st[1]+(sc.end[1]-sc.st[1])*t)];}; // the opponent with the ball, e ms after the steal
 function trScene(){const f=Math.random()<.5, j=Math.round(Math.random()*8-4), fx=p=>f?[100-p[0],p[1]]:p.slice();
@@ -1739,7 +1740,7 @@ const TRMSG={title:"取られたら すぐ 取りかえせ!",sub:"止まらな�
   late:"追いかけたのは えらい! でも 相手は もう ゴール前… キーパーが 止めて くれた。",none:"相手に シュートを うたれた… キーパーが 止めて くれた。",
   tip:{fast:"取られた 君が 一番 近い。 その まま すぐ 行こう!",mid:"もっと 早いと 君 1人で 取りかえせるよ。",late:"取られたら すぐ 追いかけよう。 早いほど 取りかえしやすいよ。",none:"取られたら 止まらないで、すぐ 追いかけよう!"},
   chk:"追いかけた 早さ",row:[["1.5秒まで","君が 取りかえす"],["2.8秒まで","味方と いっしょに 取りかえす"],["それより おそい","シュートを うたれる"]],
-  rule:"取られたら 止まらない! 取られた 君が 一番 近いから、すぐ 取りかえしに 行こう。",next:"しあいに もどる",
+  rule:"取られたら 止まらない! 取られた 君が 一番 近いから、すぐ 取りかえしに 行こう。",next:"しあいに もどる",back:"しあいに もどるよ…",
   help:"ボールを 取った 相手を タップすると、君が 追いかけるよ。",tap:"タップ!",goal:"自分の ゴール",chase:"追いかける"};
 const KBMSG={title:"首を ふって まわりを 見よう!",sub:"パスが 来る 前に",ready:"君は パスを 出す 味方の 方を 向いて いるよ。",
   look:["「左を 見る」「右を 見る」で 後ろを 見る","ボールが 来たら、相手が いない 方へ 前を 向く","両方に 相手が いたら、味方に もどす"],
@@ -1750,7 +1751,7 @@ const KBMSG={title:"首を ふって まわりを 見よう!",sub:"パスが 来
   safe:"もどして 安全。 でも 空いて いる 方が あったよ。 前を 向けると チャンス!",late:"まよって いる 間に 相手が 来た… 見て おくと すぐ 決められるよ。",
   ans:{l:"答え: 左へ 前を 向く",r:"答え: 右へ 前を 向く",back:"答え: 味方に もどす"},where:{l:"相手は 右の 後ろに いたよ。",r:"相手は 左の 後ろに いたよ。",back:"左にも 右にも 相手が いたよ。"},
   chk:"首ふり チェック",saw:{l:"パスの 前に 左を 見た",r:"パスの 前に 右を 見た"},
-  rule:"パスが 来る 前に 首を ふる。 相手が いない 方へ 前を 向く。 両方に いたら もどす。",next:"チャンスへ!",
+  rule:"パスが 来る 前に 首を ふる。 相手が いない 方へ 前を 向く。 両方に いたら もどす。",next:"チャンスへ!",go:"チャンスへ 行くよ…",
   help:"見る ボタンで その 方の 後ろが 少し 見えるよ。 赤い 丸は 相手の 足が とどく ところ。",help2:"やじるしで その 方へ 前を 向く。 味方を タップすると もどす。",face:"↓ 味方を 見て いる",left:"パスまで"};
 // v25.6 しかける? パス? (はんだん タイム): once a match he plays, before the first chance that does not start with the run of v25.1
 // (a sure chance while live.rvN < RECVN), he decides in a picture of its own whether to take on the opponent in front of him or to
@@ -4577,6 +4578,7 @@ function trStart(L){L.trN=1; const w=L.trWho||{h:{n:heroName(),hero:true},a:{n:"
   return {k:"tr",sc:trScene(),who:w,ph:"ready",t0:0,run:0,ts:0,t1:0,el:0,res:"",msg:"",bonus:"",badge:null};}
 function kbStart(L,p){L.kbN=1; return {k:"kb",sc:kbScene(),who:p.who,ph:"ready",ms:kbMs(L.base),t0:0,t2:0,t1:0,see:"",saw:{l:0,r:0},pick:"",res:"",msg:"",bonus:"",badge:null};}
 const drSec=ms=>(Math.floor(ms/100)/10).toFixed(1)+HDMSG.sec;
+const drAuto=(L,H)=>{const ms=DRAUTO?DRAUTO[H.k==="tr"?0:1]:0; if(ms)L.drT=setTimeout(()=>{if(live===L&&L.dr===H&&H.ph==="show")drTap("next");},ms);}; // v25.7.1
 const drFocus=id=>{const f=document.getElementById(id); if(f){try{f.focus({preventScroll:true});}catch(e){f.focus();}}};
 function drTap(k,kb){const L=live, H=L&&!L.done?L.dr:null; if(!H)return;
   if(k==="start"){if(H.ph!=="ready")return; H.t0=Date.now(); H.kb=!!kb; holdUntil=H.t0+HDTAP; drStop(L);
@@ -4607,7 +4609,7 @@ function trSteal(L,H){if(live!==L||L.dr!==H||H.ph!=="run")return; H.ph="chase"; 
 function trEnd(L,H,e,tap){if(live!==L||L.dr!==H||H.ph!=="chase")return; drStop(L); H.ph="show"; H.t1=Date.now(); H.el=e;
   const e1=Math.floor(e/100)*100; H.res=!tap?"none":e1<=TRMS[0]?"fast":e1<=TRMS[1]?"mid":"late"; H.msg=TRMSG[H.res]; // the result as the time shown (0.1 s steps)
   const got=H.res==="fast"&&playGot(H,"tr"); say((tap?drSec(e)+TRMSG.sec+" ":"")+H.msg+" "+TRMSG.tip[H.res]+(got?" "+H.bonus:""));
-  if(tab==="match"){renderView(); drFocus("drNext");}}
+  if(tab==="match"){renderView(); drFocus(DRAUTO?"drMsg":"drNext");} drAuto(L,H);}
 // 首ふり: the pass comes (the fog stays: no more looks), then his turn
 function kbCome(L,H){if(live!==L||L.dr!==H||H.ph!=="look")return; clearTimeout(L.kbSeeT); H.see=""; H.ph="turn"; H.t2=Date.now(); holdUntil=H.t2+HDTAP; H.msg=KBMSG.come; say(H.msg);
   if(tab==="match"){renderView(); if(H.kb)drFocus("kbt-l");}
@@ -4617,7 +4619,7 @@ function kbOver(L,H,k){if(live!==L||L.dr!==H||H.ph!=="turn")return; drStop(L); c
   H.res=!k?"late":k==="back"?(open.length?"safe":looked?"ok":"lucky"):open.indexOf(k==="l"?-1:1)>=0?(looked?"ok":"lucky"):"ng";
   H.msg=H.res==="late"?KBMSG.late:H.res==="ok"?(k==="back"?KBMSG.okBack:KBMSG.ok):H.res==="ng"?(open.length?KBMSG.ng:KBMSG.ngBoth):KBMSG[H.res];
   const got=H.res==="ok"&&playGot(H,"kb"); say(H.msg+" "+KBMSG.where[sc.ans]+(got?" "+H.bonus:""));
-  if(tab==="match"){renderView(); drFocus("drNext");}}
+  if(tab==="match"){renderView(); drFocus(DRAUTO?"drMsg":"drNext");} drAuto(L,H);}
 // where everybody is drawn: {h, ball, d, mates {a, b, p}, fx, out}; m(p, q, ms, el): a move from p to q over ms, el ms of it gone
 function drArw(id,dk,p,deg,label){return `<button type="button" class="hdarw" id="${id}" data-dr="${dk}" style="left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true" style="transform:rotate(${deg}deg)"><path d="M12 2l9 10h-5.5v10h-7V12H3z"/></svg></button>`;}
 function drHTML(L){const H=L.dr, sc=H.sc, who=H.who, ph=H.ph, tr=H.k==="tr", M=tr?TRMSG:KBMSG, now=Date.now(), F=PLAYFEET, xy=p=>`left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%`;
@@ -4679,7 +4681,8 @@ function drHTML(L){const H=L.dr, sc=H.sc, who=H.who, ph=H.ph, tr=H.k==="tr", M=t
   return `<div class="pitchbox hdbox drbox" id="drBox"><p class="ptitle"><b>${M.title}</b><span>${M.sub}</span></p>
     <div class="ppitch hdp drp ${tr?"trp":"kbp"}${!tr&&ph==="show"?" all":""}${!tr&&H.see?" see"+H.see:""}" id="drPitch"><svg class="plines" viewBox="0 0 100 115" preserveAspectRatio="none" aria-hidden="true">${ph==="ready"?"":lines}</svg>${pitch}</div>
     ${time}<p class="pmsg" id="drMsg" tabindex="-1">${esc(H.msg||(tr?TRMSG.help:KBMSG.think))}</p>${H.bonus?`<p class="pbonus" id="drBonus">${esc(H.bonus)}</p>`:""}${why}
-    ${ph==="show"?`<button type="button" class="primary" id="drNext" data-dr="next">${tr?TRMSG.next:KBMSG.next}</button>`:`<p class="plhint">${tr?TRMSG.help:ph==="turn"?KBMSG.help2:KBMSG.help}</p>`}
+    ${ph==="show"&&DRAUTO?(ms=>`<div class="hdtime on drauto" id="drAuto"><i style="animation-duration:${ms}ms;animation-delay:-${clamp(now-H.t1,0,ms)}ms" aria-hidden="true"></i><b>${tr?TRMSG.back:KBMSG.go}</b></div>`)(DRAUTO[tr?0:1])
+    :ph==="show"?`<button type="button" class="primary" id="drNext" data-dr="next">${tr?TRMSG.next:KBMSG.next}</button>`:`<p class="plhint">${tr?TRMSG.help:ph==="turn"?KBMSG.help2:KBMSG.help}</p>`}
     </div>`;}
 
 // v22: the PK shoot-out he plays (the rules: pkSpread, pkKeeper, pkRate, pkKick, pkDecided above, from v22/pk.js).
