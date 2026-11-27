@@ -646,6 +646,23 @@ button.pt{min-width:48px;min-height:48px;justify-content:center;cursor:pointer;z
 .pdash{position:absolute;transform:translate(-50%,-50%);z-index:6;min-width:72px;min-height:52px;border:3px solid #1a1a22;border-radius:26px;background:#ffd34f;color:#1a1a22;font:inherit;font-weight:900;cursor:pointer;padding:2px 10px 8px;overflow:hidden;white-space:nowrap}
 .pdash i{position:absolute;left:0;bottom:0;height:6px;width:100%;background:#e23424;transform-origin:left}
 .pbonus{margin:0;font-weight:800}
+/* v25.6 しかける? パス? */
+.ppitch.hdp{cursor:default} .hdp .pbadge{bottom:auto;top:46%} .pgoal.hdg.own{top:auto;bottom:0;transform:scaleY(-1)}
+.hdready{position:absolute;left:0;top:0;right:0;bottom:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px;background:rgba(8,12,24,.62);color:#fff;text-align:center}
+.hdready p{margin:0} .hdready ol{margin:0;padding-left:1.6em;text-align:left;font-weight:700;line-height:1.5} .hdready button{min-height:52px;min-width:160px;font-size:1.1rem}
+.hdzone{position:absolute;z-index:4;font-style:normal;font-size:.72rem;font-weight:800;background:rgba(8,12,24,.86);color:#fff;border-radius:8px;padding:1px 6px;pointer-events:none;white-space:nowrap}
+.hdzone.at{left:6px;bottom:6px} .hdzone.at.own{bottom:auto;top:6px} .hdzone.up{right:6px;top:6px;background:rgba(255,211,79,.92);color:#1a1a22} .hdzone.mg{left:50%;bottom:6px;transform:translateX(-50%);z-index:5}
+.hdtime{position:relative;height:30px;border-radius:15px;background:var(--chip);overflow:hidden;border:2px solid var(--ink)}
+.hdtime i{position:absolute;left:0;top:0;bottom:0;width:100%;background:#ffd34f;transform-origin:left;animation:pdbar linear forwards} .hdtime:not(.on) i{animation:none}
+.hdtime b{position:relative;display:block;text-align:center;line-height:26px;color:var(--ink)} .hdtime.on b{color:#1a1a22}
+@media (prefers-reduced-motion:reduce){.hdtime i{animation-timing-function:steps(8,end)}}
+.hdpick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hdb{min-height:64px;border:3px solid #1a1a22;border-radius:14px;font:inherit;font-size:1.15rem;font-weight:900;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:#1a1a22;padding:4px}
+.hdb small{font-size:.75rem;font-weight:700} .hdb.drib{background:#ffad7a} .hdb.pass{background:#8fd8ff}
+.hdb:disabled{opacity:.45;cursor:default} .hdb.on{opacity:1;box-shadow:0 0 0 4px #ffd34f} .hdb:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.hdwhy{border:2px solid #ffd34f;border-radius:12px;padding:8px 10px;background:var(--paper)} .hdwhy p{margin:0} .hdwhy .hdct{margin-top:6px;font-weight:800;font-size:.9rem}
+.hdwhy ul{margin:2px 0 6px;padding:0;list-style:none} .hdwhy li{font-weight:700} .hdwhy li::before{display:inline-block;width:1.4em;font-weight:900}
+.hdwhy li.y::before{content:"○";color:#1f9a4a} .hdwhy li.n::before{content:"×";color:#d8402f} .hdwhy li.m::before{content:"→";color:var(--muted)} .hdwhy .hdrule{font-size:.85rem;color:var(--muted)}
 .prhint.kb{opacity:0;pointer-events:none;animation:none} .prhint.kb:focus-visible{opacity:1}
 .pdash i{animation:pdbar linear forwards}@keyframes pdbar{to{transform:scaleX(0)}} /* the time that is left: shown with reduced motion too (in four steps) */
 @media (prefers-reduced-motion:reduce){.pdash i{animation-timing-function:steps(4,end)}}
@@ -1682,6 +1699,41 @@ function playBest(sc,st){let best=0; playOptions(sc,st).forEach(o=>{const p=o.q=
     best=Math.max(best,p*playBest(sc,playMove(sc,st,o.t,o.to)));});
   return best;}
 const playFlip=t=>{const fx=p=>[100-p[0],p[1]], fk={L:"R",C:"C",R:"L"}; return {h:fx(t.h),a:fx(t.a),b:fx(t.b),s:t.s?fx(t.s):null,d:t.d.map(fx),k:fk[t.k]};};
+// v25.6 しかける? パス? (はんだん タイム): once a match he plays, before the first chance that does not start with the run of v25.1
+// (a sure chance while live.rvN < RECVN), he decides in a picture of its own whether to take on the opponent in front of him or to
+// pass. HDT: the pictures (x 0-100, y 0-115 as on the pitch; their goal at the top, or ours at the bottom with zone "own"). ans: the
+// right pick. n: the opponents who come at him (d[0], and d[1] when 2), cover: one more behind d[0] (d[1]). Every other opponent marks a
+// mate (his way to that mate is cut, laneOf 0). to: the mate the pass goes to (free, laneOf 2, in a pass picture; cut by d[cut] in a
+// しかける one). go: where he gets to when he beats d[0]; take: who takes the ball when he should not have tried. The rule: しかける only
+// near their goal against one opponent with no cover. HDMS: the clock [first, a second less for every right pick in time (game.hd),
+// the shortest]. HANDAN 0: the page before.
+const HANDAN=1, HDMS=[8000,1000,5000], HDHOLD=600;
+const HDT=[
+  {ans:"drib",zone:"opp",n:1,cover:false,h:[50,64],a:[16,52],b:[84,58],d:[[50,52],[27,55],[73,60]],go:[50,38],to:"a",cut:1,take:0},
+  {ans:"drib",zone:"opp",n:1,cover:false,h:[70,60],a:[28,62],b:[42,88],d:[[66,48],[40,61],[51,77]],go:[60,36],to:"a",cut:1,take:0},
+  {ans:"pass",zone:"opp",n:1,cover:true,h:[50,66],a:[20,54],b:[82,60],d:[[50,54],[54,41],[72,62]],go:[50,40],to:"a",cut:2,take:1},
+  {ans:"pass",zone:"opp",n:2,cover:false,h:[50,64],a:[18,64],b:[84,62],d:[[42,54],[58,54],[30,64]],go:[50,40],to:"b",cut:2,take:1},
+  {ans:"pass",zone:"own",n:1,cover:false,h:[40,88],a:[78,84],b:[22,58],d:[[42,76],[28,67]],go:[42,62],to:"a",cut:1,take:0},
+  {ans:"pass",zone:"own",n:2,cover:false,h:[56,86],a:[20,90],b:[82,62],d:[[50,76],[64,77],[74,68]],go:[56,62],to:"a",cut:2,take:0}];
+const hdMs=g=>Math.max(HDMS[2],HDMS[0]-HDMS[1]*pbOf(g,"hd"));
+// one picture: しかける or パス half of the time each (so that one answer every time is no way through), mirrored half of the time
+function hdScene(){const ans=Math.random()<.5?"drib":"pass", t=rnd(HDT.filter(x=>x.ans===ans)), f=Math.random()<.5, fx=p=>f?[100-p[0],p[1]]:p.slice();
+  return Object.assign({},t,{h:fx(t.h),a:fx(t.a),b:fx(t.b),go:fx(t.go),d:t.d.map(fx)});}
+const hdKind=sc=>sc.ans==="drib"?"drib":sc.zone==="own"?"own":sc.cover?"cover":"two"; // why it is the right pick
+const HDMSG={title:"しかける? パス?",sub:"時間内に 決めよう!",ready:"見る ところは 3つ。",look:["どっちの ゴールに 近い?","前の 相手は 何人? カバーは いる?","フリーの 味方は いる?"],
+  start:"スタート!",go:"スタートを おすと 時間が 始まるよ。",think:"しかける? パス? 早く 決めよう!",left:"のこり",sec:"秒",
+  drib:"しかける",dribS:"ドリブルで ぬく",pass:"パス",passS:"フリーの 味方へ",
+  ok:{drib:"ナイス はんだん! 1対1で ぬいた!",pass:"ナイス はんだん! フリーの 味方に パスが 通った!"},
+  ng:{drib:"ぬいたけれど、カバーの 相手に 取られた…",two:"2人に はさまれて 取られた…",own:"自分の ゴールの 前で 取られた… ピンチ!",pass:"パスは カットされた… 味方は マークされて いたよ。"},
+  late:"時間ぎれ… 相手が 取りに 来た! しあいでは 早く 決めよう。",
+  why:{drib:"相手ゴールの 近くで、前の 相手は 1人、カバーも いない。 しかける チャンス!",cover:"ぬいても、後ろの カバーの 相手が 来るよ。 フリーの 味方へ パスが いいね。",
+    two:"2人を 1人で ぬくのは むずかしい。 フリーの 味方へ パスが いいね。",own:"自分の ゴールの 近くで 取られると、すぐ シュートを うたれるよ。 安全に パスが いいね。"},
+  ans:{drib:"答え: しかける",pass:"答え: パス"},chk:"しかける チェック",
+  zone:{opp:"相手ゴールの 近く",own:"自分の ゴールの 近く"},one:"前の 相手は 1人、カバーなし",cover:"前の 相手の 後ろに カバーが いる",two:"相手が 2人 来て いる",
+  free:"フリーの 味方が いる(パスの 先)",none:"フリーの 味方は いない",
+  rule:"しかけるのは「相手ゴールの 近く」で「前の 相手が 1人、カバーなし」の とき。",next:"チャンスへ!",
+  here:{opp:"ここは 相手ゴールの 近く",own:"ここは 自分の ゴールの 近く"},up:"せめる 方向",mygoal:"自分の ゴール",
+  help:"赤い 丸は 相手の 足が とどく ところ。 カバーは、前の 相手の 後ろで 待って いる 相手だよ。"};
 // v25.4 スペースへ パス: with the ball he can play it into space, not only to a mate's feet. A tap on the grass puts a sign there (S.sp),
 // a tap on the sign plays the ball. The mate without the ball nearest to that place runs onto it, SPRUN at most: further away nobody
 // gets there and the ball is gone. The ball's way is measured as a pass's is (laneOf from the ball to the place; the place is the
@@ -1772,7 +1824,7 @@ const recvScene=(sc,p,P)=>Object.assign(sc,recvPlan(sc,p,P));
 // wide: that ball is out) the ball lies there for DASHMS, and a tap in time wins it back. What follows is as before (a sure chance: again,
 // then a mate scores; a hard one: over), so a match comes out as it did. A dash in time and a spot found at the first tap bring
 // PLAYBONUS (practice points) once a match each, counted in game.pr and game.pd.
-const DASHMS=2000, DASHWAIT=1300, PBADGEMS=2400, PLAYBONUS=Object.assign({pr:["o",1],pd:["b",1]},SPACE?{ps:["h",1]}:null), pbOf=(x,k)=>x&&Number.isInteger(x[k])&&x[k]>0&&x[k]<=1e6?x[k]:0;
+const DASHMS=2000, DASHWAIT=1300, PBADGEMS=2400, PLAYBONUS=Object.assign({pr:["o",1],pd:["b",1]},SPACE?{ps:["h",1]}:null,HANDAN?{hd:["o",1]}:null), pbOf=(x,k)=>x&&Number.isInteger(x[k])&&x[k]>0&&x[k]<=1e6?x[k]:0;
 const RVMSG={title:"味方から パスを もらおう!",start:"赤い 丸から はなれて、パスの 道が 空いた ところを タップ! 君が そこへ 走るよ。",
   run:"そこへ 走るよ!",come:"ナイス ポジション! パスが 来るよ!",ok:"ナイス ポジション! フリーで パスを もらった!",first:"1回で 見つけた!",next:"次は どうする?",
   mark:"そこは 相手の 近く(赤い 丸の 中)… パスが 来ないよ。 相手から はなれよう!",lane:"パスの 道に 相手が いるよ… 味方と 君の 間に 相手が いない ところへ 動こう!",
@@ -3617,7 +3669,7 @@ function viewLive(){
   return `<section class="panel"><h2>${L.rev?`<span class="revtag">リベンジ</span> `:""}${esc(L.cupName)} ${esc(L.roundName)}</h2>
     <div class="score"><span class="tn">${esc(myTeam())}</span><span class="sc">${sm} - ${so}</span><span class="tn">${esc(L.opp.n)}</span><span class="min">${L.done?"しあい しゅうりょう"+(L.res.pk?`(PK ${L.res.pk[0]} - ${L.res.pk[1]})`:""):L.pk?"PKせん":minLabel(last.m)||"キックオフ"}</span></div>
     ${result}
-    ${L.scene&&!L.done?pitchHTML(L):""}${L.pk&&!L.done?pkHTML(L):""}
+    ${L.hd&&!L.done?hdHTML(L):""}${L.scene&&!L.done?pitchHTML(L):""}${L.pk&&!L.done?pkHTML(L):""}
     ${L.done||!skipOk(L)?"":`<button class="ghost" id="skipLive" type="button">けっかまで スキップ</button>`}
     <div class="feed" aria-live="polite">${feed}</div></section>`;
 }
@@ -4159,6 +4211,8 @@ function kickoff(auto){
 function liveTick(){if(!live||live.done)return;
   if(live.shown>=live.res.ev.length-1){finishLive();return;}
   const nx=live.res.ev[live.shown+1];
+  if(nx.play&&!nx.play.done&&hdDue(live,nx.play)){clearInterval(live.timer);live.timer=null;live.hd=hdStart(live,nx.play); // v25.6
+    say(HDMSG.title); if(tab==="match"){renderView(); playShow();} return;}
   if(nx.play&&!nx.play.done){clearInterval(live.timer);live.timer=null;live.scene={ei:live.shown+1,st:playStart(nx.play),from:"",drib:false,msg:"",over:null,busy:false,lost:false,tries:0,ball:null,wz:"",wzUsed:0,wzd:"",wzp:"",rv:null,rvP:null,dash:null,bonus:"",badge:null,sp:null,spd:false};
     if(nx.play.kind==="sure"&&!nx.play.coach&&(live.rvN||0)<RECVN){live.rvN=(live.rvN||0)+1; const r=recvSet(nx.play); live.scene.rv={P:r.P,at:r.m,h0:r.h0,n:0,mk:null,busy:false,fr:null}; holdUntil=Date.now()+400;} // v25.1 (a tap that was on its way when the pitch came up is not his first try)
     say(nx.play.kind==="hard"?"むずかしい チャンス!":"大チャンス!"); if(tab==="match"){renderView(); playShow();} return;}
@@ -4167,6 +4221,7 @@ function liveTick(){if(!live||live.done)return;
   live.shown++; if(tab==="match")renderView();}
 function finishLive(){if(!live||live.done)return; clearInterval(live.timer); clearTimeout(live.ptimer); live.timer=null;
   if(live.scene&&live.scene.over)playApply(live.res.ev[live.scene.ei],live.scene.over); // a scene that has ended counts
+  clearInterval(live.hdTick); live.hd=null; // v25.6
   live.scene=null; live.pk=null; live.res.ev.forEach(e=>{if(e.play)e.play.done=true;}); // scenes not played to the end stay as the match had them
   liveSettle(); live.shown=live.res.ev.length-1; live.done=true; render();}
 // v17: his plays changed the number of goals (called when a scene ends and at the final whistle): the result, a PK shoot-out and what
@@ -4186,7 +4241,7 @@ function liveSettle(){const L=live, R=L.res, gm=R.ev.filter(e=>e.goal&&e.side===
 const PLAYWZTAP=350;
 // v21.1: when a chance starts and its box (from the title to the message) does not stand whole between the top of the screen and the
 // tab bar, the box is brought to the top; where the page stood is kept (S.sy) and playEnd goes back there. Nothing is saved.
-function playShow(){const pk=!!(live&&live.pk), S=live&&(live.pk||live.scene), el=document.querySelector(pk?"#pkBox":"#pitchBox"), m=document.querySelector(pk?"#pkMsg":"#pmsg"), nav=document.querySelector("nav.tabs"); if(!S||!el||!m)return; // v22: the box of the shoot-out too
+function playShow(){const pk=!!(live&&live.pk), hd=!pk&&!!(live&&live.hd), S=live&&(live.pk||live.hd||live.scene), el=document.querySelector(pk?"#pkBox":hd?"#hdBox":"#pitchBox"), m=document.querySelector(pk?"#pkMsg":hd?"#hdMsg":"#pmsg"), nav=document.querySelector("nav.tabs"); if(!S||!el||!m)return; // v22: the box of the shoot-out too
   const bot=nav?nav.getBoundingClientRect().top:window.innerHeight, r=el.getBoundingClientRect(); if(r.top>=0&&m.getBoundingClientRect().bottom<=bot)return;
   S.sy=window.pageYOffset; window.scrollTo(0,Math.max(0,Math.round(S.sy+r.top-(parseFloat(getComputedStyle(el).scrollMarginTop)||12))));} // the page's own scroll only (no scrollIntoView: it could move a page around this one)
 function playWaza(sc,S,ops){if(S.wzUsed>=PLAYWAZA||!sc.who[S.st.car].hero)return [];
@@ -4316,7 +4371,7 @@ function playOver(sc,S,t,to,r,cn,wz){const from=S.st.pos[S.st.car], clear=t==="s
 // the scene is over: its line goes into the match and the clock runs again
 const playApply=(e,o)=>{e.t=o.t; e.side="me"; e.played=1; if(o.goal)e.goal=1; else delete e.goal; if(o.waza)e.waza=1; else delete e.waza;};
 const playFresh=S=>!S.busy&&!S.over&&!S.lost&&!S.tries&&!S.st.moves; // a scene he has not started: 「けっかまで スキップ」 leaves it as the match had it
-const skipOk=L=>(!L.scene||playFresh(L.scene))&&(!L.pk||!L.pk.started); // v22: not after his first kick of the shoot-out
+const skipOk=L=>(!L.scene||playFresh(L.scene))&&(!L.pk||!L.pk.started)&&(!L.hd||L.hd.ph==="ready"); // v25.6: not once his clock runs // v22: not after his first kick of the shoot-out
 function playEnd(){const L=live, S=L&&!L.done?L.scene:null; if(!S)return; clearTimeout(L.ptimer); const e=L.res.ev[S.ei];
   if(S.over){playApply(e,S.over); liveSettle();} // saved at once: closing the page keeps what he played, and a PK line that no longer fits is gone
   e.play.done=true; L.scene=null; L.shown=S.ei; L.timer=setInterval(liveTick,1200); if(tab==="match"){renderView(); if(typeof S.sy==="number")window.scrollTo(0,S.sy);}}
@@ -4365,6 +4420,65 @@ function pitchHTML(L){const S=L.scene, sc=L.res.ev[S.ei].play, st=S.st, at=st.po
     <div class="pgoal">${zones}</div>${rings}${spl}${opp}${dr}${back}${pl}<span class="pball" id="pball" style="${xy(bp)}"></span>${fx}${rvx}${spb}${dsx}${bdx}</div>
     <p class="pmsg" id="pmsg">${esc(S.msg||(rv?RVMSG.start:(at[1]>PLAYFAR?PLAYMSG.startFar:PLAYMSG.start)+(SPACE&&st.moves<PLAYMOVES&&!pbOf(game,"ps")?" "+SPMSG.tip:"")))}</p>${S.bonus?`<p class="pbonus" id="pbonus">${esc(S.bonus)}</p>`:""}
     <p class="plhint">${rv?RVMSG.help:"味方を タップで パス、ゴールを タップで シュート。 "+(SPACE?SPMSG.help:"")+"赤い 丸は 相手の 足が とどく ところ。 パスや ドリブルの あとは、みんなが 動くよ。"}</p>
+    </div>`;}
+
+// v25.6 しかける? パス?: live.hd = {sc (the picture), who (the names of the chance that follows), ph: "ready" (the grass and what to look
+// at) | "think" (the clock runs) | "show" (what his pick did, and why), ms (his clock), t0 (when it started), t1 (when it ended), pick,
+// res: "ok" | "ng" | "late", msg, bonus, badge, sy}. Nothing of it is saved but the bonus (playGot).
+const hdDue=(L,p)=>!!HANDAN&&!L.auto&&!L.hdN&&!p.coach&&!(p.kind==="sure"&&(L.rvN||0)<RECVN);
+function hdStart(L,p){L.hdN=1; return {sc:hdScene(),who:p.who,ph:"ready",ms:hdMs(L.base),t0:0,t1:0,pick:"",res:"",msg:"",bonus:"",badge:null};}
+function hdTap(k,kb){const L=live, H=L&&!L.done?L.hd:null; if(!H)return;
+  if(k==="start"){if(H.ph!=="ready")return; H.ph="think"; H.t0=Date.now(); H.msg=HDMSG.think; say(HDMSG.think+" "+HDMSG.left+" "+H.ms/1000+HDMSG.sec);
+    if(tab==="match"){renderView(); if(kb){const f=document.getElementById("hdDrib"); if(f){try{f.focus({preventScroll:true});}catch(e){f.focus();}}}}
+    clearTimeout(L.ptimer); L.ptimer=setTimeout(()=>hdOver(L,H,""),H.ms);
+    clearInterval(L.hdTick); L.hdTick=setInterval(()=>{if(live!==L||L.hd!==H||H.ph!=="think"){clearInterval(L.hdTick);return;}
+      const el=document.getElementById("hdLeft"); if(el)el.textContent=HDMSG.left+" "+Math.max(0,Math.ceil((H.ms-(Date.now()-H.t0))/1000))+HDMSG.sec;},200);
+    return;}
+  if(k==="drib"||k==="pass"){if(H.ph!=="think")return; clearTimeout(L.ptimer); hdOver(L,H,Date.now()-H.t0>=H.ms?"":k); return;} // a pick after the clock ran out is too late (a timer of a page in the background can come late)
+  if(k==="next"){if(H.ph!=="show"||Date.now()-H.t1<HDHOLD)return; const sy=H.sy; clearInterval(L.hdTick); L.hd=null; holdUntil=Date.now()+400; liveTick(); // the chance comes up where the picture was, under his finger: a second tap is none of its buttons
+    if(live===L&&L.scene&&typeof sy==="number")L.scene.sy=sy;}} // where the page stood before the picture
+// his pick (k: "drib" | "pass"), or the clock ran out (k ""): right picks in time bring the bonus
+function hdOver(L,H,k){if(live!==L||L.hd!==H||H.ph!=="think")return; clearInterval(L.hdTick);
+  const sc=H.sc; H.ph="show"; H.t1=Date.now(); H.pick=k; H.res=!k?"late":k===sc.ans?"ok":"ng";
+  H.msg=H.res==="late"?HDMSG.late:H.res==="ok"?HDMSG.ok[k]:k==="pass"?HDMSG.ng.pass:HDMSG.ng[hdKind(sc)==="cover"?"drib":hdKind(sc)];
+  const got=H.res==="ok"&&playGot(H,"hd"); say(H.msg+" "+HDMSG.why[hdKind(sc)]+(got?" "+H.bonus:""));
+  if(tab==="match"){renderView(); const f=document.getElementById("hdNext"); if(f){try{f.focus({preventScroll:true});}catch(e){f.focus();}}}} // the pick he pressed is gone: the next button has the focus
+// where everybody ends after his pick: {h, d (the other team), ball, out (beaten), fx: where the ball was lost}
+function hdAfter(H){const sc=H.sc, F=PLAYFEET, step=(p,q,l)=>{const dx=q[0]-p[0], dy=q[1]-p[1], n=Math.hypot(dx,dy)||1; return [Math.round(p[0]+dx*(n-l)/n),Math.round(p[1]+dy*(n-l)/n)];};
+  const o={h:sc.h,d:sc.d.slice(),ball:[sc.h[0],sc.h[1]+F],out:[],fx:null};
+  if(H.ph!=="show")return o;
+  if(H.res==="late"){o.d[0]=step(sc.d[0],sc.h,7); o.ball=o.d[0].slice(); o.fx=o.ball; return o;} // the one in front comes and takes it
+  if(H.pick==="drib"){if(H.res==="ok"){o.h=sc.go; o.ball=[sc.go[0],sc.go[1]+F]; o.out=[0]; return o;}
+    const tk=sc.d[sc.take]; o.h=[clamp(tk[0]+(sc.h[0]<=tk[0]?-9:9),10,90),tk[1]+3]; o.ball=tk.slice(); o.fx=tk; if(sc.cover)o.out=[0]; return o;} // beside the one who took it (with a cover: past the first one, who is pale)
+  if(H.res==="ok"){const m=sc[sc.to]; o.ball=[m[0],m[1]+F]; return o;}
+  o.ball=sc.d[sc.cut].slice(); o.fx=o.ball; return o;}
+function hdHTML(L){const H=L.hd, sc=H.sc, who=H.who, ph=H.ph, own=sc.zone==="own", xy=p=>`left:${p[0]}%;top:${(p[1]/1.15).toFixed(2)}%`;
+  const A=hdAfter(H), mv=(p,q)=>p[0]!==q[0]||p[1]!==q[1]?` pmv" style="${xy(p)};--fx:${q[0]}%;--fy:${(q[1]/1.15).toFixed(2)}%`:`" style="${xy(p)}`;
+  const face=k=>{const w=who[k]; return w.hero?heroBust(lastG,"hd"+k):w.mate?pixSVG(mateOpts(w.mate),"hd"+k):`<div class="helper">?</div>`;};
+  const me=(k,p,q,has)=>`<span class="pt mine${has?" has":""}${mv(p,q)}"><span class="ava">${face(k)}</span><span class="pn">${esc(who[k].n)}</span></span>`;
+  const lines=own?`<path d="M14 115v-36h72V115M0 2h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 79a12 9 0 0 1 24 0M38 2a12 12 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/>`
+    :`<path d="M14 0v36h72V0M0 113h100" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/><path d="M38 36a12 9 0 0 0 24 0" fill="none" stroke="#e9f5ec" stroke-width=".8" opacity=".85"/>`;
+  let pitch;
+  if(ph==="ready")pitch=`<div class="hdready" id="hdReady"><p><b>${HDMSG.ready}</b></p><ol>${HDMSG.look.map(t=>`<li>${t}</li>`).join("")}</ol><button type="button" class="primary" id="hdStart" data-hd="start">${HDMSG.start}</button></div>`;
+  else{const rings=sc.d.map((p,i)=>A.out.indexOf(i)>=0?"":`<i class="reach${mv(A.d[i],p)}"></i><i class="reach in${mv(A.d[i],p)}"></i>`).join("");
+    const opp=sc.d.map((p,i)=>`<span class="pt opp${A.out.indexOf(i)>=0?" out":""}${mv(A.d[i],p)}">${OPPFIG(MXOPP[i%MXOPP.length],oppRed(L))}</span>`).join("")
+      +(own?"":`<span class="pt opp gk" style="left:50%">${OPPFIG("gk",oppRed(L))}<span class="pn">キーパー</span></span>`);
+    const goal=own?`<div class="pgoal hdg own" aria-hidden="true"></div><i class="hdzone mg">${HDMSG.mygoal}</i><i class="hdzone up">↑ ${HDMSG.up}</i>`:`<div class="pgoal hdg" aria-hidden="true"></div>`;
+    const ball0=[sc.h[0],sc.h[1]+PLAYFEET], fx=A.fx?`<i class="pfx pfx-block mx mx-fx_block" style="${xy(A.fx)}" aria-hidden="true"></i>`:"";
+    const bdAge=H.badge?Date.now()-H.badge.at:0, bdx=H.badge&&bdAge>=0&&bdAge<PBADGEMS?`<i class="pbadge" style="animation-delay:-${bdAge}ms" aria-hidden="true">${esc(H.badge.t)}</i>`:"";
+    pitch=`${goal}${rings}${opp}${me("a",sc.a,sc.a,H.res==="ok"&&H.pick==="pass"&&sc.to==="a")}${me("b",sc.b,sc.b,H.res==="ok"&&H.pick==="pass"&&sc.to==="b")}${me("h",A.h,sc.h,!(H.ph==="show"&&(H.res!=="ok"||H.pick==="pass")))}
+      <span class="pball${mv(A.ball,ball0)}" id="hdBall"></span>${fx}<i class="hdzone at${own?" own":""}">${HDMSG.here[sc.zone]}</i>${bdx}`;}
+  const think=ph==="think", el=think?clamp(Date.now()-H.t0,0,H.ms):0;
+  const time=ph==="show"?"":`<div class="hdtime${think?" on":""}" id="hdTime"><i style="${think?`animation-duration:${H.ms}ms;animation-delay:-${el}ms`:"animation:none"}" aria-hidden="true"></i><b id="hdLeft">${HDMSG.left} ${Math.max(0,Math.ceil((H.ms-el)/1000))}${HDMSG.sec}</b></div>`;
+  const pick=k=>`<button type="button" class="hdb ${k}${H.pick===k?" on":""}" id="hd${k==="drib"?"Drib":"Pass"}" data-hd="${k}"${think?"":" disabled"}>${HDMSG[k]}<small>${HDMSG[k+"S"]}</small></button>`;
+  const kd=hdKind(sc), chk=ph!=="show"?"":`<div class="hdwhy" id="hdWhy"><p class="hdans"><b>${HDMSG.ans[sc.ans]}</b> ${HDMSG.why[kd]}</p><p class="hdct">${HDMSG.chk}</p><ul>
+      <li class="${own?"n":"y"}">${HDMSG.zone[sc.zone]}</li><li class="${sc.n===1&&!sc.cover?"y":"n"}">${sc.cover?HDMSG.cover:sc.n===2?HDMSG.two:HDMSG.one}</li><li class="m">${sc.ans==="pass"?HDMSG.free:HDMSG.none}</li></ul>
+      <p class="hdrule">${HDMSG.rule}</p></div>`;
+  return `<div class="pitchbox hdbox" id="hdBox"><p class="ptitle"><b>${HDMSG.title}</b><span>${HDMSG.sub}</span></p>
+    <div class="ppitch hdp${own?" own":""}" id="hdPitch"><svg class="plines" viewBox="0 0 100 115" preserveAspectRatio="none" aria-hidden="true">${ph==="ready"?"":lines}</svg>${pitch}</div>
+    ${time}<div class="hdpick">${pick("drib")}${pick("pass")}</div>
+    <p class="pmsg" id="hdMsg">${esc(H.msg||HDMSG.go)}</p>${H.bonus?`<p class="pbonus" id="hdBonus">${esc(H.bonus)}</p>`:""}${chk}
+    ${ph==="show"?`<button type="button" class="primary" id="hdNext" data-hd="next">${HDMSG.next}</button>`:`<p class="plhint">${HDMSG.help}</p>`}
     </div>`;}
 
 // v22: the PK shoot-out he plays (the rules: pkSpread, pkKeeper, pkRate, pkKick, pkDecided above, from v22/pk.js).
@@ -4550,6 +4664,7 @@ $("#view").addEventListener("click",async e=>{
   if(b.dataset.psp){spaceGo(e.detail===0);return;} // the sign of a pass into space (detail 0: a key, which is no double tap)
   if(b.dataset.pdash){playDashTap(e.detail===0);return;} // v25.1 (detail 0: a key, not a finger)
   if(b.dataset.prh){const S=live&&!live.done&&live.scene; if(S&&S.rv)recvTap(S.rv.h0,true);return;}
+  if(b.dataset.hd){hdTap(b.dataset.hd,e.detail===0);return;} // v25.6
   if(b.id==="pkGo"){pkGo();return;} // v22
   if(b.id==="skipLive"){if(live&&skipOk(live))finishLive();return;} // v17: not in the middle of a scene he plays
   if(b.id==="closeLive"){live=null;render();window.scrollTo(0,0);return;}
